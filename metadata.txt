@@ -1,0 +1,39 @@
+# This file contains metadata for your plugin. Since 
+# version 2.0 of QGIS this is the proper way to supply 
+# information about a plugin. The old method of 
+# embedding metadata in __init__.py will 
+# is no longer supported since version 2.0.
+
+# This file should be included when you package your plugin.# Mandatory items:
+
+[general]
+name=Otoklim
+qgisMinimumVersion=2.0
+description=Lorem ipsum dolor sit amet
+version=0.1
+author=Geo Enviro Omega
+email=faizalprbw@gmail.com
+
+about=Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc eu posuere sapien, ut fermentum orci. Nullam id condimentum metus. Etiam lobortis dapibus lectus sit amet auctor. Suspendisse non libero et purus rhoncus aliquam quis in metus. Suspendisse placerat rhoncus augue, et euismod libero ultricies eget. In in ligula non arcu fermentum blandit sit amet at odio. Nullam condimentum, enim eu volutpat fermentum, risus mauris scelerisque leo, gravida ultrices nisi libero non lorem. Cras varius orci at lectus sollicitudin suscipit. Phasellus eu nulla feugiat lorem pharetra bibendum quis id sapien.
+
+tracker=https://github.com/geoenvo/otoklim
+repository=https://github.com/geoenvo/otoklim
+# End of mandatory metadata
+
+# Recommended items:
+
+# Uncomment the following line and add your changelog:
+# changelog=
+
+# Tags are comma separated with spaces allowed
+tags=climate, rainfall, raininess, processing, pdf, statistics, composer
+
+homepage=https://github.com/geoenvo/otoklim
+category=Plugins
+icon=icon.png
+# experimental flag
+experimental=False
+
+# deprecated flag (applies to the whole plugin, not just a single version)
+deprecated=False
+
