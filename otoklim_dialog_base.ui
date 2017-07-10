@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>498</width>
-    <height>592</height>
+    <width>541</width>
+    <height>565</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QFrame" name="frame_2">
+    <widget class="QFrame" name="frame_main">
      <property name="frameShape">
       <enum>QFrame::Box</enum>
      </property>
@@ -24,10 +24,10 @@
      </property>
      <layout class="QGridLayout" name="gridLayout_9">
       <item row="0" column="0">
-       <widget class="QGroupBox" name="groupBox_2">
+       <widget class="QGroupBox" name="groupBox_1">
         <property name="font">
          <font>
-          <pointsize>11</pointsize>
+          <pointsize>10</pointsize>
           <weight>50</weight>
           <bold>false</bold>
          </font>
@@ -42,63 +42,8 @@
          <bool>false</bool>
         </property>
         <layout class="QGridLayout" name="gridLayout">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label">
-           <property name="font">
-            <font>
-             <family>Calibri</family>
-             <pointsize>10</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Input CH File (CSV)</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="Input_CH_CSV">
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
-           <property name="dragEnabled">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QPushButton" name="Browse_CH_CSV">
-           <property name="maximumSize">
-            <size>
-             <width>50</width>
-             <height>25</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>....</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="font">
-            <font>
-             <family>Calibri</family>
-             <pointsize>10</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Choose CSV Delimiter</string>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="1">
-          <widget class="QLineEdit" name="input_csv">
+          <widget class="QLineEdit" name="Delimiter">
            <property name="maximumSize">
             <size>
              <width>25</width>
@@ -121,6 +66,125 @@
            </property>
           </widget>
          </item>
+         <item row="6" column="0">
+          <widget class="QRadioButton" name="mode_1">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Jawa Timur Province Only</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QPushButton" name="Browse_CH_CSV">
+           <property name="maximumSize">
+            <size>
+             <width>50</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>....</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" colspan="2">
+          <widget class="QLineEdit" name="Input_CH_CSV">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0" colspan="4">
+          <widget class="Line" name="line">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Choose CSV Delimiter</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0">
+          <widget class="QRadioButton" name="mode_3">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>All Kecamatan</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Choose Mode :</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1" colspan="2">
+          <widget class="QLineEdit" name="Year">
+           <property name="maximumSize">
+            <size>
+             <width>65</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="maxLength">
+            <number>4</number>
+           </property>
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
          <item row="2" column="0">
           <widget class="QLabel" name="label_3">
            <property name="font">
@@ -136,8 +200,23 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QComboBox" name="Heuristic">
+         <item row="7" column="0">
+          <widget class="QRadioButton" name="mode_2">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>All Kabupaten Kota</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1" colspan="2">
+          <widget class="QComboBox" name="Select_Months">
            <property name="font">
             <font>
              <pointsize>10</pointsize>
@@ -205,115 +284,6 @@
            </item>
           </widget>
          </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_4">
-           <property name="font">
-            <font>
-             <family>Calibri</family>
-             <pointsize>10</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>This Year</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLineEdit" name="input_year">
-           <property name="maximumSize">
-            <size>
-             <width>65</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>8</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="maxLength">
-            <number>4</number>
-           </property>
-           <property name="dragEnabled">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0" colspan="3">
-          <widget class="Line" name="line">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="0">
-          <widget class="QLabel" name="label_9">
-           <property name="font">
-            <font>
-             <family>Calibri</family>
-             <pointsize>10</pointsize>
-             <weight>50</weight>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Choose Mode :</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="0">
-          <widget class="QRadioButton" name="mode_1">
-           <property name="font">
-            <font>
-             <family>Calibri</family>
-             <pointsize>10</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Jawa Timur Province Only</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="7" column="0">
-          <widget class="QRadioButton" name="mode_2">
-           <property name="font">
-            <font>
-             <family>Calibri</family>
-             <pointsize>10</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>All Kabupaten Kota</string>
-           </property>
-          </widget>
-         </item>
-         <item row="8" column="0">
-          <widget class="QRadioButton" name="mode_3">
-           <property name="font">
-            <font>
-             <family>Calibri</family>
-             <pointsize>10</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>All Kecamatan</string>
-           </property>
-          </widget>
-         </item>
          <item row="9" column="0">
           <widget class="QRadioButton" name="mode_4">
            <property name="font">
@@ -329,6 +299,51 @@
            </property>
           </widget>
          </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>This Year</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Input CH File (CSV)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLabel" name="label_7">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>9</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>*comma by default</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
@@ -336,7 +351,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QFrame" name="frame_3">
+    <widget class="QFrame" name="frame_optional">
      <property name="enabled">
       <bool>false</bool>
      </property>
@@ -348,7 +363,19 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QListView" name="listView_menu"/>
+       <widget class="QListWidget" name="listWidget_option">
+        <property name="font">
+         <font>
+          <family>Tahoma</family>
+          <pointsize>10</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::MultiSelection</enum>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QWidget" name="widget" native="true">
@@ -367,26 +394,35 @@
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="moveSelected">
+          <widget class="QPushButton" name="addSelected">
            <property name="font">
             <font>
              <pointsize>12</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+             <strikeout>false</strikeout>
             </font>
            </property>
            <property name="text">
-            <string>&gt;</string>
+            <string>+</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="moveUnselected">
+          <widget class="QPushButton" name="deleteUnselected">
            <property name="font">
             <font>
+             <family>MS Shell Dlg 2</family>
              <pointsize>12</pointsize>
+             <weight>75</weight>
+             <italic>false</italic>
+             <bold>true</bold>
+             <underline>false</underline>
+             <strikeout>true</strikeout>
             </font>
            </property>
            <property name="text">
-            <string>&lt;</string>
+            <string>-</string>
            </property>
           </widget>
          </item>
@@ -407,7 +443,19 @@
        </widget>
       </item>
       <item>
-       <widget class="QListView" name="listView_selected"/>
+       <widget class="QListWidget" name="listWidget_selected">
+        <property name="font">
+         <font>
+          <family>Tahoma</family>
+          <pointsize>10</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::MultiSelection</enum>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
