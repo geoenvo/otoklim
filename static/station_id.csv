@@ -1,0 +1,182 @@
+station_id,kabupaten,nama pos,lintang,bujur
+1,Pacitan,Tegalombo,-8.04,111.32
+2,Pacitan,Nawangan,-7.99,111.19
+3,Pacitan,Pacitan,-8.18,111.09
+4,Pacitan,Tulakan,-8.14,111.31
+5,Pacitan,Sudimoro,-8.21,111.39
+6,Ponorogo,Slahung,-8.05,111.45
+7,Ponorogo,Pulung,-7.874,111.62
+8,Ponorogo,Ponorogo,-7.86,111.48
+9,Trenggalek,Bagong,-8.04,111.71
+10,Trenggalek,Munjungan,-8.3,111.59
+11,Trenggalek,Kampak,-8.16,111.65
+12,Trenggalek,Dongko,-8.18,111.57
+13,Trenggalek,Widoro,-8.12,111.72
+14,Trenggalek,Tugu,-8.02,111.62
+15,Tulungagung,Jaeyan,-7.91,111.82
+16,Tulungagung,Tumpakmergo,-8.206,111.866
+17,Tulungagung,Kalidawir,-8.18,111.983
+18,Tulungagung,Ngantru,-8,111.92
+19,Tulungagung,Paingan,-8.04,111.85
+20,Blitar,Srengat,-8.04,112.07
+21,Blitar,Birowo,-8.22,112.37
+22,Blitar,Bantaran,-7.99,112.35
+23,Blitar,Wlingi,-8.078,112.325
+24,Blitar,Kalibadak,-7.99,112.22
+25,Blitar,Lodoyo,-8.16,112.22
+26,Blitar,Kesamben,-8.31,112.35
+27,Blitar,Kademangan,-8.12,112.14
+28,Kediri,Siman,-7.84,112.29
+29,Kediri,Papar,-7.69,112.08
+30,Kediri,Kediri PU,-7.817,112.009
+31,Kediri,Kencong Kediri,-7.7608,112.2342
+32,Kediri,Besuki,-7.89,111.9
+33,Nganjuk,Nganjuk,-7.59,111.9
+34,Nganjuk,Lengkong,-7.535,112.094
+35,Nganjuk,Matokan,-7.504,111.937
+36,Nganjuk,Stageof. Sawahan,-7.72,111.76
+37,Madiun,Pagotan,-7.7,111.55
+38,Madiun,Kandangan,-7.7586,111.6992
+39,Madiun,Caruban,-7.56,111.67
+40,Madiun,Dungus,-7.66,111.64
+41,Madiun,Saradan,-7.56,111.75
+43,Madiun,Tinap,-7.6,111.42
+44,Madiun,Lembehan,-7.762,111.403
+45,Madiun,Lanud. Iswahyudi,-7.6,111.445
+46,Ngawi,Mantingan,-7.386,111.142
+47,Ngawi,Ngale,-7.409,111.372
+48,Ngawi,Padas,-7.42,111.504
+49,Ngawi,Karangjati,-7.46,111.64
+50,Bojonegoro,Dander,-7.27,111.85
+51,Bojonegoro,Kedungadem,-7.366,112.055
+52,Bojonegoro,Bojonegoro,-7.149,111.927
+53,Bojonegoro,Sukun,-7.441,111.831
+54,Bojonegoro,Leran,-7.18,111.82
+55,Bojonegoro,Sumber rejo,-7.1758,112.0003
+56,Tuban,Kerek,-6.91,111.91
+57,Tuban,Rengel,-7.059,112.011
+59,Tuban,Jojogan,-6.97,111.81
+60,Tuban,Simo,-6.87,111.8
+61,Tuban,Widang,-7.0833,112.1751
+62,Lamongan,Lamongan,-7.12,112.43
+63,Lamongan,Bluri,-6.934,112.338
+64,Lamongan,Karanggeneng,-7.01,112.37
+65,Gresik,Balong panggang,-7.266,112.454
+66,Gresik,Lowayu,-6.98,112.422
+67,Gresik,Cerme Gresik,-7.22,112.57
+68,Gresik,Stamet Bawean,-5.837,112.635
+69,Gresik,Tambakombo,-7.07,112.62
+70,Surabaya,Kebonagung,-7.3272,112.7108
+71,Surabaya,Simo,-6.87,111.8
+72,Surabaya,Stamet Perak I,-7.22,112.72
+73,Surabaya,Kandangan,-7.23,112.64
+74,Sidoarjo,Sidoarjo,-7.448,112.72
+75,Sidoarjo,Sruni,-7.41,112.72
+76,Sidoarjo,Stamet Juanda,-7.384,112.784
+77,Mojokerto,Klegen,-7.6,112.471
+78,Mojokerto,Pacet,-7.66,112.54
+79,Mojokerto,Gedeg,-7.45,112.4
+80,Mojokerto,Janjing,-7.59,112.6
+81,Mojokerto,Mojosari,-7.53,112.56
+82,Jombang,Kabuh,-7.4,112.22
+83,Jombang,Mojowarno,-7.63,112.3
+84,Jombang,Jombang PU,-7.541,112.221
+85,Jombang,Mojoagung,-7.57,112.356
+86,Jombang,Tapen,-7.44,112.29
+87,Malang,Dampit,-8.2,112.73
+88,Malang,Pujon,-7.85,112.48
+89,Malang,Ngantang,-7.9,112.37
+90,Malang,Bantur,-8.3,112.56
+91,Malang,Staklim Karangploso,-7.901,112.597
+92,Malang,Donomulyo,-8.269,112.42
+93,Malang,Tlekung,-7.9,112.53
+94,Malang,Stageof Karangkates,-8.156,112.486
+95,Malang,Sitiarjo,-8.36,112.66
+96,Malang,Karangsuko,-8.15,112.58
+97,Malang,Jabung,-7.93,112.75
+98,Malang,Lawang,-7.81,112.68
+99,Malang,Poncokusumo,-8.25,112.81
+100,Malang,Tajinan,-8.06,112.63
+101,Malang,Lanud AR Saleh,-7.917,112.7
+102,Pasuruan,P3GI,-7.6412,112.9066
+103,Pasuruan,Lumbang,-7.842,113.029
+104,Pasuruan,Telebuk,-7.69,112.715
+105,Pasuruan,Bangil,-7.615,112.77
+106,Pasuruan,Pager,-7.75,112.728
+107,Pasuruan,Tutur,-7.884,112.812
+108,Pasuruan,Stageof Tretes,-7.704,112.636
+109,Pasuruan,Kwd. Grati,-7.7,112.9988
+112,Pasuruan,Tiris,-7.96,113.42
+114,Pasuruan,Pajarakan,-7.77,113.38
+118,Pasuruan,Krasak,-7.825,113.17
+120,Pasuruan,Triwung Kidul,-7.77,113.18
+121,Pasuruan,Krucil,-7.94,113.48
+123,Pasuruan,Batur,-7.89,113.57
+124,Pasuruan,Bermi,-7.95,113.55
+125,Lumajang,Ranuklakah,-7.97,113.28
+126,Lumajang,Pasirian,-8.2,113.09
+127,Lumajang,Blukon,-8.14,113.26
+128,Lumajang,Senduro,-8.07,113.06
+129,Lumajang,Pasrujambe,-8.08,112.98
+130,Lumajang,Supiturang,-8.17,112.97
+131,Lumajang,Rawaan/Tempursari,-8.17,113.1
+132,Lumajang,Meleman,-8.26,113.2
+133,Lumajang,Sukodono,-8.08,113.23
+134,Jember,Watuurip,-8.11,113.43
+135,Jember,Wirolegi,-8.1944,113.7391
+136,Jember,Sumberejo,-8.3019,113.6022
+137,Jember,Kencong Jember,-8.27,113.3719
+138,Jember,Sukowono,-8.0512,113.8344
+139,Jember,Sumberjambe,-7.18,112
+140,Jember,Jatian,-8.1497,113.7962
+141,Jember,Dam Sembah,-8.1564,113.6927
+142,Jember,Ledokombo,-8.1411,113.8703
+143,Jember,Dam Pono,-8.1521,113.6393
+144,Jember,Tempurejo,-8.29,113.6988
+145,Jember,Senenrejo,-8.3629,113.7732
+146,Jember,Lojejer,-8.39,113.54
+147,Bondowoso,Bondowoso,-7.905,113.8
+148,Bondowoso,Maesan,-8.015,113.755
+149,Bondowoso,Wringin,-7.836,113.765
+150,Bondowoso,Glendengan,-7.88,114
+151,Bondowoso,Cerme Bondowoso,-7.78,114.05
+152,Bondowoso,Sumbergading,-8.01,114.02
+153,Bondowoso,Dam Jeru,-7.85,113.94
+154,Bondowoso,Pinang pait,-7.965,113.94
+156,Bondowoso,Liwung,-7.809,114.238
+157,Bondowoso,Jati Banteng,-7.775,113.684
+158,Bondowoso,Kalor Koran,-7.781,114.304
+159,Bondowoso,Tanjung Kamal,-7.64,114.06
+160,Bondowoso,Arjasa,-6.8644,115.2881
+161,Bondowoso,Buduan,-7.735,113.73
+162,Banyuwangi,Stamet Banyuwangi,-8.2,114.31
+164,Banyuwangi,Alasbuluh,-8.01,114.36
+165,Banyuwangi,Pasewaran,-7.96,114.24
+166,Banyuwangi,Glennevis,-8.33,114
+167,Banyuwangi,Bajulmati,-7.93,114.38
+168,Banyuwangi,Karangharjo,-8.275,114.03
+169,Banyuwangi,Kawah ijen,-8.14,114.22
+171,Banyuwangi,Trebasala,-8.4,114
+172,Banyuwangi,Kalisepanjang,-8.38,114.09
+173,Banyuwangi,Gunung Raung,-8.24,113.99
+174,Banyuwangi,Bayulor,-8.18,114.2
+175,Banyuwangi,Lijen Jambu,-8.18,114.26
+176,Banyuwangi,Kaliklatak,-8.11,114.3
+177,Banyuwangi,Selogiri,-8.08,114.35
+179,Bangkalan,Socah,-7.1,112.715
+180,Bangkalan,Campor,-6.974,112.888
+181,Bangkalan,Arosbaya,-6.96,112.838
+182,Bangkalan,Kedungdung,-7.12,113.015
+185,Bangkalan,Sampang,-7.14,113.28
+186,Pamekasan,Pakong,-7.04,113.56
+187,Pamekasan,Propo,-7.124,113.41
+188,Pamekasan,Samiran,-7.156,113.447
+189,Pamekasan,Galis,-7.165,113.56
+190,Sumenep,Ganding,-6.965,113.865
+191,Sumenep,Stamet Kalianget,-7.05,113.93
+192,Sumenep,Dasuk,-6.89,113.86
+193,Sumenep,Robaru,-6.97,113.74
+194,Sumenep,Dam Jepun,-7.045,113.765
+195,Sumenep,Kebonagung,-7.0042,113.8486
+196,Sumenep,Saronggi,-7.1,113.828
+197,Sumenep,Arjasa,-6.8644,115.2881
