@@ -37,7 +37,7 @@ from otoklim_dialog import OtoklimDialog
 from osgeo import gdal, ogr, osr
 from gdalconst import GA_ReadOnly
 from qgis.analysis import QgsZonalStatistics
-from qgis.gui import QgsMapCanvas, QgsLayerTreeMapCanvasBridge
+from qgis.gui import QgsMapCanvas, QgsLayerTreeMapCanvasBridge, QgsMessageBar
 from qgis.core import (
             QgsVectorLayer,
             QgsRasterLayer,
@@ -293,8 +293,28 @@ class Otoklim:
             rule_file_ch = os.path.join(plugin_dir, 'static', 'rule_ch.txt')
             rule_file_sh = os.path.join(plugin_dir, 'static', 'rule_sh.txt')
             driver = ogr.GetDriverByName("ESRI Shapefile")
-        
-            def select_date_now():
+            logger = logging.getLogger(__name__)
+
+            # Input
+            after_prov = False
+            start_time = time.time()
+            now = datetime.datetime.now()
+            warning = None
+            file_input = self.dlg.Input_CH_CSV.text()  # Input CSV File
+            if not file_input:
+                warning = 'fileinput'
+            file_directory = str(os.path.dirname(os.path.realpath(file_input)))
+            csv_delimiter = self.dlg.Delimiter.text() # Input CSV Delimiter
+            try:
+                yrs = self.dlg.Year.text()
+                if yrs:
+                    yrs = int(float(yrs))
+                else:
+                    yrs = datetime.datetime.now().year
+            except:
+                warning = 'thisyear'
+
+            def select_date_now(yrs):
                 mth = self.dlg.Select_Months.currentText()
                 if mth == 'Januari':
                     mth = 1
@@ -346,15 +366,6 @@ class Otoklim:
                 pmth_3 = month_dict[mth+3]
                 month_header = [amth, pmth_1, pmth_2, pmth_3]
 
-                try:
-                    yrs = self.dlg.Year.text()
-                    if yrs:
-                        yrs = int(float(yrs))
-                    else:
-                        yrs = datetime.datetime.now().year
-                except:
-                    logger.warn('Error: Make sure input year is numeric') # QGIS Dialog
-                    pass
                 ayrs = yrs
                 pyrs_1 = pyrs_2 = pyrs_3 = yrs
                 if mth == 12:
@@ -425,6 +436,7 @@ class Otoklim:
 
             def combinecsv(delimiter):
                 logger.info('Combine Input CSV With Station Data..')
+                self.iface.mainWindow().statusBar().showMessage('Combine Input CSV With Station Data..')
                 dict_input = {}
                 dict_station = {}
 
@@ -475,6 +487,7 @@ class Otoklim:
 
             def csvtoshp(delimiter, csv_file):
                 logger.info('Convert Stasiun Data From CSV to Shapefile (Point)')
+                self.iface.mainWindow().statusBar().showMessage('Convert Stasiun Data From CSV to Shapefile (Point)')
                 filename_shp = os.path.join(file_directory, 'stasiun.shp')
                 filename_prj = os.path.join(file_directory, 'stasiun.prj')
 
@@ -526,6 +539,7 @@ class Otoklim:
 
             def idw_interpolate(point, months):
                 logger.info('Interpolate Stasiun Point By Using IDW Method..')
+                self.iface.mainWindow().statusBar().showMessage('Interpolate Stasiun Point By Using IDW Method..')
                 raster_interpolated_list = []
                 layer = QgsVectorLayer(point, 'layer', 'ogr')
                 fields = layer.pendingFields()
@@ -554,6 +568,7 @@ class Otoklim:
 
             def clip_raster(raster_input, region):
                 logger.info('Clipping Raster..')
+                self.iface.mainWindow().statusBar().showMessage('Clipping Raster..')
                 raster_list = raster_input[0]
                 param_list = raster_input[1]
                 clip_raster_list = []
@@ -616,6 +631,7 @@ class Otoklim:
 
             def raster_classify(raster_input):
                 logger.info('Classify Raster..')
+                self.iface.mainWindow().statusBar().showMessage('Classify Raster..')
                 raster_list = raster_input[0]
                 param_list = raster_input[1]
                 raster_classified_list = []
@@ -638,6 +654,7 @@ class Otoklim:
 
             def create_qgs(raster_input, point, region):
                 logger.info('Create .qgs File..')
+                self.iface.mainWindow().statusBar().showMessage('Create .qgs File..')
                 raster_list = raster_input[0]
                 param_list = raster_input[1]
                 projectqgs_list = []
@@ -773,6 +790,7 @@ class Otoklim:
 
             def create_pdf_map(qgsfiles_input, region, dates_input):
                 logger.info('Generate Map in PDF..')
+                self.iface.mainWindow().statusBar().showMessage('Generate Map in PDF..')
                 qgsfiles_list = qgsfiles_input[0]
                 param_list = qgsfiles_input[1]
                 months_list = dates_input[0]
@@ -782,7 +800,7 @@ class Otoklim:
                 for qgsfiles, param in zip(qgsfiles_list, param_list):
                     logger.info('- qgs file: ' + str(qgsfiles))
                     logger.info('- parameter file: ' + str(param))
-                    map_filename = 'map_' + str(param).lower() + '_' + str(int(region[2])) + '_' + str(region[1]).lower() + '.pdf'
+                    map_filename = str(region[1]).lower() + '_map_' + str(param).lower() + '_' + str(int(region[2])) + '.pdf'
                     output_pdf = os.path.join(map_directory, map_filename)
                     try:
                         os.remove(output_pdf)
@@ -856,6 +874,7 @@ class Otoklim:
 
             def copy_shp(region_polygon, region_level):
                 logger.info('Copy shapefile from ' + kabupaten_kota_polygon_file)
+                self.iface.mainWindow().statusBar().showMessage('Copy shapefile from ' + kabupaten_kota_polygon_file)
                 return_value = None
                 rmv_ext = os.path.splitext(region_polygon)[0]
                 #shp_name = rmv_ext.split("/")[-1]
@@ -918,6 +937,7 @@ class Otoklim:
 
             def create_csv(idw_param, raster_clip):
                 logger.info('Create CSV Summary File..')
+                self.iface.mainWindow().statusBar().showMessage('Create CSV Summary File..')
                 kabupaten_csv = os.path.join(csv_directory, 'kabupaten.csv')
                 kecamatan_csv = os.path.join(csv_directory, 'kecamatan.csv')
                 desa_csv = os.path.join(csv_directory, 'desa.csv')
@@ -1043,7 +1063,7 @@ class Otoklim:
                 for raster, param in zip(raster_clip[0], raster_clip[1]):
                     logger.info('-- Raster: ' + str(raster))
                     logger.info('-- Parameter: ' + str(param))
-                    summary_csv = os.path.join(csv_directory, 'sum_'+ param.lower() + '_jawa_timur.csv')
+                    summary_csv = os.path.join(csv_directory, 'jawa_timur_sum_'+ param.lower() +'.csv')
                     with open(summary_csv, "wb+") as csvfile:
                         logger.debug('-- Counting in progress..')
                         read_raster = gdal.Open(raster, GA_ReadOnly)
@@ -1109,7 +1129,7 @@ class Otoklim:
                             pass
                         logger.debug('-- Clipping raster in progress..')
                         processing.runalg("gdalogr:cliprasterbymasklayer", raster, layer_kab, -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", cliped)
-                        summary_csv = os.path.join(csv_directory, 'sum_'+ param.lower() + '_' + str(int(kab[0])) + '_' + str(kab[1]).lower() + '.csv')
+                        summary_csv = os.path.join(csv_directory, str(kab[1]).lower() + '_sum_'+ param.lower() + '_' + str(int(kab[0])) + '.csv')
                         with open(summary_csv, "wb+") as csvfile:
                             read_raster = gdal.Open(cliped, GA_ReadOnly)
                             raster_value = np.array(read_raster.GetRasterBand(1).ReadAsArray(), dtype ="int")
@@ -1148,84 +1168,83 @@ class Otoklim:
                     logger.info(' -- Generate csv kabupaten\kota summary success, file has been stored on' + str(summary_csv))
 
             # Main Flow
-            try:
-                after_prov = False
-                start_time = time.time()
-                now = datetime.datetime.now()
-
-                file_input = self.dlg.Input_CH_CSV.text()
-                csv_delimiter = self.dlg.Delimiter.text()
-                file_directory = str(os.path.dirname(os.path.realpath(file_input)))
-
-                map_directory = os.path.join(file_directory, 'map')
+            if not warning:
+                self.iface.messageBar().pushMessage("Please wait.. ", level=QgsMessageBar.INFO)
                 try:
-                    shutil.rmtree(map_directory)
-                    os.mkdir(os.path.join(file_directory, 'map'))
-                except:
-                    os.mkdir(os.path.join(file_directory, 'map'))
+                    map_directory = os.path.join(file_directory, 'map')
+                    try:
+                        shutil.rmtree(map_directory)
+                        os.mkdir(os.path.join(file_directory, 'map'))
+                    except:
+                        os.mkdir(os.path.join(file_directory, 'map'))
 
-                temp_directory = os.path.join(file_directory, 'temp')
-                try:
-                    shutil.rmtree(temp_directory)
-                    os.mkdir(os.path.join(file_directory, 'temp'))
-                except:
-                    os.mkdir(os.path.join(file_directory, 'temp'))
+                    temp_directory = os.path.join(file_directory, 'temp')
+                    try:
+                        shutil.rmtree(temp_directory)
+                        os.mkdir(os.path.join(file_directory, 'temp'))
+                    except:
+                        os.mkdir(os.path.join(file_directory, 'temp'))
 
-                csv_directory = os.path.join(file_directory, 'csv')
-                try:
-                    shutil.rmtree(csv_directory)
-                    os.mkdir(os.path.join(file_directory, 'csv'))
-                except:
-                    os.mkdir(os.path.join(file_directory, 'csv'))
+                    csv_directory = os.path.join(file_directory, 'csv')
+                    try:
+                        shutil.rmtree(csv_directory)
+                        os.mkdir(os.path.join(file_directory, 'csv'))
+                    except:
+                        os.mkdir(os.path.join(file_directory, 'csv'))
 
-                log_filename = os.path.join(file_directory, 'otoklim_' + '{:%Y%m%d_%H%M%S}'.format(datetime.datetime.now()) + '.log')
+                    log_filename = os.path.join(file_directory, 'otoklim_' + '{:%Y%m%d_%H%M%S}'.format(datetime.datetime.now()) + '.log')
+                    try:
+                        os.remove(log_filename)
+                    except OSError:
+                        pass
+                    logger.setLevel(logging.DEBUG)
+                    ch = logging.StreamHandler()
+                    ch.setLevel(logging.DEBUG)
+                    fh = logging.FileHandler(log_filename)
+                    formatter = logging.Formatter("%(asctime)s - [%(levelname)s] %(message)s")
+                    ch.setFormatter(formatter)
+                    fh.setFormatter(formatter)
+                    logger.addHandler(ch)
+                    logger.addHandler(fh)
 
-                try:
-                    os.remove(log_filename)
-                except OSError:
-                    pass
-                logger = logging.getLogger(__name__)
-                logger.setLevel(logging.DEBUG)
-                ch = logging.StreamHandler()
-                ch.setLevel(logging.DEBUG)
-                fh = logging.FileHandler(log_filename)
-                formatter = logging.Formatter("%(asctime)s - [%(levelname)s] %(message)s")
-                ch.setFormatter(formatter)
-                fh.setFormatter(formatter)
-                logger.addHandler(ch)
-                logger.addHandler(fh)
-                logger.info('Running start at ' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
-                slcs_date = select_date_now()
-                slcs_adm = select_adm_region()
-                csv_input = combinecsv(csv_delimiter)
-                point_stn = csvtoshp(csv_delimiter, csv_input)
-                raster_idw = idw_interpolate(point_stn, slcs_date[0])
-                idw_param = raster_idw[1]
-                for slc_adm in slcs_adm:
-                    logger.info('Region In Progress : ' + str(slc_adm))
-                    raster_clip = clip_raster(raster_idw, slc_adm)
-                    qgs_files = create_qgs(raster_clip, point_stn, slc_adm)
-                    create_pdf_map(qgs_files, slc_adm, slcs_date)
-                    if not after_prov:
-                        raster_cls = raster_classify(raster_clip)
-                        create_csv(idw_param, raster_cls)
-                    if after_prov:
-                        for raster in raster_clip[0]:
-                            os.remove(raster)
-                    after_prov = True
+                    logger.info('Running start at ' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
+                    slcs_date = select_date_now(yrs)
+                    slcs_adm = select_adm_region()
+                    csv_input = combinecsv(csv_delimiter)
+                    point_stn = csvtoshp(csv_delimiter, csv_input)
+                    raster_idw = idw_interpolate(point_stn, slcs_date[0])
+                    idw_param = raster_idw[1]
+                    for slc_adm in slcs_adm:
+                        logger.info('Region In Progress : ' + str(slc_adm))
+                        raster_clip = clip_raster(raster_idw, slc_adm)
+                        qgs_files = create_qgs(raster_clip, point_stn, slc_adm)
+                        create_pdf_map(qgs_files, slc_adm, slcs_date)
+                        if not after_prov:
+                            raster_cls = raster_classify(raster_clip)
+                            create_csv(idw_param, raster_cls)
+                        if after_prov:
+                            for raster in raster_clip[0]:
+                                os.remove(raster)
+                        after_prov = True
 
-                # Clear unuse file
-                for raster in raster_idw[0]:
-                    os.remove(raster)
-                for file in os.listdir(temp_directory):
-                    if file.split('.')[-1] != 'qgs':
-                        try:
-                            os.remove(os.path.join(temp_directory, file))
-                        except:
-                            pass
+                    # Clear unuse file
+                    for raster in raster_idw[0]:
+                        os.remove(raster)
+                    for file in os.listdir(temp_directory):
+                        if file.split('.')[-1] != 'qgs':
+                            try:
+                                os.remove(os.path.join(temp_directory, file))
+                            except:
+                                pass
 
-                now = datetime.datetime.now()
-                logger.info('Running stop at ' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
-                logger.info("--- %s seconds ---" % (time.time() - start_time))
-            except Exception as e:
-                logger.error(e)
+                    now = datetime.datetime.now()
+                    logger.info('Running stop at ' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
+                    logger.info("--- %s seconds ---" % (time.time() - start_time))
+                except Exception as e:
+                    logger.error(e)
+                    self.iface.messageBar().pushMessage("ERROR : " + str(e), level=QgsMessageBar.CRITICAL, duration=10)
+            else:
+                if warning == 'thisyear':
+                    self.iface.messageBar().pushMessage("WARNING : Input Year row must be numeric value", level=QgsMessageBar.WARNING, duration=10)
+                elif warning == 'fileinput':
+                    self.iface.messageBar().pushMessage("WARNING : File Input row is not allowed to be empty", level=QgsMessageBar.WARNING, duration=10)
