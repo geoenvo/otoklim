@@ -16,7 +16,7 @@ Persyaratan Sistem
 Cara Instalasi
 -------------------
 
-### 1. Manual Installation:
+### 1. Instalasi secara manual:
 * Unduh dan instal aplikasi QGIS (http://www.qgis.org/en/site/forusers/download.html)
 * Unduh plugin Otoklim (https://github.com/geoenvo/otoklim.git)
 * Ekstrak file otoklim-master.zip ke direktori berikut : `C:\Users\"username"\.qgis2\python\plugins`

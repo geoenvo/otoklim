@@ -1,0 +1,662 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>NewProject</class>
+ <widget class="QDialog" name="NewProject">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>515</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>600</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>600</width>
+    <height>515</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="0">
+    <widget class="QFrame" name="frame_main">
+     <property name="frameShape">
+      <enum>QFrame::Box</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Sunken</enum>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_9">
+      <item row="0" column="0">
+       <widget class="QGroupBox" name="groupBox_1">
+        <property name="maximumSize">
+         <size>
+          <width>1000</width>
+          <height>1000</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="autoFillBackground">
+         <bool>false</bool>
+        </property>
+        <property name="title">
+         <string>Setup New Project</string>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
+        </property>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Project Name</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="Input_prj_name">
+           <property name="maximumSize">
+            <size>
+             <width>150</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="maxLength">
+            <number>62767</number>
+           </property>
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Project File Name</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="Input_prj_file_name">
+           <property name="maximumSize">
+            <size>
+             <width>150</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="maxLength">
+            <number>62767</number>
+           </property>
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Project Folder</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="Input_prj_folder">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="maxLength">
+            <number>62767</number>
+           </property>
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QPushButton" name="Browse_prj_folder">
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Browse</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0" colspan="3">
+          <widget class="Line" name="line">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>11</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Boundary Files :</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Province</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLineEdit" name="Input_province">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="maxLength">
+            <number>62767</number>
+           </property>
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="2">
+          <widget class="QPushButton" name="Browse_province">
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Browse</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Cities/Districts</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QLineEdit" name="Input_cities">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="maxLength">
+            <number>62767</number>
+           </property>
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="2">
+          <widget class="QPushButton" name="Browse_cities">
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Browse</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="label_7">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Villages</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QLineEdit" name="Input_village">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="maxLength">
+            <number>62767</number>
+           </property>
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="2">
+          <widget class="QPushButton" name="Browse_village">
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Browse</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Bathymetry</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QLineEdit" name="Input_bathymetry">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="maxLength">
+            <number>62767</number>
+           </property>
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="2">
+          <widget class="QPushButton" name="Browse_bathymetry">
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Browse</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Islands</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="1">
+          <widget class="QLineEdit" name="Input_islands">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="maxLength">
+            <number>62767</number>
+           </property>
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="2">
+          <widget class="QPushButton" name="Browse_islands">
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Browse</string>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="0" colspan="3">
+          <widget class="Line" name="line_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="0">
+          <widget class="QLabel" name="label_10">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>11</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Other Files :</string>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="0">
+          <widget class="QLabel" name="label_11">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Rainpost File</string>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="1">
+          <widget class="QLineEdit" name="Input_rainpost">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="maxLength">
+            <number>62767</number>
+           </property>
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="2">
+          <widget class="QPushButton" name="Browse_rainpost">
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Browse</string>
+           </property>
+          </widget>
+         </item>
+         <item row="13" column="0">
+          <widget class="QLabel" name="label_12">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Logo File</string>
+           </property>
+          </widget>
+         </item>
+         <item row="13" column="1">
+          <widget class="QLineEdit" name="Input_logo">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="maxLength">
+            <number>62767</number>
+           </property>
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="13" column="2">
+          <widget class="QPushButton" name="Browse_logo">
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Browse</string>
+           </property>
+          </widget>
+         </item>
+         <item row="14" column="0">
+          <widget class="QLabel" name="label_13">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Rainfall Classification</string>
+           </property>
+          </widget>
+         </item>
+         <item row="14" column="1">
+          <widget class="QLineEdit" name="Input_rainfall_class">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="maxLength">
+            <number>62767</number>
+           </property>
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="14" column="2">
+          <widget class="QPushButton" name="Browse_rainfall_class">
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Browse</string>
+           </property>
+          </widget>
+         </item>
+         <item row="15" column="0">
+          <widget class="QLabel" name="label_14">
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Normal Rain Classification</string>
+           </property>
+          </widget>
+         </item>
+         <item row="15" column="1">
+          <widget class="QLineEdit" name="Input_normal_rain">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="maxLength">
+            <number>62767</number>
+           </property>
+           <property name="dragEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="15" column="2">
+          <widget class="QPushButton" name="Browse_normal_rain">
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Browse</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>NewProject</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>NewProject</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
