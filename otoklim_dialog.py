@@ -34,6 +34,9 @@ ASK_PROJECT, _ = uic.loadUiType(os.path.join(
 NEW_PROJECT, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'otoklim_dialog_new_project.ui'))
 
+CREATE_PROJECT, _ = uic.loadUiType(os.path.join(
+    os.path.dirname(__file__), 'otoklim_dialog_create_project.ui'))
+
 
 class OtoklimDialog(QtGui.QMainWindow, BASE):
     def __init__(self, parent=None):
@@ -51,4 +54,10 @@ class NewProjectDialog(QtGui.QDialog, NEW_PROJECT):
     def __init__(self, parent=None):
         """Constructor."""
         super(NewProjectDialog, self).__init__(parent)
+        self.setupUi(self)
+
+class CreateProjectDialog(QtGui.QDialog, CREATE_PROJECT):
+    def __init__(self, parent=None):
+        """Constructor."""
+        super(CreateProjectDialog, self).__init__(parent)
         self.setupUi(self)

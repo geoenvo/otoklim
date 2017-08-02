@@ -25,7 +25,7 @@ from PyQt4.QtGui import QAction, QIcon, QFileDialog
 # Initialize Qt resources from file resources.py
 import resources
 # Import the code for the dialog
-from otoklim_dialog import OtoklimDialog, NewProjectDialog, AskProjectDialog
+from otoklim_dialog import OtoklimDialog, NewProjectDialog, AskProjectDialog, CreateProjectDialog
 import os.path
 
 
@@ -136,11 +136,63 @@ class Otoklim:
         self.otoklimdlg = OtoklimDialog()
         self.newprojectdlg = NewProjectDialog()
         self.askprojectdlg = AskProjectDialog()
+        self.createprojectdlg = CreateProjectDialog()
 
         # Add Menu Trigger Logic
         self.otoklimdlg.actionNew.triggered.connect(self.ask_project_name)
         self.otoklimdlg.actionOpen.triggered.connect(self.open_existing_project)
         self.otoklimdlg.actionExit.triggered.connect(self.otoklimdlg.close)
+
+        # Add New Project Input Trigger Logic
+        self.newprojectdlg.Input_prj_folder.clear()
+        self.newprojectdlg.Browse_prj_folder.clicked.connect(
+            self.select_input_prj_folder
+        )
+        self.newprojectdlg.Input_province.clear()
+        self.newprojectdlg.Browse_province.clicked.connect(
+            self.select_input_province
+        )
+        self.newprojectdlg.Input_cities.clear()
+        self.newprojectdlg.Browse_cities.clicked.connect(
+            self.select_input_cities
+        )
+        self.newprojectdlg.Input_village.clear()
+        self.newprojectdlg.Browse_village.clicked.connect(
+            self.select_input_village
+        )
+        self.newprojectdlg.Input_bathymetry.clear()
+        self.newprojectdlg.Browse_bathymetry.clicked.connect(
+            self.select_input_bathymetry
+        )
+        self.newprojectdlg.Input_islands.clear()
+        self.newprojectdlg.Browse_islands.clicked.connect(
+            self.select_input_islands
+        )
+        self.newprojectdlg.Input_rainpost.clear()
+        self.newprojectdlg.Browse_rainpost.clicked.connect(
+            self.select_input_rainpost
+        )
+        self.newprojectdlg.Input_logo.clear()
+        self.newprojectdlg.Browse_logo.clicked.connect(
+            self.select_input_logo
+        )
+        self.newprojectdlg.Input_rainfall_class.clear()
+        self.newprojectdlg.Browse_rainfall_class.clicked.connect(
+            self.select_input_rainfall_class
+        )
+        self.newprojectdlg.Input_normalrain_class.clear()
+        self.newprojectdlg.Browse_normalrain_class.clicked.connect(
+            self.select_input_normalrain_class
+        )
+        self.newprojectdlg.Input_map_template.clear()
+        self.newprojectdlg.Browse_map_template.clicked.connect(
+            self.select_input_map_template
+        )
+
+        # Add New Project Next Trigger
+        self.newprojectdlg.ProjectCreate.clicked.connect(
+            self.select_project_create
+        )
 
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
@@ -185,12 +237,14 @@ class Otoklim:
         # remove the toolbar
         del self.toolbar
 
-    #Add Costum Functions
+    # Main Menu Functions
     def ask_project_name(self):
         """Ask for new project name"""
         self.askprojectdlg.show()
         result = self.askprojectdlg.exec_()
         if result:
+            project_name = self.askprojectdlg.ProjectName.text()
+            self.newprojectdlg.Input_prj_name.setText(project_name)
             self.newprojectdlg.show()
 
     def open_existing_project(self):
@@ -201,6 +255,126 @@ class Otoklim:
             "",
             "*.otoklim"
         )
+
+    # Project Parameter Input Function
+    def select_input_prj_folder(self):
+        """Select Project Working Directory """
+        project_folder = QFileDialog.getExistingDirectory(
+            self.newprojectdlg,
+            ""
+        )
+        self.newprojectdlg.Input_prj_folder.setText(project_folder)
+
+    def select_input_province(self):
+        """Select Province Vector File """
+        province_file = QFileDialog.getOpenFileName(
+            self.newprojectdlg,
+            "",
+            "",
+            "*.shp"
+        )
+        self.newprojectdlg.Input_province.setText(province_file)
+
+    def select_input_cities(self):
+        """Select Cities / Distircts Vector File """
+        cities_file = QFileDialog.getOpenFileName(
+            self.newprojectdlg,
+            "",
+            "",
+            "*.shp"
+        )
+        self.newprojectdlg.Input_cities.setText(cities_file)
+
+    def select_input_village(self):
+        """Select Village Vector File """
+        village_file = QFileDialog.getOpenFileName(
+            self.newprojectdlg,
+            "",
+            "",
+            "*.shp"
+        )
+        self.newprojectdlg.Input_village.setText(village_file)
+
+    def select_input_bathymetry(self):
+        """Select Bathymetry Raster File """
+        bathymetry_file = QFileDialog.getOpenFileName(
+            self.newprojectdlg,
+            "",
+            "",
+            "*.tif"
+        )
+        self.newprojectdlg.Input_bathymetry.setText(bathymetry_file)
+
+    def select_input_islands(self):
+        """Select Islands Vector File """
+        islands_file = QFileDialog.getOpenFileName(
+            self.newprojectdlg,
+            "",
+            "",
+            "*.shp"
+        )
+        self.newprojectdlg.Input_islands.setText(islands_file)
+
+    def select_input_rainpost(self):
+        """Select Rainpost CSV File """
+        rainpost_file = QFileDialog.getOpenFileName(
+            self.newprojectdlg,
+            "",
+            "",
+            "*.csv"
+        )
+        self.newprojectdlg.Input_rainpost.setText(rainpost_file)
+
+    def select_input_logo(self):
+        """Select Logo PNG File """
+        logo_file = QFileDialog.getOpenFileName(
+            self.newprojectdlg,
+            "",
+            "",
+            "*.png *.jpg"
+        )
+        self.newprojectdlg.Input_logo.setText(logo_file)
+
+    def select_input_rainfall_class(self):
+        """Select Rainfall Classification file"""
+        rainfallclass_file = QFileDialog.getOpenFileName(
+            self.newprojectdlg,
+            "",
+            "",
+            "*.txt"
+        )
+        self.newprojectdlg.Input_rainfall_class.setText(rainfallclass_file)
+
+    def select_input_normalrain_class(self):
+        """Select Normal Rain Classification file"""
+        normalrainclass_file = QFileDialog.getOpenFileName(
+            self.newprojectdlg,
+            "",
+            "",
+            "*.txt"
+        )
+        self.newprojectdlg.Input_normalrain_class.setText(normalrainclass_file)
+
+    def select_input_map_template(self):
+        """Select QGIS Map Template file"""
+        maptemplate_file = QFileDialog.getOpenFileName(
+            self.newprojectdlg,
+            "",
+            "",
+            "*.qpt"
+        )
+        self.newprojectdlg.Input_map_template.setText(maptemplate_file)
+
+    def select_project_create(self):
+        """Create Project"""
+        project_folder = self.newprojectdlg.Input_prj_folder.text()
+        project_name = self.newprojectdlg.Input_prj_name.text()
+        project_directory = os.path.join(project_folder, project_name)
+        self.createprojectdlg.show()
+        self.createprojectdlg.project_dir.setText(str(project_directory))
+        result = self.createprojectdlg.exec_()
+        if result:
+            print self.createprojectdlg.project_dir.text()
 
     def run(self):
         """Run method that performs all the real work"""
