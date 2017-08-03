@@ -30,7 +30,8 @@ from otoklim_dialog import (
     NewProjectDialog,
     AskProjectDialog,
     CreateProjectDialog,
-    ProjectProgressDialog
+    ProjectProgressDialog,
+    DirectoryConfirmDialog
 )
 import os.path
 import os
@@ -146,6 +147,7 @@ class Otoklim:
         self.askprojectdlg = AskProjectDialog()
         self.createprojectdlg = CreateProjectDialog()
         self.projectprogressdlg = ProjectProgressDialog()
+        self.dirconfirmdlg = DirectoryConfirmDialog()
 
         # Add Menu Trigger Logic
         self.otoklimdlg.actionNew.triggered.connect(self.ask_project_name)
@@ -154,50 +156,86 @@ class Otoklim:
 
         # Add New Project Input Trigger Logic
         self.newprojectdlg.Input_prj_folder.clear()
+        self.newprojectdlg.Input_prj_folder.textChanged.connect(
+            self.enable_create_button
+        )
         self.newprojectdlg.Browse_prj_folder.clicked.connect(
             self.select_input_prj_folder
         )
         self.newprojectdlg.Input_province.clear()
+        self.newprojectdlg.Input_province.textChanged.connect(
+            self.enable_create_button
+        )
         self.newprojectdlg.Browse_province.clicked.connect(
             self.select_input_province
         )
         self.newprojectdlg.Input_districts.clear()
+        self.newprojectdlg.Input_districts.textChanged.connect(
+            self.enable_create_button
+        )
         self.newprojectdlg.Browse_districts.clicked.connect(
             self.select_input_districts
         )
         self.newprojectdlg.Input_subdistricts.clear()
+        self.newprojectdlg.Input_subdistricts.textChanged.connect(
+            self.enable_create_button
+        )
         self.newprojectdlg.Browse_subdistricts.clicked.connect(
             self.select_input_subdistricts
         )
         self.newprojectdlg.Input_village.clear()
+        self.newprojectdlg.Input_village.textChanged.connect(
+            self.enable_create_button
+        )
         self.newprojectdlg.Browse_village.clicked.connect(
             self.select_input_village
         )
         self.newprojectdlg.Input_bathymetry.clear()
+        self.newprojectdlg.Input_bathymetry.textChanged.connect(
+            self.enable_create_button
+        )
         self.newprojectdlg.Browse_bathymetry.clicked.connect(
             self.select_input_bathymetry
         )
         self.newprojectdlg.Input_islands.clear()
+        self.newprojectdlg.Input_islands.textChanged.connect(
+            self.enable_create_button
+        )
         self.newprojectdlg.Browse_islands.clicked.connect(
             self.select_input_islands
         )
         self.newprojectdlg.Input_rainpost.clear()
+        self.newprojectdlg.Input_rainpost.textChanged.connect(
+            self.enable_create_button
+        )
         self.newprojectdlg.Browse_rainpost.clicked.connect(
             self.select_input_rainpost
         )
         self.newprojectdlg.Input_logo.clear()
+        self.newprojectdlg.Input_logo.textChanged.connect(
+            self.enable_create_button
+        )
         self.newprojectdlg.Browse_logo.clicked.connect(
             self.select_input_logo
         )
         self.newprojectdlg.Input_rainfall_class.clear()
+        self.newprojectdlg.Input_rainfall_class.textChanged.connect(
+            self.enable_create_button
+        )
         self.newprojectdlg.Browse_rainfall_class.clicked.connect(
             self.select_input_rainfall_class
         )
         self.newprojectdlg.Input_normalrain_class.clear()
+        self.newprojectdlg.Input_normalrain_class.textChanged.connect(
+            self.enable_create_button
+        )
         self.newprojectdlg.Browse_normalrain_class.clicked.connect(
             self.select_input_normalrain_class
         )
         self.newprojectdlg.Input_map_template.clear()
+        self.newprojectdlg.Input_map_template.textChanged.connect(
+            self.enable_create_button
+        )
         self.newprojectdlg.Browse_map_template.clicked.connect(
             self.select_input_map_template
         )
@@ -257,8 +295,25 @@ class Otoklim:
         result = self.askprojectdlg.exec_()
         if result:
             project_name = self.askprojectdlg.ProjectName.text()
+            self.askprojectdlg.ProjectName.clear()
             self.newprojectdlg.Input_prj_name.setText(project_name)
             self.newprojectdlg.show()
+            # clear input line if window closed
+            if not self.newprojectdlg.exec_():
+                self.newprojectdlg.Input_prj_folder.clear()
+                self.newprojectdlg.Input_province.clear()
+                self.newprojectdlg.Input_districts.clear()
+                self.newprojectdlg.Input_subdistricts.clear()
+                self.newprojectdlg.Input_village.clear()
+                self.newprojectdlg.Input_bathymetry.clear()
+                self.newprojectdlg.Input_islands.clear()
+                self.newprojectdlg.Input_rainpost.clear()
+                self.newprojectdlg.Input_logo.clear()
+                self.newprojectdlg.Input_rainfall_class.clear()
+                self.newprojectdlg.Input_normalrain_class.clear()
+                self.newprojectdlg.Input_map_template.clear()
+        else:
+            self.askprojectdlg.ProjectName.clear()
 
     def open_existing_project(self):
         """Open existing project """
@@ -388,6 +443,28 @@ class Otoklim:
         )
         self.newprojectdlg.Input_map_template.setText(maptemplate_file)
 
+    def enable_create_button(self):
+        """Function to enable Create Project button"""
+        input_list = [
+            self.newprojectdlg.Input_prj_folder.text(),
+            self.newprojectdlg.Input_province.text(),
+            self.newprojectdlg.Input_districts.text(),
+            self.newprojectdlg.Input_subdistricts.text(),
+            self.newprojectdlg.Input_village.text(),
+            self.newprojectdlg.Input_bathymetry.text(),
+            self.newprojectdlg.Input_islands.text(),
+            self.newprojectdlg.Input_rainpost.text(),
+            self.newprojectdlg.Input_logo.text(),
+            self.newprojectdlg.Input_rainfall_class.text(),
+            self.newprojectdlg.Input_normalrain_class.text(),
+            self.newprojectdlg.Input_map_template.text()
+        ]
+        enable_bool = True
+        for inputline in input_list:
+            if not inputline:
+                enable_bool = False
+        self.newprojectdlg.ProjectCreate.setEnabled(enable_bool)
+
     def select_project_create(self):
         """Create Project"""
         project_folder = self.newprojectdlg.Input_prj_folder.text()
@@ -396,6 +473,13 @@ class Otoklim:
         self.createprojectdlg.show()
         self.createprojectdlg.project_dir.setText(str(project_directory))
         result = self.createprojectdlg.exec_()
+        # Checking file function
+        def check_file(file, ext):
+            """Checking file validation function"""
+            if ext == '.shp':
+                pass
+            else:
+                pass
         # Copy shapefile function
         def copy_file(sourcefile, shp):
             """Copy file function"""
@@ -434,7 +518,16 @@ class Otoklim:
                 message = 'Create Project Folder..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                os.mkdir(project_directory)
+                if os.path.exists(project_directory):
+                    self.dirconfirmdlg.existingPath.setText(str(project_directory))
+                    self.dirconfirmdlg.show()
+                    if self.dirconfirmdlg.exec_():
+                        shutil.rmtree(project_directory)
+                        os.mkdir(project_directory)
+                    else:
+                        raise Exception('project directory has to be changed')
+                else:
+                    os.mkdir(project_directory)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Province Shapefiles

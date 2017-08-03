@@ -40,6 +40,9 @@ CREATE_PROJECT, _ = uic.loadUiType(os.path.join(
 PROJECT_PROGRESS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'otoklim_dialog_project_progress.ui'))
 
+DIR_CONFIRM, _ = uic.loadUiType(os.path.join(
+    os.path.dirname(__file__), 'otoklim_dialog_directory_confirm.ui'))
+
 
 class OtoklimDialog(QtGui.QMainWindow, BASE):
     def __init__(self, parent=None):
@@ -64,9 +67,15 @@ class CreateProjectDialog(QtGui.QDialog, CREATE_PROJECT):
         """Constructor."""
         super(CreateProjectDialog, self).__init__(parent)
         self.setupUi(self)
-    
+
 class ProjectProgressDialog(QtGui.QDialog, PROJECT_PROGRESS):
     def __init__(self, parent=None):
         """Constructor."""
         super(ProjectProgressDialog, self).__init__(parent)
+        self.setupUi(self)
+
+class DirectoryConfirmDialog(QtGui.QDialog, DIR_CONFIRM):
+    def __init__(self, parent=None):
+        """Constructor."""
+        super(DirectoryConfirmDialog, self).__init__(parent)
         self.setupUi(self)
