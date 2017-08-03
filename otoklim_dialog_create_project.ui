@@ -29,7 +29,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Project Confirmation</string>
+   <string>New Project</string>
   </property>
   <property name="sizeGripEnabled">
    <bool>false</bool>

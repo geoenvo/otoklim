@@ -21,12 +21,20 @@
  ***************************************************************************/
 """
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
-from PyQt4.QtGui import QAction, QIcon, QFileDialog
+from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem, QCloseEvent
 # Initialize Qt resources from file resources.py
 import resources
 # Import the code for the dialog
-from otoklim_dialog import OtoklimDialog, NewProjectDialog, AskProjectDialog, CreateProjectDialog
+from otoklim_dialog import (
+    OtoklimDialog,
+    NewProjectDialog,
+    AskProjectDialog,
+    CreateProjectDialog,
+    ProjectProgressDialog
+)
 import os.path
+import os
+import shutil
 
 
 class Otoklim:
@@ -137,6 +145,7 @@ class Otoklim:
         self.newprojectdlg = NewProjectDialog()
         self.askprojectdlg = AskProjectDialog()
         self.createprojectdlg = CreateProjectDialog()
+        self.projectprogressdlg = ProjectProgressDialog()
 
         # Add Menu Trigger Logic
         self.otoklimdlg.actionNew.triggered.connect(self.ask_project_name)
@@ -152,9 +161,13 @@ class Otoklim:
         self.newprojectdlg.Browse_province.clicked.connect(
             self.select_input_province
         )
-        self.newprojectdlg.Input_cities.clear()
-        self.newprojectdlg.Browse_cities.clicked.connect(
-            self.select_input_cities
+        self.newprojectdlg.Input_districts.clear()
+        self.newprojectdlg.Browse_districts.clicked.connect(
+            self.select_input_districts
+        )
+        self.newprojectdlg.Input_subdistricts.clear()
+        self.newprojectdlg.Browse_subdistricts.clicked.connect(
+            self.select_input_subdistricts
         )
         self.newprojectdlg.Input_village.clear()
         self.newprojectdlg.Browse_village.clicked.connect(
@@ -275,15 +288,25 @@ class Otoklim:
         )
         self.newprojectdlg.Input_province.setText(province_file)
 
-    def select_input_cities(self):
+    def select_input_districts(self):
         """Select Cities / Distircts Vector File """
-        cities_file = QFileDialog.getOpenFileName(
+        districts_file = QFileDialog.getOpenFileName(
             self.newprojectdlg,
             "",
             "",
             "*.shp"
         )
-        self.newprojectdlg.Input_cities.setText(cities_file)
+        self.newprojectdlg.Input_districts.setText(districts_file)
+
+    def select_input_subdistricts(self):
+        """Select Sub-Districts Vector File """
+        subdistricts_file = QFileDialog.getOpenFileName(
+            self.newprojectdlg,
+            "",
+            "",
+            "*.shp"
+        )
+        self.newprojectdlg.Input_subdistricts.setText(subdistricts_file)
 
     def select_input_village(self):
         """Select Village Vector File """
@@ -368,13 +391,147 @@ class Otoklim:
     def select_project_create(self):
         """Create Project"""
         project_folder = self.newprojectdlg.Input_prj_folder.text()
-        project_name = self.newprojectdlg.Input_prj_name.text()
-        project_directory = os.path.join(project_folder, project_name)
+        project_file_name = self.newprojectdlg.Input_prj_file_name.text()
+        project_directory = os.path.join(project_folder, project_file_name)
         self.createprojectdlg.show()
         self.createprojectdlg.project_dir.setText(str(project_directory))
         result = self.createprojectdlg.exec_()
+        # Copy shapefile function
+        def copy_file(sourcefile, shp):
+            """Copy file function"""
+            if not os.path.exists(sourcefile):
+                raise Exception('File is not exist in the path specified')
+            if shp:
+                rmv_ext = os.path.splitext(sourcefile)[0]
+                shp_name = os.path.split(rmv_ext)[-1]
+                dir_name = os.path.dirname(rmv_ext)
+                extlist = []
+                for infile in os.listdir(dir_name):
+                    if os.path.splitext(infile)[0] == shp_name:
+                        ext = os.path.splitext(infile)[1]
+                        extlist.append(ext)
+                if '.dbf' not in extlist:
+                    raise Exception('.dbf file not found in shapefile strcuture: ' + sourcefile)
+                if '.shx' not in extlist:
+                    raise Exception('.shx file not found in shapefile strcuture: ' + sourcefile)
+                for infile in os.listdir(dir_name):
+                    if os.path.splitext(infile)[0] == shp_name:
+                        ext = os.path.splitext(infile)[1]
+                        extlist.append(ext)
+                        source_file = os.path.join(dir_name, infile)
+                        target_file = os.path.join(project_directory, shp_name + ext)
+                        shutil.copyfile(source_file, target_file)
+            else:
+                filename = os.path.basename(sourcefile)
+                source_file = sourcefile
+                target_file = os.path.join(project_directory, filename)
+                shutil.copyfile(source_file, target_file)
         if result:
-            print self.createprojectdlg.project_dir.text()
+            self.projectprogressdlg.ProgressList.clear()
+            self.projectprogressdlg.show()
+            try:
+                # Create Project Directory
+                message = 'Create Project Folder..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                os.mkdir(project_directory)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Copy Province Shapefiles
+                message = 'Checking Province Files..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                source_shp = self.newprojectdlg.Input_province.text()
+                copy_file(source_shp, True)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Copy Cities\Districts Shapefiles
+                message = 'Checking Cities/Districts Files..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                source_shp = self.newprojectdlg.Input_districts.text()
+                copy_file(source_shp, True)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Copy Sub-Districts Shapefiles
+                message = 'Checking Sub-Districts Files..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                source_shp = self.newprojectdlg.Input_subdistricts.text()
+                copy_file(source_shp, True)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Copy Villages Shapefiles
+                message = 'Checking Villages Files..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                source_shp = self.newprojectdlg.Input_village.text()
+                copy_file(source_shp, True)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Copy Islands Shapefiles
+                message = 'Checking Islands Files..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                source_shp = self.newprojectdlg.Input_islands.text()
+                copy_file(source_shp, True)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Copy Bathymetry Raster File
+                message = 'Checking Bathymetry Files..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                source_raster = self.newprojectdlg.Input_bathymetry.text()
+                copy_file(source_raster, False)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Copy Rainpost CSV File
+                message = 'Checking Rainpost Files..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                source_raster = self.newprojectdlg.Input_rainpost.text()
+                copy_file(source_raster, False)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Copy Logo File
+                message = 'Checking Logo Files..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                source_raster = self.newprojectdlg.Input_logo.text()
+                copy_file(source_raster, False)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Copy Rainfall Classification File
+                message = 'Checking Rainfall Classification Files..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                source_raster = self.newprojectdlg.Input_rainfall_class.text()
+                copy_file(source_raster, False)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Copy Normal Rain Classification File
+                message = 'Checking Normal Rain Classification Files..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                source_raster = self.newprojectdlg.Input_normalrain_class.text()
+                copy_file(source_raster, False)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Copy Map Template File
+                message = 'Checking QGIS Map Template Files..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                source_raster = self.newprojectdlg.Input_map_template.text()
+                copy_file(source_raster, False)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+            except Exception as e:
+                item.setText(message + ' Error')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                print e
+            # Clear if progress dialog closed
+            if not self.projectprogressdlg.exec_():
+                self.projectprogressdlg.ProgressList.clear()
 
     def run(self):
         """Run method that performs all the real work"""
