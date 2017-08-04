@@ -33,6 +33,7 @@ from otoklim_dialog import (
     ProjectProgressDialog,
     DirectoryConfirmDialog
 )
+from qgis.core import QgsVectorLayer
 import os.path
 import os
 import shutil
@@ -197,6 +198,7 @@ class Otoklim:
         self.newprojectdlg.Browse_bathymetry.clicked.connect(
             self.select_input_bathymetry
         )
+        '''
         self.newprojectdlg.Input_islands.clear()
         self.newprojectdlg.Input_islands.textChanged.connect(
             self.enable_create_button
@@ -204,6 +206,7 @@ class Otoklim:
         self.newprojectdlg.Browse_islands.clicked.connect(
             self.select_input_islands
         )
+        '''
         self.newprojectdlg.Input_rainpost.clear()
         self.newprojectdlg.Input_rainpost.textChanged.connect(
             self.enable_create_button
@@ -300,13 +303,15 @@ class Otoklim:
             self.newprojectdlg.show()
             # clear input line if window closed
             if not self.newprojectdlg.exec_():
+                self.newprojectdlg.Input_prj_name.clear()
+                self.newprojectdlg.Input_prj_file_name.clear()
                 self.newprojectdlg.Input_prj_folder.clear()
                 self.newprojectdlg.Input_province.clear()
                 self.newprojectdlg.Input_districts.clear()
                 self.newprojectdlg.Input_subdistricts.clear()
                 self.newprojectdlg.Input_village.clear()
                 self.newprojectdlg.Input_bathymetry.clear()
-                self.newprojectdlg.Input_islands.clear()
+                # self.newprojectdlg.Input_islands.clear()
                 self.newprojectdlg.Input_rainpost.clear()
                 self.newprojectdlg.Input_logo.clear()
                 self.newprojectdlg.Input_rainfall_class.clear()
@@ -383,6 +388,7 @@ class Otoklim:
         )
         self.newprojectdlg.Input_bathymetry.setText(bathymetry_file)
 
+    '''
     def select_input_islands(self):
         """Select Islands Vector File """
         islands_file = QFileDialog.getOpenFileName(
@@ -392,6 +398,7 @@ class Otoklim:
             "*.shp"
         )
         self.newprojectdlg.Input_islands.setText(islands_file)
+    '''
 
     def select_input_rainpost(self):
         """Select Rainpost CSV File """
@@ -446,13 +453,15 @@ class Otoklim:
     def enable_create_button(self):
         """Function to enable Create Project button"""
         input_list = [
+            self.newprojectdlg.Input_prj_name.text(),
+            self.newprojectdlg.Input_prj_file_name.text(),
             self.newprojectdlg.Input_prj_folder.text(),
             self.newprojectdlg.Input_province.text(),
             self.newprojectdlg.Input_districts.text(),
             self.newprojectdlg.Input_subdistricts.text(),
             self.newprojectdlg.Input_village.text(),
             self.newprojectdlg.Input_bathymetry.text(),
-            self.newprojectdlg.Input_islands.text(),
+            # self.newprojectdlg.Input_islands.text(),
             self.newprojectdlg.Input_rainpost.text(),
             self.newprojectdlg.Input_logo.text(),
             self.newprojectdlg.Input_rainfall_class.text(),
@@ -473,18 +482,46 @@ class Otoklim:
         self.createprojectdlg.show()
         self.createprojectdlg.project_dir.setText(str(project_directory))
         result = self.createprojectdlg.exec_()
-        # Checking file function
-        def check_file(file, ext):
+        # Checking shapefile function
+        def check_shp(file, type):
             """Checking file validation function"""
-            if ext == '.shp':
-                pass
+            if not os.path.exists(file):
+                raise Exception('File is not exist in the path specified: ' + file)
+            layer = QgsVectorLayer(file, str(type), 'ogr')
+            fields = layer.pendingFields()
+            # CRS must be WGS '84 (ESPG=4326)
+            if layer.crs().authid().split(':')[1] != '4326':
+                raise Exception('Data Coordinate Reference System must be WGS 1984 (ESPG=4326)')
+            field_names = [field.name() for field in fields]
+            field_types = [field.typeName() for field in fields]
+            # Field checking
+            fieldlist = [
+                {'ADM_REGION': 'String'}, {'PROVINSI': 'String'}, {'ID_PROV': 'Real'}, 
+                {'KABUPATEN': 'String'}, {'ID_KAB': 'Real'}, {'KECAMATAN': 'String'}, 
+                {'ID_KEC': 'Real'}, {'DESA': 'String'}, {'ID_DES': 'Real'}
+            ]
+            if type == 'province':
+                checkfield = fieldlist[0:2]
+            elif type == 'districts':
+                checkfield = fieldlist[0:4]
+            elif type == 'subdistricts':
+                checkfield = fieldlist[0:6]
             else:
-                pass
+                checkfield = fieldlist
+            for field in checkfield:
+                if field.keys()[0] not in field_names:
+                    raise Exception(field.keys()[0] + ' field is not exists on data attribute')
+                else:
+                    idx = field_names.index(field.keys()[0])
+                    print idx
+                    if field_types[idx] != field.values()[0]:
+                        raise Exception(field.keys()[0] + ' field type must be ' + field.values()[0] + ' value')
+
         # Copy shapefile function
         def copy_file(sourcefile, shp):
             """Copy file function"""
             if not os.path.exists(sourcefile):
-                raise Exception('File is not exist in the path specified')
+                raise Exception('File is not exist in the path specified: ' + sourcefile)
             if shp:
                 rmv_ext = os.path.splitext(sourcefile)[0]
                 shp_name = os.path.split(rmv_ext)[-1]
@@ -535,6 +572,7 @@ class Otoklim:
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
                 source_shp = self.newprojectdlg.Input_province.text()
+                check_shp(source_shp, 'province')
                 copy_file(source_shp, True)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
@@ -543,6 +581,7 @@ class Otoklim:
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
                 source_shp = self.newprojectdlg.Input_districts.text()
+                check_shp(source_shp, 'districts')
                 copy_file(source_shp, True)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
@@ -551,6 +590,7 @@ class Otoklim:
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
                 source_shp = self.newprojectdlg.Input_subdistricts.text()
+                check_shp(source_shp, 'subdistricts')
                 copy_file(source_shp, True)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
@@ -559,9 +599,11 @@ class Otoklim:
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
                 source_shp = self.newprojectdlg.Input_village.text()
+                check_shp(source_shp, 'villages')
                 copy_file(source_shp, True)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
+                '''
                 # Copy Islands Shapefiles
                 message = 'Checking Islands Files..'
                 item = QListWidgetItem(message)
@@ -570,6 +612,7 @@ class Otoklim:
                 copy_file(source_shp, True)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
+                '''
                 # Copy Bathymetry Raster File
                 message = 'Checking Bathymetry Files..'
                 item = QListWidgetItem(message)
