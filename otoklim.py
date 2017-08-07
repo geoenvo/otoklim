@@ -34,9 +34,12 @@ from otoklim_dialog import (
     DirectoryConfirmDialog
 )
 from qgis.core import QgsVectorLayer
+from osgeo import gdal, ogr, osr
+from gdalconst import GA_ReadOnly
 import os.path
 import os
 import shutil
+import csv
 
 
 class Otoklim:
@@ -156,6 +159,9 @@ class Otoklim:
         self.otoklimdlg.actionExit.triggered.connect(self.otoklimdlg.close)
 
         # Add New Project Input Trigger Logic
+        self.newprojectdlg.csv_delimiter.textChanged.connect(
+            self.enable_create_button
+        )
         self.newprojectdlg.Input_prj_folder.clear()
         self.newprojectdlg.Input_prj_folder.textChanged.connect(
             self.enable_create_button
@@ -303,6 +309,7 @@ class Otoklim:
             self.newprojectdlg.show()
             # clear input line if window closed
             if not self.newprojectdlg.exec_():
+                self.newprojectdlg.csv_delimiter.clear()
                 self.newprojectdlg.Input_prj_name.clear()
                 self.newprojectdlg.Input_prj_file_name.clear()
                 self.newprojectdlg.Input_prj_folder.clear()
@@ -453,6 +460,7 @@ class Otoklim:
     def enable_create_button(self):
         """Function to enable Create Project button"""
         input_list = [
+            self.newprojectdlg.csv_delimiter.text(),
             self.newprojectdlg.Input_prj_name.text(),
             self.newprojectdlg.Input_prj_file_name.text(),
             self.newprojectdlg.Input_prj_folder.text(),
@@ -484,14 +492,20 @@ class Otoklim:
         result = self.createprojectdlg.exec_()
         # Checking shapefile function
         def check_shp(file, type):
-            """Checking file validation function"""
+            """Checking shapefile validation function"""
             if not os.path.exists(file):
-                raise Exception('File is not exist in the path specified: ' + file)
+                errormessage = 'File is not exist in the path specified: ' + file
+                raise Exception(errormessage)
+                item = QListWidgetItem(errormessage)
+                self.projectprogressdlg.ProgressList.addItem(item)
             layer = QgsVectorLayer(file, str(type), 'ogr')
             fields = layer.pendingFields()
             # CRS must be WGS '84 (ESPG=4326)
             if layer.crs().authid().split(':')[1] != '4326':
-                raise Exception('Data Coordinate Reference System must be WGS 1984 (ESPG=4326)')
+                errormessage = 'Data Coordinate Reference System must be WGS 1984 (ESPG=4326)'
+                raise Exception(errormessage)           
+                item = QListWidgetItem(errormessage)          
+                self.projectprogressdlg.ProgressList.addItem(item)
             field_names = [field.name() for field in fields]
             field_types = [field.typeName() for field in fields]
             # Field checking
@@ -510,18 +524,95 @@ class Otoklim:
                 checkfield = fieldlist
             for field in checkfield:
                 if field.keys()[0] not in field_names:
-                    raise Exception(field.keys()[0] + ' field is not exists on data attribute')
+                    errormessage = field.keys()[0] + ' field is not exists on data attribute'
+                    raise Exception(errormessage)           
+                    item = QListWidgetItem(errormessage)          
+                    self.projectprogressdlg.ProgressList.addItem(item)
                 else:
                     idx = field_names.index(field.keys()[0])
-                    print idx
                     if field_types[idx] != field.values()[0]:
-                        raise Exception(field.keys()[0] + ' field type must be ' + field.values()[0] + ' value')
+                        errormessage = field.keys()[0] + ' field type must be ' + field.values()[0] + ' value'
+                        raise Exception(errormessage)           
+                        item = QListWidgetItem(errormessage)          
+                        self.projectprogressdlg.ProgressList.addItem(item)
 
-        # Copy shapefile function
+        # Checking raster file function
+        def check_raster(file):
+            """Checking raster validation function"""
+            # CRS must be WGS '84 (ESPG=4326)
+            read_raster = gdal.Open(file, GA_ReadOnly)
+            prj = read_raster.GetProjection()
+            srs=osr.SpatialReference(wkt=prj)
+            if srs.IsProjected:
+                espg = srs.GetAttrValue('AUTHORITY', 1)
+            if espg != '4326':
+                errormessage = 'Data Coordinate Reference System must be WGS 1984 (ESPG=4326)'
+                raise Exception(errormessage)           
+                item = QListWidgetItem(errormessage)          
+                self.projectprogressdlg.ProgressList.addItem(item)
+        
+        # Checking csv function
+        def check_csv(file, delimiter):
+            """Checking csv validation function"""
+            # Check csv file header
+            with open(file, 'rb') as csvfile:
+                spamreader = csv.reader(csvfile, delimiter=str(delimiter), quotechar='|')
+                header = spamreader.next()
+                error_field = None
+                if 'post_id' not in header:
+                    error_field = 'post_id'
+                elif 'city_dist' not in header:
+                    error_field = 'city_dist'
+                elif 'name' not in header:
+                    error_field = 'name'
+                elif 'lat' not in header:
+                    error_field = 'lat'
+                elif 'lon' not in header:
+                    error_field = 'lon'
+                if error_field:
+                    errormessage = error_field + ' field not exists on file header'
+                    raise Exception(errormessage)           
+                    item = QListWidgetItem(errormessage)          
+                    self.projectprogressdlg.ProgressList.addItem(item)
+            # Check csv value type
+            with open(file, 'rb') as csvfile:
+                spamreader = csv.DictReader(csvfile, delimiter=str(delimiter), quotechar='|')
+                line = 1
+                for row in spamreader:
+                    line += 1
+                    try:
+                        int(row['post_id'])
+                    except:
+                        error_message = ': post_id [' + row['post_id'] + '] value must be integer'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)           
+                        item = QListWidgetItem(errormessage)          
+                        self.projectprogressdlg.ProgressList.addItem(item)
+                    try:
+                        float(row['lat'])
+                    except:
+                        error_message = ': lat [' + row['lat'] + '] value must be float'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)           
+                        item = QListWidgetItem(errormessage)          
+                        self.projectprogressdlg.ProgressList.addItem(item)
+                    try:
+                        float(row['lon'])
+                    except:
+                        error_message = ': lon [' + row['lon'] + '] value must be float'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)           
+                        item = QListWidgetItem(errormessage)          
+                        self.projectprogressdlg.ProgressList.addItem(item)
+
+        # Copy file function
         def copy_file(sourcefile, shp):
             """Copy file function"""
             if not os.path.exists(sourcefile):
-                raise Exception('File is not exist in the path specified: ' + sourcefile)
+                errormessage = 'File is not exist in the path specified: ' + sourcefile
+                raise Exception(errormessage)           
+                item = QListWidgetItem(errormessage)          
+                self.projectprogressdlg.ProgressList.addItem(item)
             if shp:
                 rmv_ext = os.path.splitext(sourcefile)[0]
                 shp_name = os.path.split(rmv_ext)[-1]
@@ -532,9 +623,15 @@ class Otoklim:
                         ext = os.path.splitext(infile)[1]
                         extlist.append(ext)
                 if '.dbf' not in extlist:
-                    raise Exception('.dbf file not found in shapefile strcuture: ' + sourcefile)
+                    errormessage = '.dbf file not found in shapefile strcuture: ' + sourcefile
+                    raise Exception(errormessage)           
+                    item = QListWidgetItem(errormessage)          
+                    self.projectprogressdlg.ProgressList.addItem(item)
                 if '.shx' not in extlist:
-                    raise Exception('.shx file not found in shapefile strcuture: ' + sourcefile)
+                    errormessage = '.shx file not found in shapefile strcuture: ' + sourcefile
+                    raise Exception(errormessage)           
+                    item = QListWidgetItem(errormessage)          
+                    self.projectprogressdlg.ProgressList.addItem(item)
                 for infile in os.listdir(dir_name):
                     if os.path.splitext(infile)[0] == shp_name:
                         ext = os.path.splitext(infile)[1]
@@ -562,7 +659,10 @@ class Otoklim:
                         shutil.rmtree(project_directory)
                         os.mkdir(project_directory)
                     else:
-                        raise Exception('project directory has to be changed')
+                        errormessage = 'project directory has to be changed'
+                        raise Exception(errormessage)           
+                        item = QListWidgetItem(errormessage)          
+                        self.projectprogressdlg.ProgressList.addItem(item)
                 else:
                     os.mkdir(project_directory)
                 item.setText(message + ' Done')
@@ -618,6 +718,7 @@ class Otoklim:
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
                 source_raster = self.newprojectdlg.Input_bathymetry.text()
+                check_raster(source_raster)
                 copy_file(source_raster, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
@@ -625,7 +726,9 @@ class Otoklim:
                 message = 'Checking Rainpost Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                source_raster = self.newprojectdlg.Input_rainpost.text()
+                source_csv = self.newprojectdlg.Input_rainpost.text()
+                delimiter = self.newprojectdlg.csv_delimiter.text()
+                check_csv(source_csv, delimiter)
                 copy_file(source_raster, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
@@ -661,10 +764,12 @@ class Otoklim:
                 copy_file(source_raster, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
-            except Exception as e:
+            except Exception as errormessage:
                 item.setText(message + ' Error')
+                self.projectprogressdlg.ProgressList.addItem(item)         
+                item = QListWidgetItem(str(errormessage))          
                 self.projectprogressdlg.ProgressList.addItem(item)
-                print e
+                print errormessage
             # Clear if progress dialog closed
             if not self.projectprogressdlg.exec_():
                 self.projectprogressdlg.ProgressList.clear()
