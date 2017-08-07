@@ -433,7 +433,7 @@ class Otoklim:
             self.newprojectdlg,
             "",
             "",
-            "*.txt"
+            "*.csv"
         )
         self.newprojectdlg.Input_rainfall_class.setText(rainfallclass_file)
 
@@ -443,7 +443,7 @@ class Otoklim:
             self.newprojectdlg,
             "",
             "",
-            "*.txt"
+            "*.csv"
         )
         self.newprojectdlg.Input_normalrain_class.setText(normalrainclass_file)
 
@@ -552,23 +552,34 @@ class Otoklim:
                 self.projectprogressdlg.ProgressList.addItem(item)
         
         # Checking csv function
-        def check_csv(file, delimiter):
+        def check_csv(file, delimiter, type):
             """Checking csv validation function"""
             # Check csv file header
             with open(file, 'rb') as csvfile:
                 spamreader = csv.reader(csvfile, delimiter=str(delimiter), quotechar='|')
                 header = spamreader.next()
+                print header
                 error_field = None
-                if 'post_id' not in header:
-                    error_field = 'post_id'
-                elif 'city_dist' not in header:
-                    error_field = 'city_dist'
-                elif 'name' not in header:
-                    error_field = 'name'
-                elif 'lat' not in header:
-                    error_field = 'lat'
-                elif 'lon' not in header:
-                    error_field = 'lon'
+                if type == 'rainpost':
+                    if 'post_id' not in header:
+                        error_field = 'post_id'
+                    elif 'city_dist' not in header:
+                        error_field = 'city_dist'
+                    elif 'name' not in header:
+                        error_field = 'name'
+                    elif 'lat' not in header:
+                        error_field = 'lat'
+                    elif 'lon' not in header:
+                        error_field = 'lon'
+                else:
+                    if 'lower_limit' not in header:
+                        error_field = 'lower_limit'
+                    elif 'upper_limit' not in header:
+                        error_field = 'upper_limit'
+                    elif 'new_value' not in header:
+                        error_field = 'new_value'
+                    elif 'color' not in header:
+                        error_field = 'color'
                 if error_field:
                     errormessage = error_field + ' field not exists on file header'
                     raise Exception(errormessage)           
@@ -580,30 +591,67 @@ class Otoklim:
                 line = 1
                 for row in spamreader:
                     line += 1
-                    try:
-                        int(row['post_id'])
-                    except:
-                        error_message = ': post_id [' + row['post_id'] + '] value must be integer'
-                        errormessage = 'error at line: ' + str(line) + error_message
-                        raise Exception(errormessage)           
-                        item = QListWidgetItem(errormessage)          
-                        self.projectprogressdlg.ProgressList.addItem(item)
-                    try:
-                        float(row['lat'])
-                    except:
-                        error_message = ': lat [' + row['lat'] + '] value must be float'
-                        errormessage = 'error at line: ' + str(line) + error_message
-                        raise Exception(errormessage)           
-                        item = QListWidgetItem(errormessage)          
-                        self.projectprogressdlg.ProgressList.addItem(item)
-                    try:
-                        float(row['lon'])
-                    except:
-                        error_message = ': lon [' + row['lon'] + '] value must be float'
-                        errormessage = 'error at line: ' + str(line) + error_message
-                        raise Exception(errormessage)           
-                        item = QListWidgetItem(errormessage)          
-                        self.projectprogressdlg.ProgressList.addItem(item)
+                    if type == 'rainpost':
+                        try:
+                            int(row['post_id'])
+                        except:
+                            error_message = ': post_id [' + row['post_id'] + '] value must be integer'
+                            errormessage = 'error at line: ' + str(line) + error_message
+                            raise Exception(errormessage)           
+                            item = QListWidgetItem(errormessage)          
+                            self.projectprogressdlg.ProgressList.addItem(item)
+                        try:
+                            float(row['lat'])
+                        except:
+                            error_message = ': lat [' + row['lat'] + '] value must be float'
+                            errormessage = 'error at line: ' + str(line) + error_message
+                            raise Exception(errormessage)           
+                            item = QListWidgetItem(errormessage)          
+                            self.projectprogressdlg.ProgressList.addItem(item)
+                        try:
+                            float(row['lon'])
+                        except:
+                            error_message = ': lon [' + row['lon'] + '] value must be float'
+                            errormessage = 'error at line: ' + str(line) + error_message
+                            raise Exception(errormessage)           
+                            item = QListWidgetItem(errormessage)          
+                            self.projectprogressdlg.ProgressList.addItem(item)
+                    else:
+                        try:
+                            int(row['lower_limit'])
+                        except:
+                            error_message = ': lower_limit [' + row['lower_limit'] + '] value must be integer'
+                            errormessage = 'error at line: ' + str(line) + error_message
+                            raise Exception(errormessage)           
+                            item = QListWidgetItem(errormessage)          
+                            self.projectprogressdlg.ProgressList.addItem(item)
+                        try:
+                            float(row['upper_limit'])
+                        except:
+                            if row['upper_limit'] == "*":
+                                pass
+                            else:
+                                error_message = ': upper_limit [' + row['upper_limit'] + '] value must be integer'
+                                errormessage = 'error at line: ' + str(line) + error_message
+                                raise Exception(errormessage)           
+                                item = QListWidgetItem(errormessage)          
+                                self.projectprogressdlg.ProgressList.addItem(item)
+                        try:
+                            float(row['new_value'])
+                        except:
+                            error_message = ': new_value [' + row['new_value'] + '] value must be integer'
+                            errormessage = 'error at line: ' + str(line) + error_message
+                            raise Exception(errormessage)           
+                            item = QListWidgetItem(errormessage)          
+                            self.projectprogressdlg.ProgressList.addItem(item)
+                        # Special case for hex color
+                        if len(row['color']) != 7 or row['color'][0] != '#':
+                            error_message = ': color [' + row['color'] + '] value must be color hex format'
+                            errormessage = 'error at line: ' + str(line) + error_message
+                            raise Exception(errormessage)           
+                            item = QListWidgetItem(errormessage)          
+                            self.projectprogressdlg.ProgressList.addItem(item)
+
 
         # Copy file function
         def copy_file(sourcefile, shp):
@@ -728,7 +776,7 @@ class Otoklim:
                 self.projectprogressdlg.ProgressList.addItem(item)
                 source_csv = self.newprojectdlg.Input_rainpost.text()
                 delimiter = self.newprojectdlg.csv_delimiter.text()
-                check_csv(source_csv, delimiter)
+                check_csv(source_csv, delimiter, 'rainpost')
                 copy_file(source_raster, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
@@ -744,7 +792,8 @@ class Otoklim:
                 message = 'Checking Rainfall Classification Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                source_raster = self.newprojectdlg.Input_rainfall_class.text()
+                source_csv = self.newprojectdlg.Input_rainfall_class.text()
+                check_csv(source_csv, delimiter, 'class')
                 copy_file(source_raster, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
@@ -752,7 +801,8 @@ class Otoklim:
                 message = 'Checking Normal Rain Classification Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                source_raster = self.newprojectdlg.Input_normalrain_class.text()
+                source_csv = self.newprojectdlg.Input_normalrain_class.text()
+                check_csv(source_csv, delimiter, 'class')
                 copy_file(source_raster, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
