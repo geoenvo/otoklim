@@ -40,6 +40,7 @@ import os.path
 import os
 import shutil
 import csv
+import json
 
 
 class Otoklim:
@@ -558,7 +559,6 @@ class Otoklim:
             with open(file, 'rb') as csvfile:
                 spamreader = csv.reader(csvfile, delimiter=str(delimiter), quotechar='|')
                 header = spamreader.next()
-                print header
                 error_field = None
                 if type == 'rainpost':
                     if 'post_id' not in header:
@@ -620,11 +620,14 @@ class Otoklim:
                         try:
                             int(row['lower_limit'])
                         except:
-                            error_message = ': lower_limit [' + row['lower_limit'] + '] value must be integer'
-                            errormessage = 'error at line: ' + str(line) + error_message
-                            raise Exception(errormessage)           
-                            item = QListWidgetItem(errormessage)          
-                            self.projectprogressdlg.ProgressList.addItem(item)
+                            if row['lower_limit'] == "*":
+                                pass
+                            else:
+                                error_message = ': lower_limit [' + row['lower_limit'] + '] value must be integer'
+                                errormessage = 'error at line: ' + str(line) + error_message
+                                raise Exception(errormessage)           
+                                item = QListWidgetItem(errormessage)          
+                                self.projectprogressdlg.ProgressList.addItem(item)
                         try:
                             float(row['upper_limit'])
                         except:
@@ -654,7 +657,7 @@ class Otoklim:
 
 
         # Copy file function
-        def copy_file(sourcefile, shp):
+        def copy_file(sourcefile, targetdir, shp):
             """Copy file function"""
             if not os.path.exists(sourcefile):
                 errormessage = 'File is not exist in the path specified: ' + sourcefile
@@ -685,12 +688,12 @@ class Otoklim:
                         ext = os.path.splitext(infile)[1]
                         extlist.append(ext)
                         source_file = os.path.join(dir_name, infile)
-                        target_file = os.path.join(project_directory, shp_name + ext)
+                        target_file = os.path.join(targetdir, shp_name + ext)
                         shutil.copyfile(source_file, target_file)
             else:
                 filename = os.path.basename(sourcefile)
                 source_file = sourcefile
-                target_file = os.path.join(project_directory, filename)
+                target_file = os.path.join(targetdir, filename)
                 shutil.copyfile(source_file, target_file)
         if result:
             self.projectprogressdlg.ProgressList.clear()
@@ -715,40 +718,61 @@ class Otoklim:
                     os.mkdir(project_directory)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
+                # Create Root Project Directory
+                message = 'Create Root Project Folder..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Processing Folder
+                processing_directory = os.path.join(project_directory, 'processing')
+                os.mkdir(processing_directory)  
+                # Boundary Folder
+                boundary_directory = os.path.join(project_directory, 'boundary')
+                os.mkdir(boundary_directory)
+                # Input Folder
+                input_directory = os.path.join(project_directory, 'input')
+                os.mkdir(input_directory)
+                # Output Folder
+                output_directory = os.path.join(project_directory, 'output')
+                os.mkdir(output_directory)
+                # Map & CSV Folder
+                map_directory = os.path.join(project_directory, 'map')
+                csv_directory = os.path.join(project_directory, 'csv')
+                os.mkdir(map_directory)
+                os.mkdir(csv_directory)
                 # Copy Province Shapefiles
                 message = 'Checking Province Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                source_shp = self.newprojectdlg.Input_province.text()
-                check_shp(source_shp, 'province')
-                copy_file(source_shp, True)
+                shp_prov = self.newprojectdlg.Input_province.text()
+                check_shp(shp_prov, 'province')
+                copy_file(shp_prov, boundary_directory, True)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Cities\Districts Shapefiles
                 message = 'Checking Cities/Districts Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                source_shp = self.newprojectdlg.Input_districts.text()
-                check_shp(source_shp, 'districts')
-                copy_file(source_shp, True)
+                shp_dis = self.newprojectdlg.Input_districts.text()
+                check_shp(shp_dis, 'districts')
+                copy_file(shp_dis, boundary_directory, True)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Sub-Districts Shapefiles
                 message = 'Checking Sub-Districts Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                source_shp = self.newprojectdlg.Input_subdistricts.text()
-                check_shp(source_shp, 'subdistricts')
-                copy_file(source_shp, True)
+                shp_subdis = self.newprojectdlg.Input_subdistricts.text()
+                check_shp(shp_subdis, 'subdistricts')
+                copy_file(shp_subdis, boundary_directory, True)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Villages Shapefiles
                 message = 'Checking Villages Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                source_shp = self.newprojectdlg.Input_village.text()
-                check_shp(source_shp, 'villages')
-                copy_file(source_shp, True)
+                shp_vil = self.newprojectdlg.Input_village.text()
+                check_shp(shp_vil, 'villages')
+                copy_file(shp_vil, boundary_directory, True)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 '''
@@ -765,53 +789,135 @@ class Otoklim:
                 message = 'Checking Bathymetry Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                source_raster = self.newprojectdlg.Input_bathymetry.text()
-                check_raster(source_raster)
-                copy_file(source_raster, False)
+                raster_bat = self.newprojectdlg.Input_bathymetry.text()
+                check_raster(raster_bat)
+                copy_file(raster_bat, boundary_directory, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Rainpost CSV File
                 message = 'Checking Rainpost Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                source_csv = self.newprojectdlg.Input_rainpost.text()
+                csv_rainpost = self.newprojectdlg.Input_rainpost.text()
                 delimiter = self.newprojectdlg.csv_delimiter.text()
-                check_csv(source_csv, delimiter, 'rainpost')
-                copy_file(source_raster, False)
+                check_csv(csv_rainpost, delimiter, 'rainpost')
+                copy_file(csv_rainpost, input_directory, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Logo File
                 message = 'Checking Logo Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                source_raster = self.newprojectdlg.Input_logo.text()
-                copy_file(source_raster, False)
+                logo = self.newprojectdlg.Input_logo.text()
+                copy_file(logo, input_directory, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Rainfall Classification File
                 message = 'Checking Rainfall Classification Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                source_csv = self.newprojectdlg.Input_rainfall_class.text()
-                check_csv(source_csv, delimiter, 'class')
-                copy_file(source_raster, False)
+                csv_rainfall = self.newprojectdlg.Input_rainfall_class.text()
+                check_csv(csv_rainfall, delimiter, 'class')
+                copy_file(csv_rainfall, input_directory, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Normal Rain Classification File
                 message = 'Checking Normal Rain Classification Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                source_csv = self.newprojectdlg.Input_normalrain_class.text()
-                check_csv(source_csv, delimiter, 'class')
-                copy_file(source_raster, False)
+                csv_normalrain = self.newprojectdlg.Input_normalrain_class.text()
+                check_csv(csv_normalrain, delimiter, 'class')
+                copy_file(csv_normalrain, input_directory, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Map Template File
                 message = 'Checking QGIS Map Template Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                source_raster = self.newprojectdlg.Input_map_template.text()
-                copy_file(source_raster, False)
+                map_template = self.newprojectdlg.Input_map_template.text()
+                copy_file(map_template, input_directory, False)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Create Project JSON File
+                message = 'Create Project File..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                project_meta = {
+                    "PRJ_NAME": project_file_name,
+                    "LOCATION": {
+                        "PRJ_FILE_LOC": project_directory,
+                        "BDR_FILE_LOC": boundary_directory,
+                        "IN_FILE_LOC": input_directory,
+                        "OUT_FILE_LOC": output_directory,
+                        "MAP_FILE_LOC": map_directory,
+                        "CSV_FILE_LOC": csv_directory,
+                        "PRC_FILE_LOC": processing_directory,
+                    },
+                    "FILE": {
+                        "PRJ_FILE": {
+                            "NAME": project_file_name + '.otoklim',
+                            "LOCATION": "PRJ_FILE_LOC",
+                            "FORMAT": "OTOKLIM",
+                        },
+                        "PROV_FILE": {
+                            "NAME": os.path.basename(shp_prov),
+                            "LOCATION": "BDR_FILE_LOC",
+                            "FORMAT": "SHP",
+                        },
+                        "CITY_DIST_FILE": {
+                            "NAME": os.path.basename(shp_dis),
+                            "LOCATION": "BDR_FILE_LOC",
+                            "FORMAT": "SHP"
+                        },
+                        "SUB_DIST_FILE": {
+                            "NAME": os.path.basename(shp_subdis),
+                            "LOCATION": "BDR_FILE_LOC",
+                            "FORMAT": "SHP"
+                        },
+                        "VILLAGE_FILE": {
+                            "NAME": os.path.basename(shp_vil),
+                            "LOCATION": "BDR_FILE_LOC",
+                            "FORMAT": "SHP"
+                        },
+                        "BAYTH_FILE": {
+                            "NAME": os.path.basename(raster_bat),
+                            "LOCATION": "BDR_FILE_LOC",
+                            "FORMAT": "TIF",
+                        },
+                        "RAINPOST_FILE": {
+                            "NAME": os.path.basename(csv_rainpost),
+                            "LOCATION": "IN_FILE_LOC",
+                            "FORMAT": "CSV",
+                        },
+                        "LOGO_FILE": {
+                            "NAME": os.path.basename(logo),
+                            "LOCATION": "IN_FILE_LOC",
+                            "FORMAT": "CSV",
+                        },
+                        "RAINFALL_FILE": {
+                            "NAME": os.path.basename(csv_rainfall),
+                            "LOCATION": "IN_FILE_LOC",
+                            "FORMAT": "CSV",
+                        },
+                        "NORMALRAIN_FILE": {
+                            "NAME": os.path.basename(csv_normalrain),
+                            "LOCATION": "IN_FILE_LOC",
+                            "FORMAT": "CSV",
+                        },
+                        "MAP_TEMP": {
+                            "NAME": os.path.basename(map_template),
+                            "LOCATION": "IN_FILE_LOC",
+                            "FORMAT": "QPT",
+                        },
+                    }
+                }
+                otoklim_file = os.path.join(
+                    project_meta['LOCATION']['PRJ_FILE_LOC'],
+                    project_meta['FILE']['PRJ_FILE']['NAME']
+                )
+                # Write Project File (.otoklim)
+                with open(otoklim_file, 'w') as outfile:  
+                    json.dump(project_meta, outfile, indent=4)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
             except Exception as errormessage:
