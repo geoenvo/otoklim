@@ -154,6 +154,12 @@ class Otoklim:
         self.projectprogressdlg = ProjectProgressDialog()
         self.dirconfirmdlg = DirectoryConfirmDialog()
 
+        # Default Main Window
+        self.otoklimdlg.projectparamGroup.setEnabled(False)
+        self.otoklimdlg.projectparamGroup.hide()
+        self.otoklimdlg.otoklimprocessGroup.setEnabled(False)
+        self.otoklimdlg.otoklimprocessGroup.hide()
+
         # Add Menu Trigger Logic
         self.otoklimdlg.actionNew.triggered.connect(self.ask_project_name)
         self.otoklimdlg.actionOpen.triggered.connect(self.open_existing_project)
@@ -328,6 +334,67 @@ class Otoklim:
         else:
             self.askprojectdlg.ProjectName.clear()
 
+    def read_otoklim_file(self, json):
+        """Read JSON structure from .otoklim file"""
+        project_name = json['PRJ_NAME']
+        self.otoklimdlg.projectname.setText(project_name)
+        delimiter = json['FILE']['CSV_DELIMITER']
+        self.otoklimdlg.csvdelimiter.setText(delimiter)
+        project_directory = json['LOCATION']['PRJ_FILE_LOC']
+        self.otoklimdlg.projectworkspace.setText(project_directory)
+        shp_prov = os.path.join(
+            json['LOCATION'][json['FILE']['PROV_FILE']['LOCATION']],
+            json['FILE']['PROV_FILE']['NAME']
+        )
+        self.otoklimdlg.province.setText(shp_prov)
+        shp_dis = os.path.join(
+            json['LOCATION'][json['FILE']['CITY_DIST_FILE']['LOCATION']],
+            json['FILE']['CITY_DIST_FILE']['NAME']
+        )
+        self.otoklimdlg.districts.setText(shp_dis)
+        shp_subdis = os.path.join(
+            json['LOCATION'][json['FILE']['SUB_DIST_FILE']['LOCATION']],
+            json['FILE']['SUB_DIST_FILE']['NAME']
+        )
+        self.otoklimdlg.subdistricts.setText(shp_subdis)
+        shp_vil = os.path.join(
+            json['LOCATION'][json['FILE']['VILLAGE_FILE']['LOCATION']],
+            json['FILE']['VILLAGE_FILE']['NAME']
+        )
+        self.otoklimdlg.villages.setText(shp_vil)
+        raster_bat = os.path.join(
+            json['LOCATION'][json['FILE']['BAYTH_FILE']['LOCATION']],
+            json['FILE']['BAYTH_FILE']['NAME']
+        )
+        self.otoklimdlg.bathymetry.setText(raster_bat)
+        csv_rainpost = os.path.join(
+            json['LOCATION'][json['FILE']['RAINPOST_FILE']['LOCATION']],
+            json['FILE']['RAINPOST_FILE']['NAME']
+        )
+        self.otoklimdlg.rainpostfile.setText(csv_rainpost)
+        logo = os.path.join(
+            json['LOCATION'][json['FILE']['LOGO_FILE']['LOCATION']],
+            json['FILE']['LOGO_FILE']['NAME']
+        )
+        self.otoklimdlg.logofile.setText(logo)
+        csv_rainfall = os.path.join(
+            json['LOCATION'][json['FILE']['RAINFALL_FILE']['LOCATION']],
+            json['FILE']['RAINFALL_FILE']['NAME']
+        )
+        self.otoklimdlg.rainfallsfile.setText(csv_rainfall)
+        csv_normalrain = os.path.join(
+            json['LOCATION'][json['FILE']['NORMALRAIN_FILE']['LOCATION']],
+            json['FILE']['NORMALRAIN_FILE']['NAME']
+        )
+        self.otoklimdlg.normalrainfile.setText(csv_normalrain)
+        map_template = os.path.join(
+            json['LOCATION'][json['FILE']['MAP_TEMP']['LOCATION']],
+            json['FILE']['MAP_TEMP']['NAME']
+        )
+        self.otoklimdlg.maptemplate.setText(map_template)
+        self.otoklimdlg.projectparamGroup.setEnabled(True)
+        self.otoklimdlg.projectparamGroup.show()
+
     def open_existing_project(self):
         """Open existing project """
         open_project = QFileDialog.getOpenFileName(
@@ -336,6 +403,11 @@ class Otoklim:
             "",
             "*.otoklim"
         )
+
+        if open_project:
+            with open(open_project) as jsonfile:
+                otoklim_project = json.load(jsonfile)
+            self.read_otoklim_file(otoklim_project)
 
     # Project Parameter Input Function
     def select_input_prj_folder(self):
@@ -582,8 +654,8 @@ class Otoklim:
                         error_field = 'color'
                 if error_field:
                     errormessage = error_field + ' field not exists on file header'
-                    raise Exception(errormessage)           
-                    item = QListWidgetItem(errormessage)          
+                    raise Exception(errormessage)
+                    item = QListWidgetItem(errormessage)
                     self.projectprogressdlg.ProgressList.addItem(item)
             # Check csv value type
             with open(file, 'rb') as csvfile:
@@ -597,24 +669,24 @@ class Otoklim:
                         except:
                             error_message = ': post_id [' + row['post_id'] + '] value must be integer'
                             errormessage = 'error at line: ' + str(line) + error_message
-                            raise Exception(errormessage)           
-                            item = QListWidgetItem(errormessage)          
+                            raise Exception(errormessage)
+                            item = QListWidgetItem(errormessage)
                             self.projectprogressdlg.ProgressList.addItem(item)
                         try:
                             float(row['lat'])
                         except:
                             error_message = ': lat [' + row['lat'] + '] value must be float'
                             errormessage = 'error at line: ' + str(line) + error_message
-                            raise Exception(errormessage)           
-                            item = QListWidgetItem(errormessage)          
+                            raise Exception(errormessage) 
+                            item = QListWidgetItem(errormessage)
                             self.projectprogressdlg.ProgressList.addItem(item)
                         try:
                             float(row['lon'])
                         except:
                             error_message = ': lon [' + row['lon'] + '] value must be float'
                             errormessage = 'error at line: ' + str(line) + error_message
-                            raise Exception(errormessage)           
-                            item = QListWidgetItem(errormessage)          
+                            raise Exception(errormessage)
+                            item = QListWidgetItem(errormessage)
                             self.projectprogressdlg.ProgressList.addItem(item)
                     else:
                         try:
@@ -625,8 +697,8 @@ class Otoklim:
                             else:
                                 error_message = ': lower_limit [' + row['lower_limit'] + '] value must be integer'
                                 errormessage = 'error at line: ' + str(line) + error_message
-                                raise Exception(errormessage)           
-                                item = QListWidgetItem(errormessage)          
+                                raise Exception(errormessage)
+                                item = QListWidgetItem(errormessage)
                                 self.projectprogressdlg.ProgressList.addItem(item)
                         try:
                             float(row['upper_limit'])
@@ -636,23 +708,23 @@ class Otoklim:
                             else:
                                 error_message = ': upper_limit [' + row['upper_limit'] + '] value must be integer'
                                 errormessage = 'error at line: ' + str(line) + error_message
-                                raise Exception(errormessage)           
-                                item = QListWidgetItem(errormessage)          
+                                raise Exception(errormessage)
+                                item = QListWidgetItem(errormessage)
                                 self.projectprogressdlg.ProgressList.addItem(item)
                         try:
                             float(row['new_value'])
                         except:
                             error_message = ': new_value [' + row['new_value'] + '] value must be integer'
                             errormessage = 'error at line: ' + str(line) + error_message
-                            raise Exception(errormessage)           
-                            item = QListWidgetItem(errormessage)          
+                            raise Exception(errormessage)
+                            item = QListWidgetItem(errormessage)
                             self.projectprogressdlg.ProgressList.addItem(item)
                         # Special case for hex color
                         if len(row['color']) != 7 or row['color'][0] != '#':
                             error_message = ': color [' + row['color'] + '] value must be color hex format'
                             errormessage = 'error at line: ' + str(line) + error_message
-                            raise Exception(errormessage)           
-                            item = QListWidgetItem(errormessage)          
+                            raise Exception(errormessage)
+                            item = QListWidgetItem(errormessage)
                             self.projectprogressdlg.ProgressList.addItem(item)
 
 
@@ -661,8 +733,8 @@ class Otoklim:
             """Copy file function"""
             if not os.path.exists(sourcefile):
                 errormessage = 'File is not exist in the path specified: ' + sourcefile
-                raise Exception(errormessage)           
-                item = QListWidgetItem(errormessage)          
+                raise Exception(errormessage)
+                item = QListWidgetItem(errormessage)
                 self.projectprogressdlg.ProgressList.addItem(item)
             if shp:
                 rmv_ext = os.path.splitext(sourcefile)[0]
@@ -675,13 +747,13 @@ class Otoklim:
                         extlist.append(ext)
                 if '.dbf' not in extlist:
                     errormessage = '.dbf file not found in shapefile strcuture: ' + sourcefile
-                    raise Exception(errormessage)           
-                    item = QListWidgetItem(errormessage)          
+                    raise Exception(errormessage)
+                    item = QListWidgetItem(errormessage)
                     self.projectprogressdlg.ProgressList.addItem(item)
                 if '.shx' not in extlist:
                     errormessage = '.shx file not found in shapefile strcuture: ' + sourcefile
-                    raise Exception(errormessage)           
-                    item = QListWidgetItem(errormessage)          
+                    raise Exception(errormessage)
+                    item = QListWidgetItem(errormessage)
                     self.projectprogressdlg.ProgressList.addItem(item)
                 for infile in os.listdir(dir_name):
                     if os.path.splitext(infile)[0] == shp_name:
@@ -698,6 +770,8 @@ class Otoklim:
         if result:
             self.projectprogressdlg.ProgressList.clear()
             self.projectprogressdlg.show()
+            finished = False
+            delimiter = self.newprojectdlg.csv_delimiter.text()
             try:
                 # Create Project Directory
                 message = 'Create Project Folder..'
@@ -711,8 +785,8 @@ class Otoklim:
                         os.mkdir(project_directory)
                     else:
                         errormessage = 'project directory has to be changed'
-                        raise Exception(errormessage)           
-                        item = QListWidgetItem(errormessage)          
+                        raise Exception(errormessage)
+                        item = QListWidgetItem(errormessage)
                         self.projectprogressdlg.ProgressList.addItem(item)
                 else:
                     os.mkdir(project_directory)
@@ -724,7 +798,7 @@ class Otoklim:
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Processing Folder
                 processing_directory = os.path.join(project_directory, 'processing')
-                os.mkdir(processing_directory)  
+                os.mkdir(processing_directory)
                 # Boundary Folder
                 boundary_directory = os.path.join(project_directory, 'boundary')
                 os.mkdir(boundary_directory)
@@ -799,7 +873,6 @@ class Otoklim:
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
                 csv_rainpost = self.newprojectdlg.Input_rainpost.text()
-                delimiter = self.newprojectdlg.csv_delimiter.text()
                 check_csv(csv_rainpost, delimiter, 'rainpost')
                 copy_file(csv_rainpost, input_directory, False)
                 item.setText(message + ' Done')
@@ -842,8 +915,9 @@ class Otoklim:
                 message = 'Create Project File..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
+                project_name = self.newprojectdlg.Input_prj_name.text()
                 project_meta = {
-                    "PRJ_NAME": project_file_name,
+                    "PRJ_NAME": project_name,
                     "LOCATION": {
                         "PRJ_FILE_LOC": project_directory,
                         "BDR_FILE_LOC": boundary_directory,
@@ -854,6 +928,7 @@ class Otoklim:
                         "PRC_FILE_LOC": processing_directory,
                     },
                     "FILE": {
+                        "CSV_DELIMITER": delimiter,
                         "PRJ_FILE": {
                             "NAME": project_file_name + '.otoklim',
                             "LOCATION": "PRJ_FILE_LOC",
@@ -892,7 +967,7 @@ class Otoklim:
                         "LOGO_FILE": {
                             "NAME": os.path.basename(logo),
                             "LOCATION": "IN_FILE_LOC",
-                            "FORMAT": "CSV",
+                            "FORMAT": "PNG/JPG",
                         },
                         "RAINFALL_FILE": {
                             "NAME": os.path.basename(csv_rainfall),
@@ -916,19 +991,26 @@ class Otoklim:
                     project_meta['FILE']['PRJ_FILE']['NAME']
                 )
                 # Write Project File (.otoklim)
-                with open(otoklim_file, 'w') as outfile:  
+                with open(otoklim_file, 'w') as outfile:
                     json.dump(project_meta, outfile, indent=4)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
+                finished = True
             except Exception as errormessage:
                 item.setText(message + ' Error')
-                self.projectprogressdlg.ProgressList.addItem(item)         
-                item = QListWidgetItem(str(errormessage))          
+                self.projectprogressdlg.ProgressList.addItem(item)
+                item = QListWidgetItem(str(errormessage))
                 self.projectprogressdlg.ProgressList.addItem(item)
                 print errormessage
             # Clear if progress dialog closed
             if not self.projectprogressdlg.exec_():
                 self.projectprogressdlg.ProgressList.clear()
+                # Open recent created project
+                if finished:
+                    self.newprojectdlg.close()
+                    with open(otoklim_file) as jsonfile:
+                        otoklim_project = json.load(jsonfile)
+                    self.read_otoklim_file(otoklim_project)
 
     def run(self):
         """Run method that performs all the real work"""
