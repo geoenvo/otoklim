@@ -646,10 +646,10 @@
    <widget class="QMenu" name="menuMenu">
     <property name="geometry">
      <rect>
-      <x>420</x>
-      <y>181</y>
+      <x>403</x>
+      <y>164</y>
       <width>135</width>
-      <height>147</height>
+      <height>169</height>
      </rect>
     </property>
     <property name="minimumSize">
@@ -664,6 +664,7 @@
     <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
+    <addaction name="actionSave_As"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -712,6 +713,11 @@
      <family>Calibri</family>
      <pointsize>10</pointsize>
     </font>
+   </property>
+  </action>
+  <action name="actionSave_As">
+   <property name="text">
+    <string>&amp;Save As...</string>
    </property>
   </action>
  </widget>

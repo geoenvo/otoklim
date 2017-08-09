@@ -555,223 +555,231 @@ class Otoklim:
                 enable_bool = False
         self.newprojectdlg.ProjectCreate.setEnabled(enable_bool)
 
+    def check_shp(self, file, type):
+        """Checking shapefile validation function"""
+        if not os.path.exists(file):
+            errormessage = 'File is not exist in the path specified: ' + file
+            raise Exception(errormessage)
+            item = QListWidgetItem(errormessage)
+            self.projectprogressdlg.ProgressList.addItem(item)
+        layer = QgsVectorLayer(file, str(type), 'ogr')
+        fields = layer.pendingFields()
+        # CRS must be WGS '84 (ESPG=4326)
+        if layer.crs().authid().split(':')[1] != '4326':
+            errormessage = 'Data Coordinate Reference System must be WGS 1984 (ESPG=4326)'
+            raise Exception(errormessage)
+            item = QListWidgetItem(errormessage)  
+            self.projectprogressdlg.ProgressList.addItem(item)
+        field_names = [field.name() for field in fields]
+        field_types = [field.typeName() for field in fields]
+        # Field checking
+        fieldlist = [
+            {'ADM_REGION': 'String'}, {'PROVINSI': 'String'}, {'ID_PROV': 'Real'},
+            {'KABUPATEN': 'String'}, {'ID_KAB': 'Real'}, {'KECAMATAN': 'String'},
+            {'ID_KEC': 'Real'}, {'DESA': 'String'}, {'ID_DES': 'Real'}
+        ]
+        if type == 'province':
+            checkfield = fieldlist[0:2]
+        elif type == 'districts':
+            checkfield = fieldlist[0:4]
+        elif type == 'subdistricts':
+            checkfield = fieldlist[0:6]
+        else:
+            checkfield = fieldlist
+        for field in checkfield:
+            if field.keys()[0] not in field_names:
+                errormessage = field.keys()[0] + ' field is not exists on data attribute'
+                raise Exception(errormessage)
+                item = QListWidgetItem(errormessage)
+                self.projectprogressdlg.ProgressList.addItem(item)
+            else:
+                idx = field_names.index(field.keys()[0])
+                if field_types[idx] != field.values()[0]:
+                    errormessage = field.keys()[0] + ' field type must be ' + field.values()[0] + ' value'
+                    raise Exception(errormessage)     
+                    item = QListWidgetItem(errormessage)
+                    self.projectprogressdlg.ProgressList.addItem(item)
+
+    def check_raster(self, file):
+        """Checking raster validation function"""
+        # CRS must be WGS '84 (ESPG=4326)
+        read_raster = gdal.Open(file, GA_ReadOnly)
+        prj = read_raster.GetProjection()
+        srs=osr.SpatialReference(wkt=prj)
+        if srs.IsProjected:
+            espg = srs.GetAttrValue('AUTHORITY', 1)
+        if espg != '4326':
+            errormessage = 'Data Coordinate Reference System must be WGS 1984 (ESPG=4326)'
+            raise Exception(errormessage)           
+            item = QListWidgetItem(errormessage)          
+            self.projectprogressdlg.ProgressList.addItem(item)
+
+    def check_csv(self, file, delimiter, type):
+        """Checking csv validation function"""
+        # Check csv file header
+        with open(file, 'rb') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter=str(delimiter), quotechar='|')
+            header = spamreader.next()
+            error_field = None
+            if type == 'rainpost':
+                if 'post_id' not in header:
+                    error_field = 'post_id'
+                elif 'city_dist' not in header:
+                    error_field = 'city_dist'
+                elif 'name' not in header:
+                    error_field = 'name'
+                elif 'lat' not in header:
+                    error_field = 'lat'
+                elif 'lon' not in header:
+                    error_field = 'lon'
+            else:
+                if 'lower_limit' not in header:
+                    error_field = 'lower_limit'
+                elif 'upper_limit' not in header:
+                    error_field = 'upper_limit'
+                elif 'new_value' not in header:
+                    error_field = 'new_value'
+                elif 'color' not in header:
+                    error_field = 'color'
+            if error_field:
+                errormessage = error_field + ' field not exists on file header'
+                raise Exception(errormessage)
+                item = QListWidgetItem(errormessage)
+                self.projectprogressdlg.ProgressList.addItem(item)
+        # Check csv value type
+        with open(file, 'rb') as csvfile:
+            spamreader = csv.DictReader(csvfile, delimiter=str(delimiter), quotechar='|')
+            line = 1
+            for row in spamreader:
+                line += 1
+                if type == 'rainpost':
+                    try:
+                        int(row['post_id'])
+                    except:
+                        error_message = ': post_id [' + row['post_id'] + '] value must be integer'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)
+                        item = QListWidgetItem(errormessage)
+                        self.projectprogressdlg.ProgressList.addItem(item)
+                    try:
+                        float(row['lat'])
+                    except:
+                        error_message = ': lat [' + row['lat'] + '] value must be float'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)
+                        item = QListWidgetItem(errormessage)
+                        self.projectprogressdlg.ProgressList.addItem(item)
+                    try:
+                        float(row['lon'])
+                    except:
+                        error_message = ': lon [' + row['lon'] + '] value must be float'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)
+                        item = QListWidgetItem(errormessage)
+                        self.projectprogressdlg.ProgressList.addItem(item)
+                else:
+                    try:
+                        int(row['lower_limit'])
+                    except:
+                        if row['lower_limit'] == "*":
+                            pass
+                        else:
+                            error_message = ': lower_limit [' + row['lower_limit'] + '] value must be integer'
+                            errormessage = 'error at line: ' + str(line) + error_message
+                            raise Exception(errormessage)
+                            item = QListWidgetItem(errormessage)
+                            self.projectprogressdlg.ProgressList.addItem(item)
+                    try:
+                        float(row['upper_limit'])
+                    except:
+                        if row['upper_limit'] == "*":
+                            pass
+                        else:
+                            error_message = ': upper_limit [' + row['upper_limit'] + '] value must be integer'
+                            errormessage = 'error at line: ' + str(line) + error_message
+                            raise Exception(errormessage)
+                            item = QListWidgetItem(errormessage)
+                            self.projectprogressdlg.ProgressList.addItem(item)
+                    try:
+                        float(row['new_value'])
+                    except:
+                        error_message = ': new_value [' + row['new_value'] + '] value must be integer'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)
+                        item = QListWidgetItem(errormessage)
+                        self.projectprogressdlg.ProgressList.addItem(item)
+                    # Special case for hex color
+                    if len(row['color']) != 7 or row['color'][0] != '#':
+                        error_message = ': color [' + row['color'] + '] value must be color hex format'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)
+                        item = QListWidgetItem(errormessage)
+                        self.projectprogressdlg.ProgressList.addItem(item)
+
+    def copy_file(self, sourcefile, targetdir, shp):
+        """Copy file function"""
+        if not os.path.exists(sourcefile):
+            errormessage = 'File is not exist in the path specified: ' + sourcefile
+            raise Exception(errormessage)
+            item = QListWidgetItem(errormessage)
+            self.projectprogressdlg.ProgressList.addItem(item)
+        if shp:
+            rmv_ext = os.path.splitext(sourcefile)[0]
+            shp_name = os.path.split(rmv_ext)[-1]
+            dir_name = os.path.dirname(rmv_ext)
+            extlist = []
+            for infile in os.listdir(dir_name):
+                if os.path.splitext(infile)[0] == shp_name:
+                    ext = os.path.splitext(infile)[1]
+                    extlist.append(ext)
+            if '.dbf' not in extlist:
+                errormessage = '.dbf file not found in shapefile strcuture: ' + sourcefile
+                raise Exception(errormessage)
+                item = QListWidgetItem(errormessage)
+                self.projectprogressdlg.ProgressList.addItem(item)
+            if '.shx' not in extlist:
+                errormessage = '.shx file not found in shapefile strcuture: ' + sourcefile
+                raise Exception(errormessage)
+                item = QListWidgetItem(errormessage)
+                self.projectprogressdlg.ProgressList.addItem(item)
+            for infile in os.listdir(dir_name):
+                if os.path.splitext(infile)[0] == shp_name:
+                    ext = os.path.splitext(infile)[1]
+                    extlist.append(ext)
+                    source_file = os.path.join(dir_name, infile)
+                    target_file = os.path.join(targetdir, shp_name + ext)
+                    shutil.copyfile(source_file, target_file)
+        else:
+            filename = os.path.basename(sourcefile)
+            source_file = sourcefile
+            target_file = os.path.join(targetdir, filename)
+            shutil.copyfile(source_file, target_file)
+
     def select_project_create(self):
         """Create Project"""
+        # Initialize Project Parameter
         project_folder = self.newprojectdlg.Input_prj_folder.text()
         project_file_name = self.newprojectdlg.Input_prj_file_name.text()
         project_directory = os.path.join(project_folder, project_file_name)
+        delimiter = self.newprojectdlg.csv_delimiter.text()
+        shp_prov = self.newprojectdlg.Input_province.text()
+        shp_dis = self.newprojectdlg.Input_districts.text()
+        shp_subdis = self.newprojectdlg.Input_subdistricts.text()
+        shp_vil = self.newprojectdlg.Input_village.text()
+        raster_bat = self.newprojectdlg.Input_bathymetry.text()
+        csv_rainpost = self.newprojectdlg.Input_rainpost.text()
+        logo = self.newprojectdlg.Input_logo.text()
+        csv_rainfall = self.newprojectdlg.Input_rainfall_class.text()
+        csv_normalrain = self.newprojectdlg.Input_normalrain_class.text()
+        map_template = self.newprojectdlg.Input_map_template.text()
+        project_name = self.newprojectdlg.Input_prj_name.text()
         self.createprojectdlg.show()
         self.createprojectdlg.project_dir.setText(str(project_directory))
         result = self.createprojectdlg.exec_()
-        # Checking shapefile function
-        def check_shp(file, type):
-            """Checking shapefile validation function"""
-            if not os.path.exists(file):
-                errormessage = 'File is not exist in the path specified: ' + file
-                raise Exception(errormessage)
-                item = QListWidgetItem(errormessage)
-                self.projectprogressdlg.ProgressList.addItem(item)
-            layer = QgsVectorLayer(file, str(type), 'ogr')
-            fields = layer.pendingFields()
-            # CRS must be WGS '84 (ESPG=4326)
-            if layer.crs().authid().split(':')[1] != '4326':
-                errormessage = 'Data Coordinate Reference System must be WGS 1984 (ESPG=4326)'
-                raise Exception(errormessage)           
-                item = QListWidgetItem(errormessage)          
-                self.projectprogressdlg.ProgressList.addItem(item)
-            field_names = [field.name() for field in fields]
-            field_types = [field.typeName() for field in fields]
-            # Field checking
-            fieldlist = [
-                {'ADM_REGION': 'String'}, {'PROVINSI': 'String'}, {'ID_PROV': 'Real'}, 
-                {'KABUPATEN': 'String'}, {'ID_KAB': 'Real'}, {'KECAMATAN': 'String'}, 
-                {'ID_KEC': 'Real'}, {'DESA': 'String'}, {'ID_DES': 'Real'}
-            ]
-            if type == 'province':
-                checkfield = fieldlist[0:2]
-            elif type == 'districts':
-                checkfield = fieldlist[0:4]
-            elif type == 'subdistricts':
-                checkfield = fieldlist[0:6]
-            else:
-                checkfield = fieldlist
-            for field in checkfield:
-                if field.keys()[0] not in field_names:
-                    errormessage = field.keys()[0] + ' field is not exists on data attribute'
-                    raise Exception(errormessage)           
-                    item = QListWidgetItem(errormessage)          
-                    self.projectprogressdlg.ProgressList.addItem(item)
-                else:
-                    idx = field_names.index(field.keys()[0])
-                    if field_types[idx] != field.values()[0]:
-                        errormessage = field.keys()[0] + ' field type must be ' + field.values()[0] + ' value'
-                        raise Exception(errormessage)           
-                        item = QListWidgetItem(errormessage)          
-                        self.projectprogressdlg.ProgressList.addItem(item)
-
-        # Checking raster file function
-        def check_raster(file):
-            """Checking raster validation function"""
-            # CRS must be WGS '84 (ESPG=4326)
-            read_raster = gdal.Open(file, GA_ReadOnly)
-            prj = read_raster.GetProjection()
-            srs=osr.SpatialReference(wkt=prj)
-            if srs.IsProjected:
-                espg = srs.GetAttrValue('AUTHORITY', 1)
-            if espg != '4326':
-                errormessage = 'Data Coordinate Reference System must be WGS 1984 (ESPG=4326)'
-                raise Exception(errormessage)           
-                item = QListWidgetItem(errormessage)          
-                self.projectprogressdlg.ProgressList.addItem(item)
-        
-        # Checking csv function
-        def check_csv(file, delimiter, type):
-            """Checking csv validation function"""
-            # Check csv file header
-            with open(file, 'rb') as csvfile:
-                spamreader = csv.reader(csvfile, delimiter=str(delimiter), quotechar='|')
-                header = spamreader.next()
-                error_field = None
-                if type == 'rainpost':
-                    if 'post_id' not in header:
-                        error_field = 'post_id'
-                    elif 'city_dist' not in header:
-                        error_field = 'city_dist'
-                    elif 'name' not in header:
-                        error_field = 'name'
-                    elif 'lat' not in header:
-                        error_field = 'lat'
-                    elif 'lon' not in header:
-                        error_field = 'lon'
-                else:
-                    if 'lower_limit' not in header:
-                        error_field = 'lower_limit'
-                    elif 'upper_limit' not in header:
-                        error_field = 'upper_limit'
-                    elif 'new_value' not in header:
-                        error_field = 'new_value'
-                    elif 'color' not in header:
-                        error_field = 'color'
-                if error_field:
-                    errormessage = error_field + ' field not exists on file header'
-                    raise Exception(errormessage)
-                    item = QListWidgetItem(errormessage)
-                    self.projectprogressdlg.ProgressList.addItem(item)
-            # Check csv value type
-            with open(file, 'rb') as csvfile:
-                spamreader = csv.DictReader(csvfile, delimiter=str(delimiter), quotechar='|')
-                line = 1
-                for row in spamreader:
-                    line += 1
-                    if type == 'rainpost':
-                        try:
-                            int(row['post_id'])
-                        except:
-                            error_message = ': post_id [' + row['post_id'] + '] value must be integer'
-                            errormessage = 'error at line: ' + str(line) + error_message
-                            raise Exception(errormessage)
-                            item = QListWidgetItem(errormessage)
-                            self.projectprogressdlg.ProgressList.addItem(item)
-                        try:
-                            float(row['lat'])
-                        except:
-                            error_message = ': lat [' + row['lat'] + '] value must be float'
-                            errormessage = 'error at line: ' + str(line) + error_message
-                            raise Exception(errormessage) 
-                            item = QListWidgetItem(errormessage)
-                            self.projectprogressdlg.ProgressList.addItem(item)
-                        try:
-                            float(row['lon'])
-                        except:
-                            error_message = ': lon [' + row['lon'] + '] value must be float'
-                            errormessage = 'error at line: ' + str(line) + error_message
-                            raise Exception(errormessage)
-                            item = QListWidgetItem(errormessage)
-                            self.projectprogressdlg.ProgressList.addItem(item)
-                    else:
-                        try:
-                            int(row['lower_limit'])
-                        except:
-                            if row['lower_limit'] == "*":
-                                pass
-                            else:
-                                error_message = ': lower_limit [' + row['lower_limit'] + '] value must be integer'
-                                errormessage = 'error at line: ' + str(line) + error_message
-                                raise Exception(errormessage)
-                                item = QListWidgetItem(errormessage)
-                                self.projectprogressdlg.ProgressList.addItem(item)
-                        try:
-                            float(row['upper_limit'])
-                        except:
-                            if row['upper_limit'] == "*":
-                                pass
-                            else:
-                                error_message = ': upper_limit [' + row['upper_limit'] + '] value must be integer'
-                                errormessage = 'error at line: ' + str(line) + error_message
-                                raise Exception(errormessage)
-                                item = QListWidgetItem(errormessage)
-                                self.projectprogressdlg.ProgressList.addItem(item)
-                        try:
-                            float(row['new_value'])
-                        except:
-                            error_message = ': new_value [' + row['new_value'] + '] value must be integer'
-                            errormessage = 'error at line: ' + str(line) + error_message
-                            raise Exception(errormessage)
-                            item = QListWidgetItem(errormessage)
-                            self.projectprogressdlg.ProgressList.addItem(item)
-                        # Special case for hex color
-                        if len(row['color']) != 7 or row['color'][0] != '#':
-                            error_message = ': color [' + row['color'] + '] value must be color hex format'
-                            errormessage = 'error at line: ' + str(line) + error_message
-                            raise Exception(errormessage)
-                            item = QListWidgetItem(errormessage)
-                            self.projectprogressdlg.ProgressList.addItem(item)
-
-
-        # Copy file function
-        def copy_file(sourcefile, targetdir, shp):
-            """Copy file function"""
-            if not os.path.exists(sourcefile):
-                errormessage = 'File is not exist in the path specified: ' + sourcefile
-                raise Exception(errormessage)
-                item = QListWidgetItem(errormessage)
-                self.projectprogressdlg.ProgressList.addItem(item)
-            if shp:
-                rmv_ext = os.path.splitext(sourcefile)[0]
-                shp_name = os.path.split(rmv_ext)[-1]
-                dir_name = os.path.dirname(rmv_ext)
-                extlist = []
-                for infile in os.listdir(dir_name):
-                    if os.path.splitext(infile)[0] == shp_name:
-                        ext = os.path.splitext(infile)[1]
-                        extlist.append(ext)
-                if '.dbf' not in extlist:
-                    errormessage = '.dbf file not found in shapefile strcuture: ' + sourcefile
-                    raise Exception(errormessage)
-                    item = QListWidgetItem(errormessage)
-                    self.projectprogressdlg.ProgressList.addItem(item)
-                if '.shx' not in extlist:
-                    errormessage = '.shx file not found in shapefile strcuture: ' + sourcefile
-                    raise Exception(errormessage)
-                    item = QListWidgetItem(errormessage)
-                    self.projectprogressdlg.ProgressList.addItem(item)
-                for infile in os.listdir(dir_name):
-                    if os.path.splitext(infile)[0] == shp_name:
-                        ext = os.path.splitext(infile)[1]
-                        extlist.append(ext)
-                        source_file = os.path.join(dir_name, infile)
-                        target_file = os.path.join(targetdir, shp_name + ext)
-                        shutil.copyfile(source_file, target_file)
-            else:
-                filename = os.path.basename(sourcefile)
-                source_file = sourcefile
-                target_file = os.path.join(targetdir, filename)
-                shutil.copyfile(source_file, target_file)
         if result:
             self.projectprogressdlg.ProgressList.clear()
             self.projectprogressdlg.show()
             finished = False
-            delimiter = self.newprojectdlg.csv_delimiter.text()
             try:
                 # Create Project Directory
                 message = 'Create Project Folder..'
@@ -817,105 +825,84 @@ class Otoklim:
                 message = 'Checking Province Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                shp_prov = self.newprojectdlg.Input_province.text()
-                check_shp(shp_prov, 'province')
-                copy_file(shp_prov, boundary_directory, True)
+                self.check_shp(shp_prov, 'province')
+                self.copy_file(shp_prov, boundary_directory, True)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Cities\Districts Shapefiles
                 message = 'Checking Cities/Districts Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                shp_dis = self.newprojectdlg.Input_districts.text()
-                check_shp(shp_dis, 'districts')
-                copy_file(shp_dis, boundary_directory, True)
+                self.check_shp(shp_dis, 'districts')
+                self.copy_file(shp_dis, boundary_directory, True)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Sub-Districts Shapefiles
                 message = 'Checking Sub-Districts Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                shp_subdis = self.newprojectdlg.Input_subdistricts.text()
-                check_shp(shp_subdis, 'subdistricts')
-                copy_file(shp_subdis, boundary_directory, True)
+                self.check_shp(shp_subdis, 'subdistricts')
+                self.copy_file(shp_subdis, boundary_directory, True)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Villages Shapefiles
                 message = 'Checking Villages Files..'
                 item = QListWidgetItem(message)
-                self.projectprogressdlg.ProgressList.addItem(item)
-                shp_vil = self.newprojectdlg.Input_village.text()
-                check_shp(shp_vil, 'villages')
-                copy_file(shp_vil, boundary_directory, True)
+                self.projectprogressdlg.ProgressList.addItem(item)       
+                self.check_shp(shp_vil, 'villages')
+                self.copy_file(shp_vil, boundary_directory, True)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
-                '''
-                # Copy Islands Shapefiles
-                message = 'Checking Islands Files..'
-                item = QListWidgetItem(message)
-                self.projectprogressdlg.ProgressList.addItem(item)
-                source_shp = self.newprojectdlg.Input_islands.text()
-                copy_file(source_shp, True)
-                item.setText(message + ' Done')
-                self.projectprogressdlg.ProgressList.addItem(item)
-                '''
                 # Copy Bathymetry Raster File
                 message = 'Checking Bathymetry Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                raster_bat = self.newprojectdlg.Input_bathymetry.text()
-                check_raster(raster_bat)
-                copy_file(raster_bat, boundary_directory, False)
+                self.check_raster(raster_bat)
+                self.copy_file(raster_bat, boundary_directory, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Rainpost CSV File
                 message = 'Checking Rainpost Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                csv_rainpost = self.newprojectdlg.Input_rainpost.text()
-                check_csv(csv_rainpost, delimiter, 'rainpost')
-                copy_file(csv_rainpost, input_directory, False)
+                self.check_csv(csv_rainpost, delimiter, 'rainpost')
+                self.copy_file(csv_rainpost, input_directory, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Logo File
                 message = 'Checking Logo Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                logo = self.newprojectdlg.Input_logo.text()
-                copy_file(logo, input_directory, False)
+                self.copy_file(logo, input_directory, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Rainfall Classification File
                 message = 'Checking Rainfall Classification Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                csv_rainfall = self.newprojectdlg.Input_rainfall_class.text()
-                check_csv(csv_rainfall, delimiter, 'class')
-                copy_file(csv_rainfall, input_directory, False)
+                self.check_csv(csv_rainfall, delimiter, 'class')
+                self.copy_file(csv_rainfall, input_directory, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Normal Rain Classification File
                 message = 'Checking Normal Rain Classification Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                csv_normalrain = self.newprojectdlg.Input_normalrain_class.text()
-                check_csv(csv_normalrain, delimiter, 'class')
-                copy_file(csv_normalrain, input_directory, False)
+                self.check_csv(csv_normalrain, delimiter, 'class')
+                self.copy_file(csv_normalrain, input_directory, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Map Template File
                 message = 'Checking QGIS Map Template Files..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                map_template = self.newprojectdlg.Input_map_template.text()
-                copy_file(map_template, input_directory, False)
+                self.copy_file(map_template, input_directory, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Create Project JSON File
                 message = 'Create Project File..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
-                project_name = self.newprojectdlg.Input_prj_name.text()
                 project_meta = {
                     "PRJ_NAME": project_name,
                     "LOCATION": {
