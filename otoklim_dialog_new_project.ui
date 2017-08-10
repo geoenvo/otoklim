@@ -108,7 +108,7 @@
             </font>
            </property>
            <property name="maxLength">
-            <number>62767</number>
+            <number>20</number>
            </property>
            <property name="dragEnabled">
             <bool>true</bool>
@@ -144,7 +144,7 @@
             </font>
            </property>
            <property name="maxLength">
-            <number>62767</number>
+            <number>1</number>
            </property>
            <property name="dragEnabled">
             <bool>true</bool>
@@ -180,7 +180,7 @@
             </font>
            </property>
            <property name="maxLength">
-            <number>62767</number>
+            <number>20</number>
            </property>
            <property name="dragEnabled">
             <bool>true</bool>

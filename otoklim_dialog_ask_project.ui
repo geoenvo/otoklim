@@ -72,6 +72,9 @@
        <pointsize>12</pointsize>
       </font>
      </property>
+     <property name="maxLength">
+      <number>20</number>
+     </property>
     </widget>
    </item>
   </layout>

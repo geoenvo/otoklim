@@ -43,6 +43,15 @@ PROJECT_PROGRESS, _ = uic.loadUiType(os.path.join(
 DIR_CONFIRM, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'otoklim_dialog_directory_confirm.ui'))
 
+SAVE_AS_PRO, _ = uic.loadUiType(os.path.join(
+    os.path.dirname(__file__), 'otoklim_dialog_save_as_project.ui'))
+
+EDIT_CSV, _ = uic.loadUiType(os.path.join(
+    os.path.dirname(__file__), 'otoklim_dialog_edit_delimiter.ui'))
+
+ERROR_MSG, _ = uic.loadUiType(os.path.join(
+    os.path.dirname(__file__), 'otoklim_dialog_error_message.ui'))
+
 
 class OtoklimDialog(QtGui.QMainWindow, BASE):
     def __init__(self, parent=None):
@@ -78,4 +87,22 @@ class DirectoryConfirmDialog(QtGui.QDialog, DIR_CONFIRM):
     def __init__(self, parent=None):
         """Constructor."""
         super(DirectoryConfirmDialog, self).__init__(parent)
+        self.setupUi(self)
+
+class SaveAsProjectDialog(QtGui.QDialog, SAVE_AS_PRO):
+    def __init__(self, parent=None):
+        """Constructor."""
+        super(SaveAsProjectDialog, self).__init__(parent)
+        self.setupUi(self)
+
+class EditDelimiterDialog(QtGui.QDialog, EDIT_CSV):
+    def __init__(self, parent=None):
+        """Constructor."""
+        super(EditDelimiterDialog, self).__init__(parent)
+        self.setupUi(self)
+
+class ErrorMessageDialog(QtGui.QDialog, ERROR_MSG):
+    def __init__(self, parent=None):
+        """Constructor."""
+        super(ErrorMessageDialog, self).__init__(parent)
         self.setupUi(self)
