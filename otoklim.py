@@ -20,7 +20,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
+from PyQt4.QtCore import Qt, QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem, QCloseEvent, QColor
 # Initialize Qt resources from file resources.py
 import resources
@@ -34,9 +34,18 @@ from otoklim_dialog import (
     DirectoryConfirmDialog,
     SaveAsProjectDialog,
     EditDelimiterDialog,
-    ErrorMessageDialog
+    ErrorMessageDialog,
+    SaveConfrimDialog,
+    ReplaceConfrimDialog
 )
-from qgis.core import QgsVectorLayer, QgsRasterLayer, QgsMapLayerRegistry
+from qgis.core import (
+    QgsVectorLayer,
+    QgsRasterLayer,
+    QgsMapLayerRegistry,
+    QgsFeatureRequest,
+    QgsExpression,
+    QgsVectorFileWriter
+)
 from osgeo import gdal, ogr, osr
 from gdalconst import GA_ReadOnly
 import os.path
@@ -45,6 +54,8 @@ import shutil
 import csv
 import json
 import subprocess
+import datetime
+import processing
 
 
 class Otoklim:
@@ -160,6 +171,8 @@ class Otoklim:
         self.saveasprodlg = SaveAsProjectDialog()
         self.editdelimiterdlg = EditDelimiterDialog()
         self.errormessagedlg = ErrorMessageDialog()
+        self.saveconfirmdlg = SaveConfrimDialog()
+        self.replaceconfirmdlg = ReplaceConfrimDialog() 
 
         # Default Main Window
         self.otoklimdlg.actionSave_As.setEnabled(False)
@@ -167,6 +180,22 @@ class Otoklim:
         self.otoklimdlg.projectparamPanel.hide()
         self.otoklimdlg.projectparamPanelAccord.setEnabled(False)
         self.otoklimdlg.projectparamPanelAccord.hide()
+        self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+        self.otoklimdlg.idwinterpolationPanel.hide()
+        self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
+        self.otoklimdlg.idwinterpolationPanelAccord.hide()
+        self.otoklimdlg.classificationPanel.setEnabled(False)
+        self.otoklimdlg.classificationPanel.hide()
+        self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+        self.otoklimdlg.classificationPanelAccord.hide()
+        self.otoklimdlg.generatemapPanel.setEnabled(False)
+        self.otoklimdlg.generatemapPanel.hide()
+        self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+        self.otoklimdlg.generatemapPanelAccord.hide()
+        self.otoklimdlg.generatecsvPanel.setEnabled(False)
+        self.otoklimdlg.generatecsvPanel.hide()
+        self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
+        self.otoklimdlg.generatecsvPanelAccord.hide()
 
         # Add Menu Trigger Logic
         self.otoklimdlg.actionNew.triggered.connect(self.ask_project_name)
@@ -177,6 +206,10 @@ class Otoklim:
 
         # Add Panel Accordion Button Logic
         self.otoklimdlg.projectparamPanelAccord.clicked.connect(self.project_param_accord)
+        self.otoklimdlg.idwinterpolationPanelAccord.clicked.connect(self.idw_interpolation_accord)
+        self.otoklimdlg.classificationPanelAccord.clicked.connect(self.classification_accord)
+        self.otoklimdlg.generatemapPanelAccord.clicked.connect(self.generate_map_accord)
+        self.otoklimdlg.generatecsvPanelAccord.clicked.connect(self.generate_csv_accord)
 
         # Add New Project Input Trigger Logic
         self.newprojectdlg.csv_delimiter.textChanged.connect(
@@ -330,10 +363,80 @@ class Otoklim:
         self.otoklimdlg.View_normalrain_class.clicked.connect(
             self.view_normalrain_class
         )
+        self.otoklimdlg.View_Value_CSV.clicked.connect(
+            self.view_value_csv
+        )
 
         # Add Save As Project Workspace Trigger Logic
         self.saveasprodlg.Browse_prj_folder.clicked.connect(
             self.select_input_prj_folder_saveas
+        )
+
+        # Add Input Value IDW Trigger Logic
+        self.otoklimdlg.Browse_Value_CSV.clicked.connect(
+            self.select_input_value_csv
+        )
+        self.otoklimdlg.Input_Value_CSV.clear()
+        self.otoklimdlg.Input_Value_CSV.textChanged.connect(
+            self.enable_test_parameter_button
+        )
+        self.otoklimdlg.Input_Value_CSV.textChanged.connect(
+            self.input_value_csv_edited
+        )
+
+        # Add Year Enable Logic
+        self.otoklimdlg.Select_Year.textChanged.connect(
+            self.enable_test_parameter_button
+        )
+        self.otoklimdlg.Select_Year.textChanged.connect(
+            self.year_now_edited
+        )
+
+        # Add Province and Month Edited Trigger
+        self.otoklimdlg.Select_Province.currentIndexChanged.connect(
+            self.province_edited
+        )
+        self.otoklimdlg.Select_Month.currentIndexChanged.connect(
+            self.month_edited
+        )
+
+        # Add Select All Chcekbox
+        self.otoklimdlg.check_all.stateChanged.connect(
+            self.select_all_type
+        )
+
+        # Add Interpolate Trigger Logic
+        self.otoklimdlg.testParameter.clicked.connect(
+            self.pra_interpolate
+        )
+        self.otoklimdlg.interpolateButton.clicked.connect(
+            self.interpolate_idw
+        )
+
+        # Add Raster Interpolated Logic
+        self.otoklimdlg.addach_1.clicked.connect(
+            self.add_ach_1
+        )
+        self.otoklimdlg.addash_1.clicked.connect(
+            self.add_ash_1
+        )
+        self.otoklimdlg.addpch_1.clicked.connect(
+            self.add_pch_1
+        )
+        self.otoklimdlg.addpsh_1.clicked.connect(
+            self.add_psh_1
+        )
+        self.otoklimdlg.addpch_2.clicked.connect(
+            self.add_pch_2
+        )
+        self.otoklimdlg.addpsh_2.clicked.connect(
+            self.add_psh_2
+        )
+        self.otoklimdlg.addpch_3.clicked.connect(
+            self.add_pch_3
+        )
+        self.otoklimdlg.addpsh_3.clicked.connect(
+            self.add_psh_3
         )
 
         icon = QIcon(icon_path)
@@ -406,6 +509,7 @@ class Otoklim:
             self.otoklimdlg.maptemplate.setStyleSheet('color: black')
             project_name = self.askprojectdlg.ProjectName.text()
             self.askprojectdlg.ProjectName.clear()
+            self.otoklimdlg.hide()
             self.newprojectdlg.Input_prj_name.setText(project_name)
             self.newprojectdlg.show()
             # clear input line if window closed
@@ -443,6 +547,13 @@ class Otoklim:
             json['FILE']['PROV_FILE']['NAME']
         )
         self.otoklimdlg.province.setText(shp_prov)
+        # Special case for province
+        self.otoklimdlg.Select_Province.clear()
+        layer = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
+        provinsi_list = []
+        for field in layer.getFeatures():
+            provinsi_list.append(field['PROVINSI'])
+        self.otoklimdlg.Select_Province.addItems(provinsi_list)
         shp_dis = os.path.join(
             json['LOCATION'][json['FILE']['CITY_DIST_FILE']['LOCATION']],
             json['FILE']['CITY_DIST_FILE']['NAME']
@@ -488,10 +599,112 @@ class Otoklim:
             json['FILE']['MAP_TEMP']['NAME']
         )
         self.otoklimdlg.maptemplate.setText(map_template)
+        try:
+            value_csv = os.path.join(
+                json['LOCATION'][json['PROCESSING']['IDW_INTERPOLATION']['INPUT_VALUE_FILE']['LOCATION']],
+                json['PROCESSING']['IDW_INTERPOLATION']['INPUT_VALUE_FILE']['NAME']
+            )
+        except:
+            value_csv = ""
+        self.otoklimdlg.Input_Value_CSV.setText(value_csv)
+        province_id = json['PROCESSING']['IDW_INTERPOLATION']['ID_PROV']
+        layer = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
+        for value in layer.getFeatures():
+            if str(value['ID_PROV']) == province_id:
+                index = self.otoklimdlg.Select_Province.findText(str(value['PROVINSI']), Qt.MatchFixedString)
+                self.otoklimdlg.Select_Province.setCurrentIndex(index)
+        month = json['PROCESSING']['IDW_INTERPOLATION']['THIS_MONTH']
+        index = self.otoklimdlg.Select_Month.findText(str(month), Qt.MatchFixedString)
+        self.otoklimdlg.Select_Month.setCurrentIndex(index)
+        year = json['PROCESSING']['IDW_INTERPOLATION']['THIS_YEAR']
+        self.otoklimdlg.Select_Year.setText(year)
+        idw_interpolate_prc = json['PROCESSING']['IDW_INTERPOLATION']['PROCESSED']
+        if idw_interpolate_prc:
+            self.otoklimdlg.groupBox_3.setEnabled(True)
+            self.otoklimdlg.interpolateButton.setEnabled(True)
+            ach_1 = json['PROCESSING']['IDW_INTERPOLATION']['RASTER_ACH_1']["NAME"]
+            if ach_1:
+                self.otoklimdlg.ach_1.setEnabled(True)
+                self.otoklimdlg.ach_1.setChecked(True)
+                self.otoklimdlg.addach_1.setEnabled(True)
+                self.otoklimdlg.addach_1.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['IDW_INTERPOLATION']['RASTER_ACH_1']['LOCATION']], ach_1)
+                )
+            ash_1 = json['PROCESSING']['IDW_INTERPOLATION']['RASTER_ASH_1']["NAME"]
+            if ash_1:
+                self.otoklimdlg.ash_1.setEnabled(True)
+                self.otoklimdlg.ash_1.setChecked(True)
+                self.otoklimdlg.addash_1.setEnabled(True)
+                self.otoklimdlg.addash_1.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['IDW_INTERPOLATION']['RASTER_ASH_1']['LOCATION']], ash_1)
+                )
+            pch_1 = json['PROCESSING']['IDW_INTERPOLATION']['RASTER_PCH_1']["NAME"]
+            if pch_1:
+                self.otoklimdlg.pch_1.setEnabled(True)
+                self.otoklimdlg.pch_1.setChecked(True)
+                self.otoklimdlg.addpch_1.setEnabled(True)
+                self.otoklimdlg.addpch_1.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['IDW_INTERPOLATION']['RASTER_PCH_1']['LOCATION']], pch_1)
+                )
+            psh_1 = json['PROCESSING']['IDW_INTERPOLATION']['RASTER_PSH_1']["NAME"]
+            if psh_1:
+                self.otoklimdlg.psh_1.setEnabled(True)
+                self.otoklimdlg.psh_1.setChecked(True)
+                self.otoklimdlg.addpsh_1.setEnabled(True)
+                self.otoklimdlg.addpsh_1.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['IDW_INTERPOLATION']['RASTER_PSH_1']['LOCATION']], psh_1)
+                )
+            pch_2 = json['PROCESSING']['IDW_INTERPOLATION']['RASTER_PCH_2']["NAME"]
+            if pch_2:
+                self.otoklimdlg.pch_2.setEnabled(True)
+                self.otoklimdlg.pch_2.setChecked(True)
+                self.otoklimdlg.addpch_2.setEnabled(True)
+                self.otoklimdlg.addpch_2.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['IDW_INTERPOLATION']['RASTER_PCH_2']['LOCATION']], pch_2)
+                )
+            psh_2 = json['PROCESSING']['IDW_INTERPOLATION']['RASTER_PSH_2']["NAME"]
+            if psh_2:
+                self.otoklimdlg.psh_2.setEnabled(True)
+                self.otoklimdlg.psh_2.setChecked(True)
+                self.otoklimdlg.addpsh_2.setEnabled(True)
+                self.otoklimdlg.addpsh_2.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['IDW_INTERPOLATION']['RASTER_PSH_2']['LOCATION']], psh_2)
+                )
+            pch_3 = json['PROCESSING']['IDW_INTERPOLATION']['RASTER_PCH_3']["NAME"]
+            if pch_3:
+                self.otoklimdlg.pch_3.setEnabled(True)
+                self.otoklimdlg.pch_3.setChecked(True)
+                self.otoklimdlg.addpch_3.setEnabled(True)
+                self.otoklimdlg.addpch_3.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['IDW_INTERPOLATION']['RASTER_PCH_3']['LOCATION']], pch_3)
+                )
+            psh_3 = json['PROCESSING']['IDW_INTERPOLATION']['RASTER_PSH_3']["NAME"]
+            if psh_3:
+                self.otoklimdlg.psh_3.setEnabled(True)
+                self.otoklimdlg.psh_3.setChecked(True)
+                self.otoklimdlg.addpsh_3.setEnabled(True)
+                self.otoklimdlg.addpsh_3.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['IDW_INTERPOLATION']['RASTER_PSH_3']['LOCATION']], psh_3)
+                )
+
+        self.otoklimdlg.Input_Value_CSV.setWhatsThis('')
+        self.otoklimdlg.Select_Province.setWhatsThis('')
+        self.otoklimdlg.Select_Month.setWhatsThis('')
+        self.otoklimdlg.Select_Year.setWhatsThis('')
+
         self.otoklimdlg.projectparamPanel.setEnabled(True)
         self.otoklimdlg.projectparamPanel.show()
         self.otoklimdlg.projectparamPanelAccord.setEnabled(True)
         self.otoklimdlg.projectparamPanelAccord.show()
+
+        self.otoklimdlg.idwinterpolationPanel.setEnabled(True)
+        self.otoklimdlg.idwinterpolationPanel.show()
+        self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(True)
+        self.otoklimdlg.idwinterpolationPanelAccord.show()
+
+        self.otoklimdlg.classificationPanelAccord.show()
+        self.otoklimdlg.generatemapPanelAccord.show()
+        self.otoklimdlg.generatecsvPanelAccord.show()
         self.otoklimdlg.actionSave_As.setEnabled(True)
 
     def open_existing_project(self):
@@ -524,6 +737,10 @@ class Otoklim:
             self.otoklimdlg.normalrainfile.setStyleSheet('color: black')
             self.otoklimdlg.maptemplate.setWhatsThis('')
             self.otoklimdlg.maptemplate.setStyleSheet('color: black')
+            self.otoklimdlg.Input_Value_CSV.setWhatsThis('')
+            self.otoklimdlg.Select_Province.setWhatsThis('')
+            self.otoklimdlg.Select_Month.setWhatsThis('')
+            self.otoklimdlg.Select_Year.setWhatsThis('')
             with open(open_project) as jsonfile:
                 otoklim_project = json.load(jsonfile)
             self.read_otoklim_file(otoklim_project)
@@ -646,6 +863,9 @@ class Otoklim:
             self.otoklimdlg.csvdelimiter.setText(csv_delimiter)
             self.otoklimdlg.csvdelimiter.setWhatsThis('edited')
             self.otoklimdlg.csvdelimiter.setStyleSheet('color: red')
+            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+            self.otoklimdlg.idwinterpolationPanel.hide()
+            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
 
     def edit_province(self):
         """Edit Province Vector File """
@@ -659,6 +879,9 @@ class Otoklim:
             self.otoklimdlg.province.setText(province_file)
             self.otoklimdlg.province.setWhatsThis('edited')
             self.otoklimdlg.province.setStyleSheet('color: red')
+            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+            self.otoklimdlg.idwinterpolationPanel.hide()
+            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
 
     def edit_districts(self):
         """Edit Cities / Distircts Vector File """
@@ -672,6 +895,9 @@ class Otoklim:
             self.otoklimdlg.districts.setText(districts_file)
             self.otoklimdlg.districts.setWhatsThis('edited')
             self.otoklimdlg.districts.setStyleSheet('color: red')
+            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+            self.otoklimdlg.idwinterpolationPanel.hide()
+            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
 
     def edit_subdistricts(self):
         """Edit Sub-Districts Vector File """
@@ -685,6 +911,9 @@ class Otoklim:
             self.otoklimdlg.subdistricts.setText(subdistricts_file)
             self.otoklimdlg.subdistricts.setWhatsThis('edited')
             self.otoklimdlg.subdistricts.setStyleSheet('color: red')
+            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+            self.otoklimdlg.idwinterpolationPanel.hide()
+            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
 
     def edit_village(self):
         """Edit Village Vector File """
@@ -698,6 +927,9 @@ class Otoklim:
             self.otoklimdlg.villages.setText(village_file)
             self.otoklimdlg.villages.setWhatsThis('edited')
             self.otoklimdlg.villages.setStyleSheet('color: red')
+            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+            self.otoklimdlg.idwinterpolationPanel.hide()
+            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
 
     def edit_bathymetry(self):
         """Edit Bathymetry Raster File """
@@ -711,6 +943,9 @@ class Otoklim:
             self.otoklimdlg.bathymetry.setText(bathymetry_file)
             self.otoklimdlg.bathymetry.setWhatsThis('edited')
             self.otoklimdlg.bathymetry.setStyleSheet('color: red')
+            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+            self.otoklimdlg.idwinterpolationPanel.hide()
+            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
 
     def edit_rainpost(self):
         """Edit Rainpost CSV File """
@@ -724,6 +959,9 @@ class Otoklim:
             self.otoklimdlg.rainpostfile.setText(rainpost_file)
             self.otoklimdlg.rainpostfile.setWhatsThis('edited')
             self.otoklimdlg.rainpostfile.setStyleSheet('color: red')
+            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+            self.otoklimdlg.idwinterpolationPanel.hide()
+            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
 
     def edit_logo(self):
         """Edit Logo PNG File """
@@ -737,6 +975,9 @@ class Otoklim:
             self.otoklimdlg.logofile.setText(logo_file)
             self.otoklimdlg.logofile.setWhatsThis('edited')
             self.otoklimdlg.logofile.setStyleSheet('color: red')
+            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+            self.otoklimdlg.idwinterpolationPanel.hide()
+            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
 
     def edit_rainfall_class(self):
         """Edit Rainfall Classification file"""
@@ -750,6 +991,9 @@ class Otoklim:
             self.otoklimdlg.rainfallfile.setText(rainfallclass_file)
             self.otoklimdlg.rainfallfile.setWhatsThis('edited')
             self.otoklimdlg.rainfallfile.setStyleSheet('color: red')
+            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+            self.otoklimdlg.idwinterpolationPanel.hide()
+            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
 
     def edit_normalrain_class(self):
         """Edit Normal Rain Classification file"""
@@ -763,6 +1007,9 @@ class Otoklim:
             self.otoklimdlg.normalrainfile.setText(normalrainclass_file)
             self.otoklimdlg.normalrainfile.setWhatsThis('edited')
             self.otoklimdlg.normalrainfile.setStyleSheet('color: red')
+            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+            self.otoklimdlg.idwinterpolationPanel.hide()
+            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
 
     def edit_map_template(self):
         """Edit QGIS Map Template file"""
@@ -776,6 +1023,9 @@ class Otoklim:
             self.otoklimdlg.maptemplate.setText(maptemplate_file)
             self.otoklimdlg.maptemplate.setWhatsThis('edited')
             self.otoklimdlg.maptemplate.setStyleSheet('color: red')
+            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+            self.otoklimdlg.idwinterpolationPanel.hide()
+            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
 
     # Workspace Show In Folder
     def show_folder(self):
@@ -818,7 +1068,6 @@ class Otoklim:
     def view_rainpost(self):
         """View Rainpost CSV"""
         rainpostfile = self.otoklimdlg.rainpostfile.text()
-        print rainpostfile
         os.system(rainpostfile)
 
     def view_rainfall_class(self):
@@ -831,6 +1080,60 @@ class Otoklim:
         normalrainfile = self.otoklimdlg.normalrainfile.text()
         os.system(normalrainfile)
 
+    def view_value_csv(self):
+        """View Input Value CSV"""
+        valuecsv = self.otoklimdlg.Input_Value_CSV.text()
+        os.system(valuecsv)
+
+    # Add Raster Interpolated To Canvas
+    def add_ach_1(self):
+        """Add ACH 1"""
+        raster = self.otoklimdlg.addach_1.whatsThis()
+        layer = QgsRasterLayer(raster, 'ach1')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    def add_ash_1(self):
+        """Add ASH 1"""
+        raster = self.otoklimdlg.addash_1.whatsThis()
+        layer = QgsRasterLayer(raster, 'ash1')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    def add_pch_1(self):
+        """Add PCH 1"""
+        raster = self.otoklimdlg.addpch_1.whatsThis()
+        layer = QgsRasterLayer(raster, 'pch1')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    def add_psh_1(self):
+        """Add PSH 1"""
+        raster = self.otoklimdlg.addpsh_1.whatsThis()
+        layer = QgsRasterLayer(raster, 'psh1')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    def add_pch_2(self):
+        """Add PCH 2"""
+        raster = self.otoklimdlg.addpch_2.whatsThis()
+        layer = QgsRasterLayer(raster, 'pch2')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    def add_psh_2(self):
+        """Add PSH 2"""
+        raster = self.otoklimdlg.addpsh_2.whatsThis()
+        layer = QgsRasterLayer(raster, 'psh2')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    def add_pch_3(self):
+        """Add PCH 3"""
+        raster = self.otoklimdlg.addpch_3.whatsThis()
+        layer = QgsRasterLayer(raster, 'pch3')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    def add_psh_3(self):
+        """Add PSH 3"""
+        raster = self.otoklimdlg.addpsh_3.whatsThis()
+        layer = QgsRasterLayer(raster, 'psh3')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
     # Browse Project Workspace from Save As New Mode
     def select_input_prj_folder_saveas(self):
         """Select Project Working Directory From Save As Mode """
@@ -839,6 +1142,18 @@ class Otoklim:
             ""
         )
         self.saveasprodlg.ProjectFolder.setText(project_folder)
+
+    # Browse Input Value CSV
+    def select_input_value_csv(self):
+        """Select Input Value in CSV Format and Validate it """
+        input_value = QFileDialog.getOpenFileName(
+            self.otoklimdlg,
+            "",
+            "",
+            "*.csv"
+        )
+        self.otoklimdlg.Input_Value_CSV.setText(input_value)
+        self.otoklimdlg.Input_Value_CSV.setWhatsThis('edited')
 
     def enable_create_button(self):
         """Function to enable Create Project button"""
@@ -864,6 +1179,126 @@ class Otoklim:
             if not inputline:
                 enable_bool = False
         self.newprojectdlg.ProjectCreate.setEnabled(enable_bool)
+
+    def enable_test_parameter_button(self):
+        """Funtion to enable Test Parameter Button"""
+        input_list = [
+            self.otoklimdlg.Input_Value_CSV.text(),
+            self.otoklimdlg.Select_Year.text()
+        ]
+        enable_bool = True
+        for inputline in input_list:
+            if not inputline:
+                enable_bool = False
+        self.otoklimdlg.testParameter.setEnabled(enable_bool)
+
+    def input_value_csv_edited(self):
+        """Function to set input value as edited"""
+        self.otoklimdlg.Input_Value_CSV.setWhatsThis('edited')
+        self.otoklimdlg.groupBox_3.setEnabled(False)
+        self.otoklimdlg.ach_1.setChecked(False)
+        self.otoklimdlg.ash_1.setChecked(False)
+        self.otoklimdlg.pch_1.setChecked(False)
+        self.otoklimdlg.psh_1.setChecked(False)
+        self.otoklimdlg.pch_2.setChecked(False)
+        self.otoklimdlg.psh_2.setChecked(False)
+        self.otoklimdlg.pch_3.setChecked(False)
+        self.otoklimdlg.psh_3.setChecked(False)
+        self.otoklimdlg.addach_1.setEnabled(False)
+        self.otoklimdlg.addash_1.setEnabled(False)
+        self.otoklimdlg.addpch_1.setEnabled(False)
+        self.otoklimdlg.addpsh_1.setEnabled(False)
+        self.otoklimdlg.addpch_2.setEnabled(False)
+        self.otoklimdlg.addpsh_2.setEnabled(False)
+        self.otoklimdlg.addpch_3.setEnabled(False)
+        self.otoklimdlg.addpsh_3.setEnabled(False)
+
+    def year_now_edited(self):
+        """Function to set year nor as edited"""
+        self.otoklimdlg.Select_Year.setWhatsThis('edited')
+        self.otoklimdlg.groupBox_3.setEnabled(False)
+        self.otoklimdlg.ach_1.setChecked(False)
+        self.otoklimdlg.ash_1.setChecked(False)
+        self.otoklimdlg.pch_1.setChecked(False)
+        self.otoklimdlg.psh_1.setChecked(False)
+        self.otoklimdlg.pch_2.setChecked(False)
+        self.otoklimdlg.psh_2.setChecked(False)
+        self.otoklimdlg.pch_3.setChecked(False)
+        self.otoklimdlg.psh_3.setChecked(False)
+        self.otoklimdlg.addach_1.setEnabled(False)
+        self.otoklimdlg.addash_1.setEnabled(False)
+        self.otoklimdlg.addpch_1.setEnabled(False)
+        self.otoklimdlg.addpsh_1.setEnabled(False)
+        self.otoklimdlg.addpch_2.setEnabled(False)
+        self.otoklimdlg.addpsh_2.setEnabled(False)
+        self.otoklimdlg.addpch_3.setEnabled(False)
+        self.otoklimdlg.addpsh_3.setEnabled(False)
+
+    def province_edited(self):
+        """Function to set province edited"""
+        self.otoklimdlg.Select_Province.setWhatsThis('edited')
+        self.otoklimdlg.groupBox_3.setEnabled(False)
+        self.otoklimdlg.testParameter.setEnabled(True)
+        self.otoklimdlg.ach_1.setChecked(False)
+        self.otoklimdlg.ash_1.setChecked(False)
+        self.otoklimdlg.pch_1.setChecked(False)
+        self.otoklimdlg.psh_1.setChecked(False)
+        self.otoklimdlg.pch_2.setChecked(False)
+        self.otoklimdlg.psh_2.setChecked(False)
+        self.otoklimdlg.pch_3.setChecked(False)
+        self.otoklimdlg.psh_3.setChecked(False)
+        self.otoklimdlg.addach_1.setEnabled(False)
+        self.otoklimdlg.addash_1.setEnabled(False)
+        self.otoklimdlg.addpch_1.setEnabled(False)
+        self.otoklimdlg.addpsh_1.setEnabled(False)
+        self.otoklimdlg.addpch_2.setEnabled(False)
+        self.otoklimdlg.addpsh_2.setEnabled(False)
+        self.otoklimdlg.addpch_3.setEnabled(False)
+        self.otoklimdlg.addpsh_3.setEnabled(False)
+
+
+    def month_edited(self):
+        """Function to set month edited"""
+        self.otoklimdlg.Select_Month.setWhatsThis('edited')
+        self.otoklimdlg.groupBox_3.setEnabled(False)
+        self.otoklimdlg.testParameter.setEnabled(True)
+        self.otoklimdlg.ach_1.setChecked(False)
+        self.otoklimdlg.ash_1.setChecked(False)
+        self.otoklimdlg.pch_1.setChecked(False)
+        self.otoklimdlg.psh_1.setChecked(False)
+        self.otoklimdlg.pch_2.setChecked(False)
+        self.otoklimdlg.psh_2.setChecked(False)
+        self.otoklimdlg.pch_3.setChecked(False)
+        self.otoklimdlg.psh_3.setChecked(False)
+        self.otoklimdlg.addach_1.setEnabled(False)
+        self.otoklimdlg.addash_1.setEnabled(False)
+        self.otoklimdlg.addpch_1.setEnabled(False)
+        self.otoklimdlg.addpsh_1.setEnabled(False)
+        self.otoklimdlg.addpch_2.setEnabled(False)
+        self.otoklimdlg.addpsh_2.setEnabled(False)
+        self.otoklimdlg.addpch_3.setEnabled(False)
+        self.otoklimdlg.addpsh_3.setEnabled(False)
+
+    def select_all_type(self):
+        """Select All Check Box Type"""
+        if self.otoklimdlg.check_all.isChecked():
+            self.otoklimdlg.ach_1.setChecked(True)
+            self.otoklimdlg.ash_1.setChecked(True)
+            self.otoklimdlg.pch_1.setChecked(True)
+            self.otoklimdlg.psh_1.setChecked(True)
+            self.otoklimdlg.pch_2.setChecked(True)
+            self.otoklimdlg.psh_2.setChecked(True)
+            self.otoklimdlg.pch_3.setChecked(True)
+            self.otoklimdlg.psh_3.setChecked(True)
+        else:
+            self.otoklimdlg.ach_1.setChecked(False)
+            self.otoklimdlg.ash_1.setChecked(False)
+            self.otoklimdlg.pch_1.setChecked(False)
+            self.otoklimdlg.psh_1.setChecked(False)
+            self.otoklimdlg.pch_2.setChecked(False)
+            self.otoklimdlg.psh_2.setChecked(False)
+            self.otoklimdlg.pch_3.setChecked(False)
+            self.otoklimdlg.psh_3.setChecked(False)
 
     def check_shp(self, file, type):
         """Checking shapefile validation function"""
@@ -942,7 +1377,7 @@ class Otoklim:
                     error_field = 'lat'
                 elif 'lon' not in header:
                     error_field = 'lon'
-            else:
+            elif type == 'class':
                 if 'lower_limit' not in header:
                     error_field = 'lower_limit'
                 elif 'upper_limit' not in header:
@@ -951,6 +1386,25 @@ class Otoklim:
                     error_field = 'new_value'
                 elif 'color' not in header:
                     error_field = 'color'
+            else:
+                if 'post_id' not in header:
+                    error_field = 'post_id'
+                elif 'ACH_1' not in header:
+                    error_field = 'ACH_1'
+                elif 'ASH_1' not in header:
+                    error_field = 'ASH_1'
+                elif 'PCH_1' not in header:
+                    error_field = 'PCH_1'
+                elif 'PSH_1' not in header:
+                    error_field = 'PSH_1'
+                elif 'PCH_2' not in header:
+                    error_field = 'PCH_2'
+                elif 'PSH_2' not in header:
+                    error_field = 'PSH_2'
+                elif 'PCH_3' not in header:
+                    error_field = 'PCH_3'
+                elif 'PSH_3' not in header:
+                    error_field = 'PSH_3'
             if error_field:
                 errormessage = error_field + ' field not exists on file header'
                 raise Exception(errormessage)
@@ -987,7 +1441,7 @@ class Otoklim:
                         raise Exception(errormessage)
                         item = QListWidgetItem(errormessage)
                         self.projectprogressdlg.ProgressList.addItem(item)
-                else:
+                elif type == 'class':
                     try:
                         int(row['lower_limit'])
                     except:
@@ -1025,6 +1479,62 @@ class Otoklim:
                         raise Exception(errormessage)
                         item = QListWidgetItem(errormessage)
                         self.projectprogressdlg.ProgressList.addItem(item)
+                else:
+                    try:
+                        int(row['post_id'])
+                    except:
+                        error_message = ': post_id [' + row['post_id'] + '] value must be integer'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)
+                    try:
+                        int(row['ACH_1'])
+                    except:
+                        error_message = ': ACH_1 [' + row['ACH_1'] + '] value must be integer'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)
+                    try:
+                        int(row['ASH_1'])
+                    except:
+                        error_message = ': ASH_1 [' + row['ASH_1'] + '] value must be integer'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)
+                    try:
+                        int(row['PCH_1'])
+                    except:
+                        error_message = ': PCH_1 [' + row['PCH_1'] + '] value must be integer'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)
+                    try:
+                        int(row['PSH_1'])
+                    except:
+                        error_message = ': PSH_1 [' + row['PSH_1'] + '] value must be integer'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)
+                    try:
+                        int(row['PCH_2'])
+                    except:
+                        error_message = ': PCH_2 [' + row['PCH_2'] + '] value must be integer'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)
+                    try:
+                        int(row['PSH_2'])
+                    except:
+                        error_message = ': PSH_2 [' + row['PSH_2'] + '] value must be integer'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)
+                    try:
+                        int(row['PCH_3'])
+                    except:
+                        error_message = ': PCH_3 [' + row['PCH_3'] + '] value must be integer'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)
+                    try:
+                        int(row['PSH_3'])
+                    except:
+                        error_message = ': PSH_3 [' + row['PSH_3'] + '] value must be integer'
+                        errormessage = 'error at line: ' + str(line) + error_message
+                        raise Exception(errormessage)
+
 
     def copy_file(self, sourcefile, targetdir, shp):
         """Copy file function"""
@@ -1063,7 +1573,10 @@ class Otoklim:
             filename = os.path.basename(sourcefile)
             source_file = sourcefile
             target_file = os.path.join(targetdir, filename)
-            shutil.copyfile(source_file, target_file)
+            if source_file != target_file:
+                shutil.copyfile(source_file, target_file)
+            else:
+                pass
 
     def project_param_accord(self, type):
         """Project Param Panel Accordion Clicked Show/Hide"""
@@ -1071,6 +1584,34 @@ class Otoklim:
             self.otoklimdlg.projectparamPanel.hide()
         else:
             self.otoklimdlg.projectparamPanel.show()
+
+    def idw_interpolation_accord(self, type):
+        """Project IDW Interpolation Accordion Clicked Show/Hide"""
+        if self.otoklimdlg.idwinterpolationPanel.isVisible():
+            self.otoklimdlg.idwinterpolationPanel.hide()
+        else:
+            self.otoklimdlg.idwinterpolationPanel.show()
+
+    def classification_accord(self, type):
+        """Project Classification Accordion Clicked Show/Hide"""
+        if self.otoklimdlg.classificationPanel.isVisible():
+            self.otoklimdlg.classificationPanel.hide()
+        else:
+            self.otoklimdlg.classificationPanel.show()
+
+    def generate_map_accord(self, type):
+        """Project Generate Map Accordion Clicked Show/Hide"""
+        if self.otoklimdlg.generatemapPanel.isVisible():
+            self.otoklimdlg.generatemapPanel.hide()
+        else:
+            self.otoklimdlg.generatemapPanel.show()
+
+    def generate_csv_accord(self, type):
+        """Project Generate CSV Accordion Clicked Show/Hide"""
+        if self.otoklimdlg.generatecsvPanel.isVisible():
+            self.otoklimdlg.generatecsvPanel.hide()
+        else:
+            self.otoklimdlg.generatecsvPanel.show()
 
     def save_change(self):
         """Save Edited Parameter"""
@@ -1125,7 +1666,6 @@ class Otoklim:
                 self.otoklimdlg.subdistricts.setWhatsThis('')
                 change = True
             if self.otoklimdlg.villages.whatsThis() == 'edited':
-                print self.otoklimdlg.villages.whatsThis()
                 self.check_shp(self.otoklimdlg.villages.text(), 'villages')
                 self.copy_file(self.otoklimdlg.villages.text(), boundary_directory, True)
                 with open(project, 'r') as jsonfile:
@@ -1199,6 +1739,63 @@ class Otoklim:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 self.otoklimdlg.maptemplate.setStyleSheet('color: black')
                 self.otoklimdlg.maptemplate.setWhatsThis('')
+                change = True
+            # Special case for Input Value CSV
+            if self.otoklimdlg.Input_Value_CSV.whatsThis() == 'edited':
+                self.check_csv(self.otoklimdlg.Input_Value_CSV.text(), self.otoklimdlg.csvdelimiter.text(), 'input_value')
+                with open(self.otoklimdlg.rainpostfile.text(), 'rb') as csvfile:
+                    spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                    rainpost_id = []
+                    for row in spamreader:
+                        rainpost_id.append(row['post_id'])
+                with open(self.otoklimdlg.Input_Value_CSV.text(), 'rb') as csvfile:
+                    spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                    for row in spamreader:
+                        if row['post_id'] not in rainpost_id:
+                            errormessage = 'post_id ' + row['post_id'] + ' does not exists on rainpost file' 
+                            raise Exception(errormessage)
+                self.copy_file(self.otoklimdlg.Input_Value_CSV.text(), input_directory, False)
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]['INPUT_VALUE_FILE']["NAME"] = os.path.basename(self.otoklimdlg.Input_Value_CSV.text())
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]['INPUT_VALUE_FILE']["LOCATION"] = "IN_FILE_LOC"
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                self.otoklimdlg.Input_Value_CSV.setWhatsThis('')
+                change = True
+            if self.otoklimdlg.Select_Province.whatsThis() == 'edited':
+                layer = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
+                province_id = None
+                for value in layer.getFeatures():
+                    if value['PROVINSI'] == self.otoklimdlg.Select_Province.currentText():
+                        province_id = value['ID_PROV']
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]['ID_PROV'] = str(province_id)
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                self.otoklimdlg.Select_Province.setWhatsThis('')
+                change = True
+            if self.otoklimdlg.Select_Month.whatsThis() == 'edited':
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]['THIS_MONTH'] = str(self.otoklimdlg.Select_Month.currentText())
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                self.otoklimdlg.Select_Month.setWhatsThis('')
+                change = True
+            if self.otoklimdlg.Select_Year.whatsThis() == 'edited':
+                try:
+                    int(self.otoklimdlg.Select_Year.text())
+                except:
+                    errormessage = 'year value must be four digit integer'
+                    raise Exception(errormessage)
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]['THIS_YEAR'] = str(self.otoklimdlg.Select_Year.text())
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                self.otoklimdlg.Select_Year.setWhatsThis('')
                 change = True
             if change:
                 self.read_otoklim_file(otoklim_project)
@@ -1409,6 +2006,32 @@ class Otoklim:
                 message = 'Create Project File..'
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
+                def month_name(index):
+                    if index == 1:
+                        monthname = 'Januari'
+                    elif index == 2:
+                        monthname = 'Februari'
+                    elif index == 3:
+                        monthname = 'Maret'
+                    elif index == 4:
+                        monthname = 'April'
+                    elif index == 5:
+                        monthname = 'Mei'
+                    elif index == 6:
+                        monthname = 'Juni'
+                    elif index == 7:
+                        monthname = 'Juli'
+                    elif index == 8:
+                        monthname = 'Agustus'
+                    elif index == 9:
+                        monthname = 'September'
+                    elif index == 10:
+                        monthname = 'Oktober'
+                    elif index == 11:
+                        monthname = 'November'
+                    else:
+                        monthname = 'Desember'
+                    return monthname
                 project_meta = {
                     "PRJ_NAME": project_name,
                     "LOCATION": {
@@ -1477,6 +2100,104 @@ class Otoklim:
                             "LOCATION": "IN_FILE_LOC",
                             "FORMAT": "QPT",
                         },
+                    },
+                    "PROCESSING": {
+                        "IDW_INTERPOLATION": {
+                            "PROCESSED": 0,
+                            "INPUT_VALUE_FILE": {
+                                "NAME": "",
+                                "LOCATION": "",
+                                "FORMAT": "CSV"
+                            },
+                            "ID_PROV": "",
+                            "THIS_MONTH": month_name(datetime.datetime.now().month),
+                            "THIS_YEAR": str(datetime.datetime.now().year),
+                            "RASTER_ACH_1": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_ASH_1": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PCH_1": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PSH_1": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PCH_2": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PSH_2": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PCH_3": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PSH_3": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            }
+                        },
+                        "CLASSIFICATION": {
+                            "PROCESSED": 0,
+                            "RASTER_ACH_1": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_ASH_1": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PCH_1": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PSH_1": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PCH_2": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PSH_2": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PCH_3": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PSH_3": {
+                                "NAME": "",
+                                "LOCATION": "PRC_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                        },
+                        "GENERATE_MAP": {},
+                        "GENERATE_CSV": {}
                     }
                 }
                 otoklim_file = os.path.join(
@@ -1504,6 +2225,386 @@ class Otoklim:
                     with open(otoklim_file) as jsonfile:
                         otoklim_project = json.load(jsonfile)
                     self.read_otoklim_file(otoklim_project)
+                    self.otoklimdlg.show()
+    
+    def check_all_edited_parameter(self):
+        """Make sure all param is not edited"""
+        all_param = [
+            self.otoklimdlg.province.whatsThis(),
+            self.otoklimdlg.districts.whatsThis(),
+            self.otoklimdlg.subdistricts.whatsThis(),
+            self.otoklimdlg.villages.whatsThis(),
+            self.otoklimdlg.bathymetry.whatsThis(),
+            self.otoklimdlg.rainpostfile.whatsThis(),
+            self.otoklimdlg.logofile.whatsThis(),
+            self.otoklimdlg.rainfallfile.whatsThis(),
+            self.otoklimdlg.normalrainfile.whatsThis(),
+            self.otoklimdlg.maptemplate.whatsThis(),
+            self.otoklimdlg.Input_Value_CSV.whatsThis(),
+            self.otoklimdlg.Select_Province.whatsThis(),
+            self.otoklimdlg.Select_Month.whatsThis(),
+            self.otoklimdlg.Select_Year.whatsThis()
+        ]
+        if 'edited' in all_param:
+            result = self.saveconfirmdlg.exec_()
+            if result:
+                self.save_change()
+                return True
+            else:
+                return False
+        else:
+            return True
+
+    def select_date_now(self):
+        mth = self.otoklimdlg.Select_Month.currentText()
+        if mth == 'Januari':
+            mth = 1
+        elif mth == 'Februari':
+            mth = 2
+        elif mth == 'Maret':
+            mth = 3
+        elif mth == 'April':
+            mth = 4
+        elif mth == 'Mei':
+            mth = 5
+        elif mth == 'Juni':
+            mth = 6
+        elif mth == 'Juli':
+            mth = 7
+        elif mth == 'Agustus':
+            mth = 8
+        elif mth == 'September':
+            mth = 9
+        elif mth == 'Oktober':
+            mth = 0
+        elif mth == 'November':
+            mth = 11
+        else:
+            mth = 12
+
+        month_dict = {
+            0: ['DES', 'DESEMBER'],
+            1: ['JAN', 'JANUARI'],
+            2: ['FEB', 'FEBRUARI'],
+            3: ['MAR', 'MARET'],
+            4: ['APR', 'APRIL'],
+            5: ['MEI', 'MEI'],
+            6: ['JUN', 'JUNI'],
+            7: ['JUL', 'JULI'],
+            8: ['AGT', 'AGUSTUS'],
+            9: ['SEP', 'SEPTEMBER'],
+            10: ['OKT', 'OKTOBER'],
+            11: ['NOV', 'NOVEMBER'],
+            12: ['DES', 'DESEMBER'],
+            13: ['JAN', 'JANUARI'],
+            14: ['FEB', 'FEBRUARI'],
+            15: ['MAR', 'MARET'],
+            16: ['APR', 'APRIL']
+        }
+        amth = month_dict[mth-1]
+        pmth_1 = month_dict[mth+1]
+        pmth_2 = month_dict[mth+2]
+        pmth_3 = month_dict[mth+3]
+        month_header = [amth, pmth_1, pmth_2, pmth_3]
+
+        yrs = int(self.otoklimdlg.Select_Year.text())
+        ayrs = yrs
+        pyrs_1 = pyrs_2 = pyrs_3 = yrs
+        if mth == 12:
+            pyrs_1 = yrs + 1
+            pyrs_2 = yrs + 1
+            pyrs_3 = yrs + 1
+        elif mth == 11:
+            pyrs_2 = yrs + 1
+            pyrs_3 = yrs + 1
+        elif mth == 10:
+            pyrs_3 = yrs + 1
+        elif mth == 1:
+            ayrs = yrs - 1
+        years_header = [ayrs, pyrs_1, pyrs_2, pyrs_3]
+        return month_header, years_header
+    
+    def interpolate_idw(self):
+        """Function To Run IDW Interpolation"""
+        prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
+        provinsi_polygon_file = os.path.join(prcs_directory, 'provinsi_polygon.shp')
+        filename_shp = os.path.join(prcs_directory, 'rainpost_point.shp')
+        temp = os.path.join(prcs_directory, 'tmp_' + '{:%Y%m%d_%H%M%S}'.format(datetime.datetime.now()))
+        os.mkdir(temp)
+        self.copy_file(filename_shp, temp, True)
+        filename_shp_tmp = os.path.join(temp, 'rainpost_point.shp')
+        layer = QgsVectorLayer(filename_shp_tmp, 'layer', 'ogr')
+        fields = layer.pendingFields()
+        field_names = [field.name() for field in fields]
+        idw_params = field_names[5:]
+        project = os.path.join(
+            self.otoklimdlg.projectworkspace.text(),
+            self.otoklimdlg.projectfilename.text()
+        )
+        try:
+            prc_list = []
+            if self.otoklimdlg.ach_1.isChecked():
+                prc_list.append(idw_params[0])
+                self.otoklimdlg.addach_1.setEnabled(True)
+                self.otoklimdlg.addach_1.setWhatsThis(
+                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[0]).lower() + '.tif')
+                )
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_ACH_1"]["NAME"] = 'interpolated_' + str(idw_params[0]).lower() + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+            if self.otoklimdlg.ash_1.isChecked():
+                prc_list.append(idw_params[1])
+                self.otoklimdlg.addash_1.setEnabled(True)
+                self.otoklimdlg.addash_1.setWhatsThis(
+                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[1]).lower() + '.tif')
+                )
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_ASH_1"]["NAME"] = 'interpolated_' + str(idw_params[1]).lower() + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+            if self.otoklimdlg.pch_1.isChecked():
+                prc_list.append(idw_params[2])
+                self.otoklimdlg.addpch_1.setEnabled(True)
+                self.otoklimdlg.addpch_1.setWhatsThis(
+                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[2]).lower() + '.tif')
+                )
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_1"]["NAME"] = 'interpolated_' + str(idw_params[2]).lower() + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+            if self.otoklimdlg.psh_1.isChecked():
+                prc_list.append(idw_params[3])
+                self.otoklimdlg.addpsh_1.setEnabled(True)
+                self.otoklimdlg.addpsh_1.setWhatsThis(
+                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[3]).lower() + '.tif')
+                )
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PSH_1"]["NAME"] = 'interpolated_' + str(idw_params[3]).lower() + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+            if self.otoklimdlg.pch_2.isChecked():
+                prc_list.append(idw_params[4])
+                self.otoklimdlg.addpch_2.setEnabled(True)
+                self.otoklimdlg.addpch_2.setWhatsThis(
+                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[4]).lower() + '.tif')
+                )
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_2"]["NAME"] = 'interpolated_' + str(idw_params[4]).lower() + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+            if self.otoklimdlg.psh_2.isChecked():
+                prc_list.append(idw_params[5])
+                self.otoklimdlg.addpsh_2.setEnabled(True)
+                self.otoklimdlg.addpsh_2.setWhatsThis(
+                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[5]).lower() + '.tif')
+                )
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PSH_2"]["NAME"] = 'interpolated_' + str(idw_params[5]).lower() + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+            if self.otoklimdlg.pch_3.isChecked():
+                prc_list.append(idw_params[6])
+                self.otoklimdlg.addpch_3.setEnabled(True)
+                self.otoklimdlg.addpch_3.setWhatsThis(
+                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[6]).lower() + '.tif')
+                )
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_3"]["NAME"] = 'interpolated_' + str(idw_params[6]).lower() + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+            if self.otoklimdlg.psh_3.isChecked():
+                prc_list.append(idw_params[7])
+                self.otoklimdlg.addpsh_3.setEnabled(True)
+                self.otoklimdlg.addpsh_3.setWhatsThis(
+                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[7]).lower() + '.tif')
+                )
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PSH_3"]["NAME"] = 'interpolated_' + str(idw_params[7]).lower() + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+
+            for param in prc_list:
+                raster_interpolated = os.path.join(temp, param + '_raster_idw.tif')
+                raster_cropped = os.path.join(prcs_directory, 'interpolated_' + str(param).lower() + '.tif')
+                if os.path.exists(raster_cropped):
+                    self.replaceconfirmdlg.var.setText(raster_cropped)
+                    result = self.replaceconfirmdlg.exec_()
+                    if result:
+                        os.remove(raster_cropped)
+                    else:
+                        raise Exception('Skip ' + raster_cropped)
+
+                extent = layer.extent()
+                processing.runalg(
+                    'grass7:v.surf.idw',
+                    layer, 8.0, 5.0, param, False,
+                    "%f,%f,%f,%f" % (extent.xMinimum()-1, extent.xMaximum()+1, extent.yMinimum()-1, extent.yMaximum()+1), 0.001, -1.0, 0.0001,
+                    raster_interpolated
+                )
+                processing.runalg(
+                    "gdalogr:cliprasterbymasklayer", 
+                    raster_interpolated,
+                    provinsi_polygon_file,
+                    -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", 
+                    raster_cropped
+                )
+            with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["PROCESSED"] = 1
+            with open(project, 'w') as jsonfile:
+                jsonfile.write(json.dumps(otoklim_project, indent=4))
+            self.otoklimdlg.testParameter.setEnabled(False)
+        except Exception as e:
+            self.errormessagedlg.ErrorMessage.setText(str(e))
+            self.errormessagedlg.exec_()
+
+    def pra_interpolate(self):
+        """Checking Before Interpolate IDW Function"""
+        confirm = self.check_all_edited_parameter()
+        if confirm:
+            driver = ogr.GetDriverByName("ESRI Shapefile")
+            file_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
+            filelist = [f for f in os.listdir(file_directory) if os.path.isfile(os.path.join(file_directory, f))]
+            for file in filelist:
+                os.remove(os.path.join(file_directory, file))
+            file_input = self.otoklimdlg.Input_Value_CSV.text()
+            rainpost_file = self.otoklimdlg.rainpostfile.text()
+            combine_file = os.path.join(file_directory, 'combine.csv')
+            delimiter = self.otoklimdlg.csvdelimiter.text()
+            date = self.select_date_now()
+            months = date[0]
+            years = date[1]
+            try:
+                # Combine CSV
+                dict_input = {}
+                dict_station = {}
+                with open(file_input, 'rb') as csvfile:
+                    spamreader = csv.reader(csvfile, delimiter=str(delimiter), quotechar='|')
+                    n = 0
+                    for row in spamreader:
+                        if n != 0:
+                            dict_input.update({int(row[0]): row[1:]})
+                        else:
+                            idw_params = row[1:]
+                            for month in months:
+                                idw_params[n] = idw_params[n].split('_')[0] + '_' + str(month[0])
+                                idw_params[n+1] = idw_params[n+1].split('_')[0] + '_' + str(month[0])
+                                n += 2
+                            header_input = idw_params
+                        n += 1
+                with open(rainpost_file, 'rb') as csvfile:
+                    spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+                    n = 0
+                    for row in spamreader:
+                        if n != 0:
+                            dict_station.update({int(row[0]): row})
+                        else:
+                            header_station = row
+                        n += 1
+                try:
+                    combine = {k: dict_station.get(k, []) + dict_input.get(k, []) for k in (dict_station.keys() | dict_input.keys())}
+                except:
+                    combine = {k: dict_station.get(k, []) + dict_input.get(k, []) for k in (dict_station.viewkeys() | dict_input.viewkeys())}
+                with open(combine_file, "wb+") as csvfile:
+                    csv_writer = csv.writer(csvfile, delimiter=str(delimiter))
+                    csv_writer.writerow(header_station + header_input)
+                    for row in combine.values():
+                        csv_writer.writerow(row)
+                
+                # CSV To Shapefile
+                csv_file = combine_file
+                filename_shp = os.path.join(file_directory, 'rainpost_point.shp')
+                filename_prj = os.path.join(file_directory, 'rainpost_point.prj')
+                data_source = driver.CreateDataSource(filename_shp)
+                srs = osr.SpatialReference()
+                srs.ImportFromEPSG(4326)
+                srs.MorphToESRI()
+                prj_file = open(filename_prj, 'w')
+                prj_file.write(srs.ExportToWkt())
+                prj_file.close()
+                filename_shp = filename_shp.encode('utf-8')
+                layer = data_source.CreateLayer(filename_shp, srs, ogr.wkbPoint)
+                with open(csv_file, 'rb') as csvfile:
+                    reader = csv.reader(csvfile)
+                    headers = reader.next()
+                    n = 0
+                    for h in headers:
+                        if n <= 2:
+                            layer.CreateField(ogr.FieldDefn(h, ogr.OFTString))
+                        else:
+                            layer.CreateField(ogr.FieldDefn(h, ogr.OFTReal))
+                        n += 1
+                with open(csv_file, 'rb') as csvfile:
+                    spamreader = csv.DictReader(csvfile, delimiter=str(delimiter), quotechar='|')
+                    for row in spamreader:
+                        point = ogr.Geometry(ogr.wkbPoint)
+                        feature = ogr.Feature(layer.GetLayerDefn())
+                        point.AddPoint(float(row['lon']), float(row['lat']))
+                        for h in headers:
+                            feature.SetField(h, row[h])
+                        feature.SetGeometry(point)
+                        layer.CreateFeature(feature)
+                
+                # Province Polygon Querry
+                provinsi_polygon = os.path.join(file_directory, 'provinsi_polygon.shp')
+                layer = QgsVectorLayer(self.otoklimdlg.province.text(), 'provinsi', 'ogr')
+                exp = "\"PROVINSI\"='{}'".format(self.otoklimdlg.Select_Province.currentText())
+                it = layer.getFeatures(QgsFeatureRequest(QgsExpression(exp)))
+                ids = [i.id() for i in it]
+                layer.setSelectedFeatures(ids)
+                QgsVectorFileWriter.writeAsVectorFormat(layer, provinsi_polygon, "utf-8", layer.crs(), "ESRI Shapefile", 1)
+                layer_poly = QgsVectorLayer(provinsi_polygon, "lyr", "ogr")
+                self.otoklimdlg.groupBox_3.setEnabled(True)
+                self.otoklimdlg.interpolateButton.setEnabled(True)
+                project = os.path.join(
+                    self.otoklimdlg.projectworkspace.text(),
+                    self.otoklimdlg.projectfilename.text()
+                )
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]['PROCESSED'] = 0
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_ACH_1"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_ASH_1"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_1"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PSH_1"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_2"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PSH_2"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_3"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PSH_3"]["NAME"] = ""
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                self.otoklimdlg.ach_1.setChecked(False)
+                self.otoklimdlg.ash_1.setChecked(False)
+                self.otoklimdlg.pch_1.setChecked(False)
+                self.otoklimdlg.psh_1.setChecked(False)
+                self.otoklimdlg.pch_2.setChecked(False)
+                self.otoklimdlg.psh_2.setChecked(False)
+                self.otoklimdlg.pch_3.setChecked(False)
+                self.otoklimdlg.psh_3.setChecked(False)
+                self.otoklimdlg.addach_1.setEnabled(False)
+                self.otoklimdlg.addash_1.setEnabled(False)
+                self.otoklimdlg.addpch_1.setEnabled(False)
+                self.otoklimdlg.addpsh_1.setEnabled(False)
+                self.otoklimdlg.addpch_2.setEnabled(False)
+                self.otoklimdlg.addpsh_2.setEnabled(False)
+                self.otoklimdlg.addpch_3.setEnabled(False)
+                self.otoklimdlg.addpsh_3.setEnabled(False)
+            except Exception as e:
+                print e
+                self.errormessagedlg.ErrorMessage.setText(str(e))
+                self.errormessagedlg.exec_()
+
+                
+
 
     def run(self):
         """Run method that performs all the real work"""

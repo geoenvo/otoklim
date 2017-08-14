@@ -52,6 +52,12 @@ EDIT_CSV, _ = uic.loadUiType(os.path.join(
 ERROR_MSG, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'otoklim_dialog_error_message.ui'))
 
+SAVE_CONFIRM, _ = uic.loadUiType(os.path.join(
+    os.path.dirname(__file__), 'otoklim_dialog_save_confirm.ui'))
+
+REPLACE_CONFIRM, _ = uic.loadUiType(os.path.join(
+    os.path.dirname(__file__), 'otoklim_dialog_replace_confirm.ui'))
+
 
 class OtoklimDialog(QtGui.QMainWindow, BASE):
     def __init__(self, parent=None):
@@ -105,4 +111,16 @@ class ErrorMessageDialog(QtGui.QDialog, ERROR_MSG):
     def __init__(self, parent=None):
         """Constructor."""
         super(ErrorMessageDialog, self).__init__(parent)
+        self.setupUi(self)
+
+class SaveConfrimDialog(QtGui.QDialog, SAVE_CONFIRM):
+    def __init__(self, parent=None):
+        """Constructor."""
+        super(SaveConfrimDialog, self).__init__(parent)
+        self.setupUi(self)
+
+class ReplaceConfrimDialog(QtGui.QDialog, REPLACE_CONFIRM):
+    def __init__(self, parent=None):
+        """Constructor."""
+        super(ReplaceConfrimDialog, self).__init__(parent)
         self.setupUi(self)
