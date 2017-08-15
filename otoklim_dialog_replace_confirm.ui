@@ -60,7 +60,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Raster Already Interpolated</string>
+      <string>Raster Already Processed</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -78,7 +78,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Do you want to replace  it?</string>
+      <string>Do you want to replace it?</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>

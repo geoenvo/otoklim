@@ -56,6 +56,7 @@ import json
 import subprocess
 import datetime
 import processing
+import csv
 
 
 class Otoklim:
@@ -184,7 +185,6 @@ class Otoklim:
         self.otoklimdlg.idwinterpolationPanel.hide()
         self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
         self.otoklimdlg.idwinterpolationPanelAccord.hide()
-        self.otoklimdlg.classificationPanel.setEnabled(False)
         self.otoklimdlg.classificationPanel.hide()
         self.otoklimdlg.classificationPanelAccord.setEnabled(False)
         self.otoklimdlg.classificationPanelAccord.hide()
@@ -192,7 +192,6 @@ class Otoklim:
         self.otoklimdlg.generatemapPanel.hide()
         self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
         self.otoklimdlg.generatemapPanelAccord.hide()
-        self.otoklimdlg.generatecsvPanel.setEnabled(False)
         self.otoklimdlg.generatecsvPanel.hide()
         self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
         self.otoklimdlg.generatecsvPanelAccord.hide()
@@ -404,6 +403,15 @@ class Otoklim:
         self.otoklimdlg.check_all.stateChanged.connect(
             self.select_all_type
         )
+        self.otoklimdlg.check_all_class.stateChanged.connect(
+            self.select_all_type
+        )
+        self.otoklimdlg.check_all_map.stateChanged.connect(
+            self.select_all_type
+        )
+        self.otoklimdlg.check_all_csv.stateChanged.connect(
+            self.select_all_type
+        )
 
         # Add Interpolate Trigger Logic
         self.otoklimdlg.testParameter.clicked.connect(
@@ -437,6 +445,37 @@ class Otoklim:
         )
         self.otoklimdlg.addpsh_3.clicked.connect(
             self.add_psh_3
+        )
+
+        # Add Classification Trigger Logic
+        self.otoklimdlg.classifyButton.clicked.connect(
+            self.raster_classify
+        )
+
+        # Add Raster Classified Logic
+        self.otoklimdlg.addach_1_class.clicked.connect(
+            self.add_ach_1_class
+        )
+        self.otoklimdlg.addash_1_class.clicked.connect(
+            self.add_ash_1_class
+        )
+        self.otoklimdlg.addpch_1_class.clicked.connect(
+            self.add_pch_1_class
+        )
+        self.otoklimdlg.addpsh_1_class.clicked.connect(
+            self.add_psh_1_class
+        )
+        self.otoklimdlg.addpch_2_class.clicked.connect(
+            self.add_pch_2_class
+        )
+        self.otoklimdlg.addpsh_2_class.clicked.connect(
+            self.add_psh_2_class
+        )
+        self.otoklimdlg.addpch_3_class.clicked.connect(
+            self.add_pch_3_class
+        )
+        self.otoklimdlg.addpsh_3_class.clicked.connect(
+            self.add_psh_3_class
         )
 
         icon = QIcon(icon_path)
@@ -620,6 +659,7 @@ class Otoklim:
         self.otoklimdlg.Select_Year.setText(year)
         idw_interpolate_prc = json['PROCESSING']['IDW_INTERPOLATION']['PROCESSED']
         if idw_interpolate_prc:
+            self.otoklimdlg.classificationPanelAccord.setEnabled(True)
             self.otoklimdlg.groupBox_3.setEnabled(True)
             self.otoklimdlg.interpolateButton.setEnabled(True)
             ach_1 = json['PROCESSING']['IDW_INTERPOLATION']['RASTER_ACH_1']["NAME"]
@@ -685,6 +725,75 @@ class Otoklim:
                 self.otoklimdlg.addpsh_3.setEnabled(True)
                 self.otoklimdlg.addpsh_3.setWhatsThis(
                     os.path.join(json['LOCATION'][json['PROCESSING']['IDW_INTERPOLATION']['RASTER_PSH_3']['LOCATION']], psh_3)
+                )
+        classification_prc = json['PROCESSING']['CLASSIFICATION']['PROCESSED']
+        if classification_prc:
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(True)
+            self.otoklimdlg.classificationPanel.show()
+            self.otoklimdlg.classifyButton.setEnabled(True)
+            ach_1 = json['PROCESSING']['CLASSIFICATION']['RASTER_ACH_1']["NAME"]
+            if ach_1:
+                self.otoklimdlg.ach_1_class.setEnabled(True)
+                self.otoklimdlg.ach_1_class.setChecked(True)
+                self.otoklimdlg.addach_1_class.setEnabled(True)
+                self.otoklimdlg.addach_1_class.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['CLASSIFICATION']['RASTER_ACH_1']['LOCATION']], ach_1)
+                )
+            ash_1 = json['PROCESSING']['CLASSIFICATION']['RASTER_ASH_1']["NAME"]
+            if ash_1:
+                self.otoklimdlg.ash_1_class.setEnabled(True)
+                self.otoklimdlg.ash_1_class.setChecked(True)
+                self.otoklimdlg.addash_1_class.setEnabled(True)
+                self.otoklimdlg.addash_1_class.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['CLASSIFICATION']['RASTER_ASH_1']['LOCATION']], ash_1)
+                )
+            pch_1 = json['PROCESSING']['CLASSIFICATION']['RASTER_PCH_1']["NAME"]
+            if pch_1:
+                self.otoklimdlg.pch_1_class.setEnabled(True)
+                self.otoklimdlg.pch_1_class.setChecked(True)
+                self.otoklimdlg.addpch_1_class.setEnabled(True)
+                self.otoklimdlg.addpch_1_class.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['CLASSIFICATION']['RASTER_PCH_1']['LOCATION']], pch_1)
+                )
+            psh_1 = json['PROCESSING']['CLASSIFICATION']['RASTER_PSH_1']["NAME"]
+            if psh_1:
+                self.otoklimdlg.psh_1_class.setEnabled(True)
+                self.otoklimdlg.psh_1_class.setChecked(True)
+                self.otoklimdlg.addpsh_1_class.setEnabled(True)
+                self.otoklimdlg.addpsh_1_class.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['CLASSIFICATION']['RASTER_PSH_1']['LOCATION']], psh_1)
+                )
+            pch_2 = json['PROCESSING']['CLASSIFICATION']['RASTER_PCH_2']["NAME"]
+            if pch_2:
+                self.otoklimdlg.pch_2_class.setEnabled(True)
+                self.otoklimdlg.pch_2_class.setChecked(True)
+                self.otoklimdlg.addpch_2_class.setEnabled(True)
+                self.otoklimdlg.addpch_2_class.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['CLASSIFICATION']['RASTER_PCH_2']['LOCATION']], pch_2)
+                )
+            psh_2 = json['PROCESSING']['CLASSIFICATION']['RASTER_PSH_2']["NAME"]
+            if psh_2:
+                self.otoklimdlg.psh_2_class.setEnabled(True)
+                self.otoklimdlg.psh_2_class.setChecked(True)
+                self.otoklimdlg.addpsh_2_class.setEnabled(True)
+                self.otoklimdlg.addpsh_2_class.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['CLASSIFICATION']['RASTER_PSH_2']['LOCATION']], psh_2)
+                )
+            pch_3 = json['PROCESSING']['CLASSIFICATION']['RASTER_PCH_3']["NAME"]
+            if pch_3:
+                self.otoklimdlg.pch_3_class.setEnabled(True)
+                self.otoklimdlg.pch_3_class.setChecked(True)
+                self.otoklimdlg.addpch_3_class.setEnabled(True)
+                self.otoklimdlg.addpch_3_class.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['CLASSIFICATION']['RASTER_PCH_3']['LOCATION']], pch_3)
+                )
+            psh_3 = json['PROCESSING']['CLASSIFICATION']['RASTER_PSH_3']["NAME"]
+            if psh_3:
+                self.otoklimdlg.psh_3_class.setEnabled(True)
+                self.otoklimdlg.psh_3_class.setChecked(True)
+                self.otoklimdlg.addpsh_3_class.setEnabled(True)
+                self.otoklimdlg.addpsh_3_class.setWhatsThis(
+                    os.path.join(json['LOCATION'][json['PROCESSING']['CLASSIFICATION']['RASTER_PSH_3']['LOCATION']], psh_3)
                 )
 
         self.otoklimdlg.Input_Value_CSV.setWhatsThis('')
@@ -1134,6 +1243,55 @@ class Otoklim:
         layer = QgsRasterLayer(raster, 'psh3')
         QgsMapLayerRegistry.instance().addMapLayer(layer)
 
+    # Add Raster Classified To Canvas
+    def add_ach_1_class(self):
+        """Add ACH 1 Classified"""
+        raster = self.otoklimdlg.addach_1_class.whatsThis()
+        layer = QgsRasterLayer(raster, 'ach1')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    def add_ash_1_class(self):
+        """Add ASH 1 Classified"""
+        raster = self.otoklimdlg.addash_1_class.whatsThis()
+        layer = QgsRasterLayer(raster, 'ash1')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    def add_pch_1_class(self):
+        """Add PCH 1 Classified"""
+        raster = self.otoklimdlg.addpch_1_class.whatsThis()
+        layer = QgsRasterLayer(raster, 'pch1')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    def add_psh_1_class(self):
+        """Add PSH 1 Classified"""
+        raster = self.otoklimdlg.addpsh_1_class.whatsThis()
+        layer = QgsRasterLayer(raster, 'psh1')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    def add_pch_2_class(self):
+        """Add PCH 2 Classified"""
+        raster = self.otoklimdlg.addpch_2_class.whatsThis()
+        layer = QgsRasterLayer(raster, 'pch2')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    def add_psh_2_class(self):
+        """Add PSH 2 Classified"""
+        raster = self.otoklimdlg.addpsh_2_class.whatsThis()
+        layer = QgsRasterLayer(raster, 'psh2')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    def add_pch_3_class(self):
+        """Add PCH 3 Classified"""
+        raster = self.otoklimdlg.addpch_3_class.whatsThis()
+        layer = QgsRasterLayer(raster, 'pch3')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
+    def add_psh_3_class(self):
+        """Add PSH 3 Classified"""
+        raster = self.otoklimdlg.addpsh_3_class.whatsThis()
+        layer = QgsRasterLayer(raster, 'psh3')
+        QgsMapLayerRegistry.instance().addMapLayer(layer)
+
     # Browse Project Workspace from Save As New Mode
     def select_input_prj_folder_saveas(self):
         """Select Project Working Directory From Save As Mode """
@@ -1299,6 +1457,60 @@ class Otoklim:
             self.otoklimdlg.psh_2.setChecked(False)
             self.otoklimdlg.pch_3.setChecked(False)
             self.otoklimdlg.psh_3.setChecked(False)
+        if self.otoklimdlg.check_all_class.isChecked():
+            self.otoklimdlg.ach_1_class.setChecked(True)
+            self.otoklimdlg.ash_1_class.setChecked(True)
+            self.otoklimdlg.pch_1_class.setChecked(True)
+            self.otoklimdlg.psh_1_class.setChecked(True)
+            self.otoklimdlg.pch_2_class.setChecked(True)
+            self.otoklimdlg.psh_2_class.setChecked(True)
+            self.otoklimdlg.pch_3_class.setChecked(True)
+            self.otoklimdlg.psh_3_class.setChecked(True)
+        else:
+            self.otoklimdlg.ach_1_class.setChecked(False)
+            self.otoklimdlg.ash_1_class.setChecked(False)
+            self.otoklimdlg.pch_1_class.setChecked(False)
+            self.otoklimdlg.psh_1_class.setChecked(False)
+            self.otoklimdlg.pch_2_class.setChecked(False)
+            self.otoklimdlg.psh_2_class.setChecked(False)
+            self.otoklimdlg.pch_3_class.setChecked(False)
+            self.otoklimdlg.psh_3_class.setChecked(False)
+        if self.otoklimdlg.check_all_map.isChecked():
+            self.otoklimdlg.ach_1_map.setChecked(True)
+            self.otoklimdlg.ash_1_map.setChecked(True)
+            self.otoklimdlg.pch_1_map.setChecked(True)
+            self.otoklimdlg.psh_1_map.setChecked(True)
+            self.otoklimdlg.pch_2_map.setChecked(True)
+            self.otoklimdlg.psh_2_map.setChecked(True)
+            self.otoklimdlg.pch_3_map.setChecked(True)
+            self.otoklimdlg.psh_3_map.setChecked(True)
+        else:
+            self.otoklimdlg.ach_1_map.setChecked(False)
+            self.otoklimdlg.ash_1_map.setChecked(False)
+            self.otoklimdlg.pch_1_map.setChecked(False)
+            self.otoklimdlg.psh_1_map.setChecked(False)
+            self.otoklimdlg.pch_2_map.setChecked(False)
+            self.otoklimdlg.psh_2_map.setChecked(False)
+            self.otoklimdlg.pch_3_map.setChecked(False)
+            self.otoklimdlg.psh_3_map.setChecked(False)
+        if self.otoklimdlg.check_all_csv.isChecked():
+            self.otoklimdlg.ach_1_csv.setChecked(True)
+            self.otoklimdlg.ash_1_csv.setChecked(True)
+            self.otoklimdlg.pch_1_csv.setChecked(True)
+            self.otoklimdlg.psh_1_csv.setChecked(True)
+            self.otoklimdlg.pch_2_csv.setChecked(True)
+            self.otoklimdlg.psh_2_csv.setChecked(True)
+            self.otoklimdlg.pch_3_csv.setChecked(True)
+            self.otoklimdlg.psh_3_csv.setChecked(True)
+        else:
+            self.otoklimdlg.ach_1_csv.setChecked(False)
+            self.otoklimdlg.ash_1_csv.setChecked(False)
+            self.otoklimdlg.pch_1_csv.setChecked(False)
+            self.otoklimdlg.psh_1_csv.setChecked(False)
+            self.otoklimdlg.pch_2_csv.setChecked(False)
+            self.otoklimdlg.psh_2_csv.setChecked(False)
+            self.otoklimdlg.pch_3_csv.setChecked(False)
+            self.otoklimdlg.psh_3_csv.setChecked(False)
 
     def check_shp(self, file, type):
         """Checking shapefile validation function"""
@@ -2334,6 +2546,7 @@ class Otoklim:
         self.copy_file(filename_shp, temp, True)
         filename_shp_tmp = os.path.join(temp, 'rainpost_point.shp')
         layer = QgsVectorLayer(filename_shp_tmp, 'layer', 'ogr')
+        layer_provinsi = QgsVectorLayer(provinsi_polygon_file, 'layer', 'ogr')
         fields = layer.pendingFields()
         field_names = [field.name() for field in fields]
         idw_params = field_names[5:]
@@ -2443,11 +2656,11 @@ class Otoklim:
                     else:
                         raise Exception('Skip ' + raster_cropped)
 
-                extent = layer.extent()
+                extent = layer_provinsi.extent()
                 processing.runalg(
                     'grass7:v.surf.idw',
                     layer, 8.0, 5.0, param, False,
-                    "%f,%f,%f,%f" % (extent.xMinimum()-1, extent.xMaximum()+1, extent.yMinimum()-1, extent.yMaximum()+1), 0.001, -1.0, 0.0001,
+                    "%f,%f,%f,%f" % (extent.xMinimum(), extent.xMaximum(), extent.yMinimum(), extent.yMaximum()), 0.001, -1.0, 0.0001,
                     raster_interpolated
                 )
                 processing.runalg(
@@ -2463,6 +2676,9 @@ class Otoklim:
             with open(project, 'w') as jsonfile:
                 jsonfile.write(json.dumps(otoklim_project, indent=4))
             self.otoklimdlg.testParameter.setEnabled(False)
+            self.otoklimdlg.classificationPanelAccord.setEnabled(True)
+            self.otoklimdlg.classificationPanel.setEnabled(True)
+            self.otoklimdlg.classificationPanel.show()
         except Exception as e:
             self.errormessagedlg.ErrorMessage.setText(str(e))
             self.errormessagedlg.exec_()
@@ -2580,6 +2796,15 @@ class Otoklim:
                     otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PSH_2"]["NAME"] = ""
                     otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_3"]["NAME"] = ""
                     otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PSH_3"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]['PROCESSED'] = 0
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ACH_1"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ASH_1"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_1"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_1"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_2"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_2"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_3"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_3"]["NAME"] = ""
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 self.otoklimdlg.ach_1.setChecked(False)
@@ -2598,13 +2823,186 @@ class Otoklim:
                 self.otoklimdlg.addpsh_2.setEnabled(False)
                 self.otoklimdlg.addpch_3.setEnabled(False)
                 self.otoklimdlg.addpsh_3.setEnabled(False)
+                self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+                self.otoklimdlg.classificationPanel.hide()
+                self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+                self.otoklimdlg.generatemapPanel.hide()
             except Exception as e:
                 print e
                 self.errormessagedlg.ErrorMessage.setText(str(e))
                 self.errormessagedlg.exec_()
 
-                
+    def raster_classify(self):
+        """Function To Classify Raster Interpolated"""
+        prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
+        provinsi_polygon_file = os.path.join(prcs_directory, 'provinsi_polygon.shp')
+        layer_provinsi = QgsVectorLayer(provinsi_polygon_file, 'layer', 'ogr')
+        filename_rainfall = self.otoklimdlg.rainfallfile.text()
+        output_rainfall = os.path.join(prcs_directory, 'rule_ch.txt')
+        if os.path.exists(output_rainfall):
+            os.remove(output_rainfall)
+        row_keeper = []
+        with open(filename_rainfall, 'rb') as csvfile:
+            spamreader = csv.DictReader(csvfile, delimiter=',', quotechar='|')
+            data = spamreader.next()
+            for row in spamreader:
+                row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
+        with open(output_rainfall, "wb+") as txtfile:
+            txt_writer = csv.writer(txtfile, delimiter=':')
+            for row in row_keeper:
+                txt_writer.writerow(row)
+        filename_normalrain = self.otoklimdlg.normalrainfile.text()
+        output_normalrain = os.path.join(prcs_directory, 'rule_sh.txt')
+        if os.path.exists(output_normalrain):
+            os.remove(output_normalrain)
+        row_keeper = []
+        with open(filename_normalrain, 'rb') as csvfile:
+            spamreader = csv.DictReader(csvfile, delimiter=',', quotechar='|')
+            data = spamreader.next()
+            for row in spamreader:
+                row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
+        with open(output_normalrain, "wb+") as txtfile:
+            txt_writer = csv.writer(txtfile, delimiter=':')
+            for row in row_keeper:
+                txt_writer.writerow(row)
+        project = os.path.join(
+            self.otoklimdlg.projectworkspace.text(),
+            self.otoklimdlg.projectfilename.text()
+        )
+        try:
+            prc_list = []
+            if self.otoklimdlg.ach_1_class.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_ach_1 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_ACH_1"]["NAME"]
+                    param = os.path.splitext(raster_ach_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ach_1)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ACH_1"]["NAME"] = 'classified_' + str(param) + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_ach_1])
+                self.otoklimdlg.addach_1_class.setEnabled(True)
+                self.otoklimdlg.addach_1_class.setWhatsThis(
+                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                )
+            if self.otoklimdlg.ash_1_class.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_ash_1 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_ASH_1"]["NAME"]
+                    param = os.path.splitext(raster_ash_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ash_1)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ASH_1"]["NAME"] = 'classified_' + str(param) + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_ash_1])
+                self.otoklimdlg.addash_1_class.setEnabled(True)
+                self.otoklimdlg.addash_1_class.setWhatsThis(
+                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                )
+            if self.otoklimdlg.pch_1_class.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_pch_1 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_1"]["NAME"]
+                    param = os.path.splitext(raster_pch_1)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_1)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_1"]["NAME"] = 'classified_' + str(param) + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_pch_1])
+                self.otoklimdlg.addpch_1_class.setEnabled(True)
+                self.otoklimdlg.addpch_1_class.setWhatsThis(
+                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                )
+            if self.otoklimdlg.psh_1_class.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_psh_1 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PSH_1"]["NAME"]
+                    param = os.path.splitext(raster_psh_1)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_1)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_1"]["NAME"] = 'classified_' + str(param) + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_psh_1])
+                self.otoklimdlg.addpsh_1_class.setEnabled(True)
+                self.otoklimdlg.addpsh_1_class.setWhatsThis(
+                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                )
+            if self.otoklimdlg.pch_2_class.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_pch_2 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_2"]["NAME"]
+                    param = os.path.splitext(raster_pch_2)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_2)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_2"]["NAME"] = 'classified_' + str(param) + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_pch_2])
+                self.otoklimdlg.addpch_2_class.setEnabled(True)
+                self.otoklimdlg.addpch_2_class.setWhatsThis(
+                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                )
+            if self.otoklimdlg.psh_2_class.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_psh_2 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PSH_2"]["NAME"]
+                    param = os.path.splitext(raster_psh_2)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_2)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_2"]["NAME"] = 'classified_' + str(param) + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_psh_2])
+                self.otoklimdlg.addpsh_2_class.setEnabled(True)
+                self.otoklimdlg.addpsh_2_class.setWhatsThis(
+                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                )
+            if self.otoklimdlg.pch_3_class.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_pch_3 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_3"]["NAME"]
+                    param = os.path.splitext(raster_pch_3)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_3)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_3"]["NAME"] = 'classified_' + str(param) + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_pch_3])
+                self.otoklimdlg.addpch_3_class.setEnabled(True)
+                self.otoklimdlg.addpch_3_class.setWhatsThis(
+                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                )
+            if self.otoklimdlg.psh_3_class.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_psh_3 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PSH_3"]["NAME"]
+                    param = os.path.splitext(raster_psh_3)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_3)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_3"]["NAME"] = 'classified_' + str(param) + '.tif'
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_psh_3])
+                self.otoklimdlg.addpsh_3_class.setEnabled(True)
+                self.otoklimdlg.addpsh_3_class.setWhatsThis(
+                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                )
 
+            for value in prc_list:
+                raster_classified = os.path.join(prcs_directory, 'classified_' + str(value[0]) + '.tif')
+                rasterinterpolated = os.path.join(prcs_directory, value[1])
+                if os.path.exists(raster_classified):
+                    self.replaceconfirmdlg.var.setText(raster_classified)
+                    result = self.replaceconfirmdlg.exec_()
+                    if result:
+                        os.remove(raster_classified)
+                    else:
+                        raise Exception('Skip ' + raster_classified)
+                extent = layer_provinsi.extent()
+                if value[0][0:3] == 'ach' or value[0][0:3] == 'pch':
+                    processing.runalg('grass7:r.recode', rasterinterpolated, output_rainfall, False, "%f,%f,%f,%f" % (extent.xMinimum(), extent.xMaximum(), extent.yMinimum(), extent.yMaximum()), 0.001, raster_classified)
+                else:
+                    processing.runalg('grass7:r.recode', rasterinterpolated, output_normalrain, False, "%f,%f,%f,%f" % (extent.xMinimum(), extent.xMaximum(), extent.yMinimum(), extent.yMaximum()), 0.001, raster_classified)
+
+            with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["PROCESSED"] = 1
+            with open(project, 'w') as jsonfile:
+                jsonfile.write(json.dumps(otoklim_project, indent=4))
+            self.otoklimdlg.testParameter.setEnabled(False)
+            self.otoklimdlg.classificationPanelAccord.setEnabled(True)
+            self.otoklimdlg.classificationPanel.setEnabled(True)
+        except Exception as e:
+            self.errormessagedlg.ErrorMessage.setText(str(e))
+            self.errormessagedlg.exec_()
 
     def run(self):
         """Run method that performs all the real work"""
