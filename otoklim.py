@@ -20,8 +20,9 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt4.QtCore import Qt, QSettings, QTranslator, qVersion, QCoreApplication
+from PyQt4.QtCore import Qt, QSettings, QTranslator, qVersion, QCoreApplication, QFileInfo
 from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem, QCloseEvent, QColor
+from PyQt4.QtXml import QDomDocument
 # Initialize Qt resources from file resources.py
 import resources
 # Import the code for the dialog
@@ -44,10 +45,19 @@ from qgis.core import (
     QgsMapLayerRegistry,
     QgsFeatureRequest,
     QgsExpression,
-    QgsVectorFileWriter
+    QgsVectorFileWriter,
+    QgsRasterShader,
+    QgsColorRampShader,
+    QgsSingleBandPseudoColorRenderer,
+    QgsFillSymbolV2,
+    QgsPalLayerSettings,
+    QgsProject,
+    QgsComposition
 )
+from qgis.gui import QgsMapCanvas, QgsLayerTreeMapCanvasBridge
 from osgeo import gdal, ogr, osr
 from gdalconst import GA_ReadOnly
+import qgis.utils
 import os.path
 import os
 import shutil
@@ -188,7 +198,6 @@ class Otoklim:
         self.otoklimdlg.classificationPanel.hide()
         self.otoklimdlg.classificationPanelAccord.setEnabled(False)
         self.otoklimdlg.classificationPanelAccord.hide()
-        self.otoklimdlg.generatemapPanel.setEnabled(False)
         self.otoklimdlg.generatemapPanel.hide()
         self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
         self.otoklimdlg.generatemapPanelAccord.hide()
@@ -263,13 +272,6 @@ class Otoklim:
         self.newprojectdlg.Browse_rainpost.clicked.connect(
             self.select_input_rainpost
         )
-        self.newprojectdlg.Input_logo.clear()
-        self.newprojectdlg.Input_logo.textChanged.connect(
-            self.enable_create_button
-        )
-        self.newprojectdlg.Browse_logo.clicked.connect(
-            self.select_input_logo
-        )
         self.newprojectdlg.Input_rainfall_class.clear()
         self.newprojectdlg.Input_rainfall_class.textChanged.connect(
             self.enable_create_button
@@ -290,6 +292,20 @@ class Otoklim:
         )
         self.newprojectdlg.Browse_map_template.clicked.connect(
             self.select_input_map_template
+        )
+        self.newprojectdlg.Input_map_template_2.clear()
+        self.newprojectdlg.Input_map_template_2.textChanged.connect(
+            self.enable_create_button
+        )
+        self.newprojectdlg.Browse_map_template_2.clicked.connect(
+            self.select_input_map_template_2
+        )
+        self.newprojectdlg.Input_map_template_3.clear()
+        self.newprojectdlg.Input_map_template_3.textChanged.connect(
+            self.enable_create_button
+        )
+        self.newprojectdlg.Browse_map_template_3.clicked.connect(
+            self.select_input_map_template_3
         )
 
         # Add New Project Next Trigger
@@ -319,9 +335,6 @@ class Otoklim:
         self.otoklimdlg.Edit_rainpost.clicked.connect(
             self.edit_rainpost
         )
-        self.otoklimdlg.Edit_logo.clicked.connect(
-            self.edit_logo
-        )
         self.otoklimdlg.Edit_rainfall_class.clicked.connect(
             self.edit_rainfall_class
         )
@@ -330,6 +343,12 @@ class Otoklim:
         )
         self.otoklimdlg.Edit_map_template.clicked.connect(
             self.edit_map_template
+        )
+        self.otoklimdlg.Edit_map_template_2.clicked.connect(
+            self.edit_map_template_2
+        )
+        self.otoklimdlg.Edit_map_template_3.clicked.connect(
+            self.edit_map_template_3
         )
 
         # Add Show Folder Trigger Logic
@@ -478,6 +497,23 @@ class Otoklim:
             self.add_psh_3_class
         )
 
+        # Add Search Region Logic
+        self.otoklimdlg.search_option1.textChanged.connect(
+            self.search_option_1
+        )
+        self.otoklimdlg.search_option2.textChanged.connect(
+            self.search_option_2
+        )
+
+        # Add Move Selected Region Button Logic
+        self.otoklimdlg.addSelected_1.clicked.connect(self.add_to_selected_1)
+        self.otoklimdlg.deleteUnselected_1.clicked.connect(self.delete_from_selected_1)
+        self.otoklimdlg.addSelected_2.clicked.connect(self.add_to_selected_2)
+        self.otoklimdlg.deleteUnselected_2.clicked.connect(self.delete_from_selected_2)
+
+        # Add Generate Map Trigger Logic
+        self.otoklimdlg.generatemapButton.clicked.connect(self.generate_map)
+
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
         action.triggered.connect(callback)
@@ -538,14 +574,16 @@ class Otoklim:
             self.otoklimdlg.bathymetry.setStyleSheet('color: black')
             self.otoklimdlg.rainpostfile.setWhatsThis('')
             self.otoklimdlg.rainpostfile.setStyleSheet('color: black')
-            self.otoklimdlg.logofile.setWhatsThis('')
-            self.otoklimdlg.logofile.setStyleSheet('color: black')
             self.otoklimdlg.rainfallfile.setWhatsThis('')
             self.otoklimdlg.rainfallfile.setStyleSheet('color: black')
             self.otoklimdlg.normalrainfile.setWhatsThis('')
             self.otoklimdlg.normalrainfile.setStyleSheet('color: black')
             self.otoklimdlg.maptemplate.setWhatsThis('')
             self.otoklimdlg.maptemplate.setStyleSheet('color: black')
+            self.otoklimdlg.maptemplate2.setWhatsThis('')
+            self.otoklimdlg.maptemplate2.setStyleSheet('color: black')
+            self.otoklimdlg.maptemplate3.setWhatsThis('')
+            self.otoklimdlg.maptemplate3.setStyleSheet('color: black')
             project_name = self.askprojectdlg.ProjectName.text()
             self.askprojectdlg.ProjectName.clear()
             self.otoklimdlg.hide()
@@ -562,16 +600,16 @@ class Otoklim:
                 self.newprojectdlg.Input_subdistricts.clear()
                 self.newprojectdlg.Input_village.clear()
                 self.newprojectdlg.Input_bathymetry.clear()
-                # self.newprojectdlg.Input_islands.clear()
                 self.newprojectdlg.Input_rainpost.clear()
-                self.newprojectdlg.Input_logo.clear()
                 self.newprojectdlg.Input_rainfall_class.clear()
                 self.newprojectdlg.Input_normalrain_class.clear()
                 self.newprojectdlg.Input_map_template.clear()
+                self.newprojectdlg.Input_map_template_2.clear()
+                self.newprojectdlg.Input_map_template_3.clear()
         else:
             self.askprojectdlg.ProjectName.clear()
 
-    def read_otoklim_file(self, json):
+    def read_otoklim_file(self, json, save=False):
         """Read JSON structure from .otoklim file"""
         project_name = json['PRJ_NAME']
         self.otoklimdlg.projectname.setText(project_name)
@@ -618,11 +656,6 @@ class Otoklim:
             json['FILE']['RAINPOST_FILE']['NAME']
         )
         self.otoklimdlg.rainpostfile.setText(csv_rainpost)
-        logo = os.path.join(
-            json['LOCATION'][json['FILE']['LOGO_FILE']['LOCATION']],
-            json['FILE']['LOGO_FILE']['NAME']
-        )
-        self.otoklimdlg.logofile.setText(logo)
         csv_rainfall = os.path.join(
             json['LOCATION'][json['FILE']['RAINFALL_FILE']['LOCATION']],
             json['FILE']['RAINFALL_FILE']['NAME']
@@ -638,6 +671,16 @@ class Otoklim:
             json['FILE']['MAP_TEMP']['NAME']
         )
         self.otoklimdlg.maptemplate.setText(map_template)
+        map_template_2 = os.path.join(
+            json['LOCATION'][json['FILE']['MAP_TEMP_2']['LOCATION']],
+            json['FILE']['MAP_TEMP_2']['NAME']
+        )
+        self.otoklimdlg.maptemplate2.setText(map_template_2)
+        map_template_3 = os.path.join(
+            json['LOCATION'][json['FILE']['MAP_TEMP_3']['LOCATION']],
+            json['FILE']['MAP_TEMP_3']['NAME']
+        )
+        self.otoklimdlg.maptemplate3.setText(map_template_3)
         try:
             value_csv = os.path.join(
                 json['LOCATION'][json['PROCESSING']['IDW_INTERPOLATION']['INPUT_VALUE_FILE']['LOCATION']],
@@ -729,6 +772,7 @@ class Otoklim:
         classification_prc = json['PROCESSING']['CLASSIFICATION']['PROCESSED']
         if classification_prc:
             self.otoklimdlg.generatemapPanelAccord.setEnabled(True)
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(True)
             self.otoklimdlg.classificationPanel.show()
             self.otoklimdlg.classifyButton.setEnabled(True)
             ach_1 = json['PROCESSING']['CLASSIFICATION']['RASTER_ACH_1']["NAME"]
@@ -796,21 +840,23 @@ class Otoklim:
                     os.path.join(json['LOCATION'][json['PROCESSING']['CLASSIFICATION']['RASTER_PSH_3']['LOCATION']], psh_3)
                 )
 
+        # Region Listing
+        province_id = json['PROCESSING']['IDW_INTERPOLATION']['ID_PROV']
+        region_csv = os.path.join(json["LOCATION"]["PRC_FILE_LOC"], str(province_id) +  "_regionlist.csv")
+        self.region_listing(province_id, region_csv, save)
+
         self.otoklimdlg.Input_Value_CSV.setWhatsThis('')
         self.otoklimdlg.Select_Province.setWhatsThis('')
         self.otoklimdlg.Select_Month.setWhatsThis('')
         self.otoklimdlg.Select_Year.setWhatsThis('')
-
         self.otoklimdlg.projectparamPanel.setEnabled(True)
         self.otoklimdlg.projectparamPanel.show()
         self.otoklimdlg.projectparamPanelAccord.setEnabled(True)
         self.otoklimdlg.projectparamPanelAccord.show()
-
         self.otoklimdlg.idwinterpolationPanel.setEnabled(True)
         self.otoklimdlg.idwinterpolationPanel.show()
         self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(True)
         self.otoklimdlg.idwinterpolationPanelAccord.show()
-
         self.otoklimdlg.classificationPanelAccord.show()
         self.otoklimdlg.generatemapPanelAccord.show()
         self.otoklimdlg.generatecsvPanelAccord.show()
@@ -838,14 +884,16 @@ class Otoklim:
             self.otoklimdlg.bathymetry.setStyleSheet('color: black')
             self.otoklimdlg.rainpostfile.setWhatsThis('')
             self.otoklimdlg.rainpostfile.setStyleSheet('color: black')
-            self.otoklimdlg.logofile.setWhatsThis('')
-            self.otoklimdlg.logofile.setStyleSheet('color: black')
             self.otoklimdlg.rainfallfile.setWhatsThis('')
             self.otoklimdlg.rainfallfile.setStyleSheet('color: black')
             self.otoklimdlg.normalrainfile.setWhatsThis('')
             self.otoklimdlg.normalrainfile.setStyleSheet('color: black')
             self.otoklimdlg.maptemplate.setWhatsThis('')
             self.otoklimdlg.maptemplate.setStyleSheet('color: black')
+            self.otoklimdlg.maptemplate2.setWhatsThis('')
+            self.otoklimdlg.maptemplate2.setStyleSheet('color: black')
+            self.otoklimdlg.maptemplate3.setWhatsThis('')
+            self.otoklimdlg.maptemplate3.setStyleSheet('color: black')
             self.otoklimdlg.Input_Value_CSV.setWhatsThis('')
             self.otoklimdlg.Select_Province.setWhatsThis('')
             self.otoklimdlg.Select_Month.setWhatsThis('')
@@ -923,16 +971,6 @@ class Otoklim:
         )
         self.newprojectdlg.Input_rainpost.setText(rainpost_file)
 
-    def select_input_logo(self):
-        """Select Logo PNG File """
-        logo_file = QFileDialog.getOpenFileName(
-            self.newprojectdlg,
-            "",
-            "",
-            "*.png *.jpg"
-        )
-        self.newprojectdlg.Input_logo.setText(logo_file)
-
     def select_input_rainfall_class(self):
         """Select Rainfall Classification file"""
         rainfallclass_file = QFileDialog.getOpenFileName(
@@ -963,6 +1001,26 @@ class Otoklim:
         )
         self.newprojectdlg.Input_map_template.setText(maptemplate_file)
 
+    def select_input_map_template_2(self):
+        """Select QGIS Map Template file"""
+        maptemplate_file_2 = QFileDialog.getOpenFileName(
+            self.newprojectdlg,
+            "",
+            "",
+            "*.qpt"
+        )
+        self.newprojectdlg.Input_map_template_2.setText(maptemplate_file_2)
+
+    def select_input_map_template_3(self):
+        """Select QGIS Map Template file"""
+        maptemplate_file_3 = QFileDialog.getOpenFileName(
+            self.newprojectdlg,
+            "",
+            "",
+            "*.qpt"
+        )
+        self.newprojectdlg.Input_map_template_3.setText(maptemplate_file_3)
+
     # Project Parameter Edit Function
     def edit_csv_delimiter(self):
         """Edit CSV Delimiter """
@@ -975,6 +1033,12 @@ class Otoklim:
             self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
             self.otoklimdlg.idwinterpolationPanel.hide()
             self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
+            self.otoklimdlg.classificationPanel.hide()
+            self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.hide()
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.hide()
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
 
     def edit_province(self):
         """Edit Province Vector File """
@@ -991,6 +1055,12 @@ class Otoklim:
             self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
             self.otoklimdlg.idwinterpolationPanel.hide()
             self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
+            self.otoklimdlg.classificationPanel.hide()
+            self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.hide()
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.hide()
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
 
     def edit_districts(self):
         """Edit Cities / Distircts Vector File """
@@ -1007,6 +1077,12 @@ class Otoklim:
             self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
             self.otoklimdlg.idwinterpolationPanel.hide()
             self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
+            self.otoklimdlg.classificationPanel.hide()
+            self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.hide()
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.hide()
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
 
     def edit_subdistricts(self):
         """Edit Sub-Districts Vector File """
@@ -1023,6 +1099,12 @@ class Otoklim:
             self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
             self.otoklimdlg.idwinterpolationPanel.hide()
             self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
+            self.otoklimdlg.classificationPanel.hide()
+            self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.hide()
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.hide()
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
 
     def edit_village(self):
         """Edit Village Vector File """
@@ -1039,6 +1121,12 @@ class Otoklim:
             self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
             self.otoklimdlg.idwinterpolationPanel.hide()
             self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
+            self.otoklimdlg.classificationPanel.hide()
+            self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.hide()
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.hide()
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
 
     def edit_bathymetry(self):
         """Edit Bathymetry Raster File """
@@ -1055,6 +1143,12 @@ class Otoklim:
             self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
             self.otoklimdlg.idwinterpolationPanel.hide()
             self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
+            self.otoklimdlg.classificationPanel.hide()
+            self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.hide()
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.hide()
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
 
     def edit_rainpost(self):
         """Edit Rainpost CSV File """
@@ -1071,22 +1165,15 @@ class Otoklim:
             self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
             self.otoklimdlg.idwinterpolationPanel.hide()
             self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
-
-    def edit_logo(self):
-        """Edit Logo PNG File """
-        logo_file = QFileDialog.getOpenFileName(
-            self.otoklimdlg,
-            "",
-            "",
-            "*.png *.jpg"
-        )
-        if logo_file:
-            self.otoklimdlg.logofile.setText(logo_file)
-            self.otoklimdlg.logofile.setWhatsThis('edited')
-            self.otoklimdlg.logofile.setStyleSheet('color: red')
-            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
-            self.otoklimdlg.idwinterpolationPanel.hide()
-            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
+            self.otoklimdlg.classificationPanel.setEnabled(False)
+            self.otoklimdlg.classificationPanel.hide()
+            self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.hide()
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.hide()
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
 
     def edit_rainfall_class(self):
         """Edit Rainfall Classification file"""
@@ -1103,6 +1190,15 @@ class Otoklim:
             self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
             self.otoklimdlg.idwinterpolationPanel.hide()
             self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
+            self.otoklimdlg.classificationPanel.setEnabled(False)
+            self.otoklimdlg.classificationPanel.hide()
+            self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.hide()
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.hide()
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
 
     def edit_normalrain_class(self):
         """Edit Normal Rain Classification file"""
@@ -1119,6 +1215,15 @@ class Otoklim:
             self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
             self.otoklimdlg.idwinterpolationPanel.hide()
             self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
+            self.otoklimdlg.classificationPanel.setEnabled(False)
+            self.otoklimdlg.classificationPanel.hide()
+            self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.hide()
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.hide()
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
 
     def edit_map_template(self):
         """Edit QGIS Map Template file"""
@@ -1135,6 +1240,65 @@ class Otoklim:
             self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
             self.otoklimdlg.idwinterpolationPanel.hide()
             self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
+            self.otoklimdlg.classificationPanel.setEnabled(False)
+            self.otoklimdlg.classificationPanel.hide()
+            self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.hide()
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.hide()
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
+
+    def edit_map_template_2(self):
+        """Edit QGIS Map Template file"""
+        maptemplate_file_2 = QFileDialog.getOpenFileName(
+            self.otoklimdlg,
+            "",
+            "",
+            "*.qpt"
+        )
+        if maptemplate_file_2:
+            self.otoklimdlg.maptemplate2.setText(maptemplate_file_2)
+            self.otoklimdlg.maptemplate2.setWhatsThis('edited')
+            self.otoklimdlg.maptemplate2.setStyleSheet('color: red')
+            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+            self.otoklimdlg.idwinterpolationPanel.hide()
+            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
+            self.otoklimdlg.classificationPanel.setEnabled(False)
+            self.otoklimdlg.classificationPanel.hide()
+            self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.hide()
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.hide()
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
+
+    def edit_map_template_3(self):
+        """Edit QGIS Map Template file"""
+        maptemplate_file_3 = QFileDialog.getOpenFileName(
+            self.otoklimdlg,
+            "",
+            "",
+            "*.qpt"
+        )
+        if maptemplate_file_3:
+            self.otoklimdlg.maptemplate3.setText(maptemplate_file_3)
+            self.otoklimdlg.maptemplate3.setWhatsThis('edited')
+            self.otoklimdlg.maptemplate3.setStyleSheet('color: red')
+            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+            self.otoklimdlg.idwinterpolationPanel.hide()
+            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
+            self.otoklimdlg.classificationPanel.setEnabled(False)
+            self.otoklimdlg.classificationPanel.hide()
+            self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.hide()
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.hide()
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
 
     # Workspace Show In Folder
     def show_folder(self):
@@ -1325,12 +1489,12 @@ class Otoklim:
             self.newprojectdlg.Input_subdistricts.text(),
             self.newprojectdlg.Input_village.text(),
             self.newprojectdlg.Input_bathymetry.text(),
-            # self.newprojectdlg.Input_islands.text(),
             self.newprojectdlg.Input_rainpost.text(),
-            self.newprojectdlg.Input_logo.text(),
             self.newprojectdlg.Input_rainfall_class.text(),
             self.newprojectdlg.Input_normalrain_class.text(),
-            self.newprojectdlg.Input_map_template.text()
+            self.newprojectdlg.Input_map_template.text(),
+            self.newprojectdlg.Input_map_template_2.text(),
+            self.newprojectdlg.Input_map_template_3.text()
         ]
         enable_bool = True
         for inputline in input_list:
@@ -1910,16 +2074,6 @@ class Otoklim:
                 self.otoklimdlg.rainpostfile.setStyleSheet('color: black')
                 self.otoklimdlg.rainpostfile.setWhatsThis('')
                 change = True
-            if self.otoklimdlg.logofile.whatsThis() == 'edited':
-                self.copy_file(self.otoklimdlg.logofile.text(), input_directory, False)
-                with open(project, 'r') as jsonfile:
-                    otoklim_project = json.load(jsonfile)
-                    otoklim_project["FILE"]["LOGO_FILE"]["NAME"] = os.path.basename(self.otoklimdlg.logofile.text())
-                with open(project, 'w') as jsonfile:
-                    jsonfile.write(json.dumps(otoklim_project, indent=4))
-                self.otoklimdlg.logofile.setStyleSheet('color: black')
-                self.otoklimdlg.logofile.setWhatsThis('')
-                change = True
             if self.otoklimdlg.rainfallfile.whatsThis() == 'edited':
                 self.check_csv(self.otoklimdlg.rainfallfile.text(), self.otoklimdlg.csvdelimiter.text(), 'class')
                 self.copy_file(self.otoklimdlg.rainfallfile.text(), input_directory, False)
@@ -1951,6 +2105,26 @@ class Otoklim:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 self.otoklimdlg.maptemplate.setStyleSheet('color: black')
                 self.otoklimdlg.maptemplate.setWhatsThis('')
+                change = True
+            if self.otoklimdlg.maptemplate2.whatsThis() == 'edited':
+                self.copy_file(self.otoklimdlg.maptemplate2.text(), input_directory, False)
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["FILE"]["MAP_TEMP_2"]["NAME"] = os.path.basename(self.otoklimdlg.maptemplate2.text())
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                self.otoklimdlg.maptemplate2.setStyleSheet('color: black')
+                self.otoklimdlg.maptemplate2.setWhatsThis('')
+                change = True
+            if self.otoklimdlg.maptemplate3.whatsThis() == 'edited':
+                self.copy_file(self.otoklimdlg.maptemplate3.text(), input_directory, False)
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["FILE"]["MAP_TEMP_3"]["NAME"] = os.path.basename(self.otoklimdlg.maptemplate3.text())
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                self.otoklimdlg.maptemplate3.setStyleSheet('color: black')
+                self.otoklimdlg.maptemplate3.setWhatsThis('')
                 change = True
             # Special case for Input Value CSV
             if self.otoklimdlg.Input_Value_CSV.whatsThis() == 'edited':
@@ -2010,7 +2184,7 @@ class Otoklim:
                 self.otoklimdlg.Select_Year.setWhatsThis('')
                 change = True
             if change:
-                self.read_otoklim_file(otoklim_project)
+                self.read_otoklim_file(otoklim_project, True)
         except Exception as e:
             self.errormessagedlg.ErrorMessage.setText(str(e))
             self.errormessagedlg.exec_()
@@ -2035,14 +2209,16 @@ class Otoklim:
             self.otoklimdlg.bathymetry.setStyleSheet('color: black')
             self.otoklimdlg.rainpostfile.setWhatsThis('')
             self.otoklimdlg.rainpostfile.setStyleSheet('color: black')
-            self.otoklimdlg.logofile.setWhatsThis('')
-            self.otoklimdlg.logofile.setStyleSheet('color: black')
             self.otoklimdlg.rainfallfile.setWhatsThis('')
             self.otoklimdlg.rainfallfile.setStyleSheet('color: black')
             self.otoklimdlg.normalrainfile.setWhatsThis('')
             self.otoklimdlg.normalrainfile.setStyleSheet('color: black')
             self.otoklimdlg.maptemplate.setWhatsThis('')
             self.otoklimdlg.maptemplate.setStyleSheet('color: black')
+            self.otoklimdlg.maptemplate2.setWhatsThis('')
+            self.otoklimdlg.maptemplate2.setStyleSheet('color: black')
+            self.otoklimdlg.maptemplate3.setWhatsThis('')
+            self.otoklimdlg.maptemplate3.setStyleSheet('color: black')
         else:
             self.saveasprodlg.ProjectName.clear()
             self.saveasprodlg.ProjectFileName.clear()
@@ -2061,10 +2237,11 @@ class Otoklim:
             shp_vil = self.newprojectdlg.Input_village.text()
             raster_bat = self.newprojectdlg.Input_bathymetry.text()
             csv_rainpost = self.newprojectdlg.Input_rainpost.text()
-            logo = self.newprojectdlg.Input_logo.text()
             csv_rainfall = self.newprojectdlg.Input_rainfall_class.text()
             csv_normalrain = self.newprojectdlg.Input_normalrain_class.text()
             map_template = self.newprojectdlg.Input_map_template.text()
+            map_template_2 = self.newprojectdlg.Input_map_template_2.text()
+            map_template_3 = self.newprojectdlg.Input_map_template_3.text()
             project_name = self.newprojectdlg.Input_prj_name.text()
         else:
             project_directory = self.saveasprodlg.ProjectFolder.text()
@@ -2076,10 +2253,11 @@ class Otoklim:
             shp_vil = self.otoklimdlg.villages.text()
             raster_bat = self.otoklimdlg.bathymetry.text()
             csv_rainpost = self.otoklimdlg.rainpostfile.text()
-            logo = self.otoklimdlg.logofile.text()
             csv_rainfall = self.otoklimdlg.rainfallfile.text()
             csv_normalrain = self.otoklimdlg.normalrainfile.text()
             map_template = self.otoklimdlg.maptemplate.text()
+            map_template_2 = self.otoklimdlg.maptemplate_2.text()
+            map_template_3 = self.otoklimdlg.maptemplate_3.text()
             project_name = self.saveasprodlg.ProjectName.text()
         self.createprojectdlg.project_dir.setText(str(project_directory))
         result = self.createprojectdlg.exec_()
@@ -2184,13 +2362,6 @@ class Otoklim:
                 self.copy_file(csv_rainpost, input_directory, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
-                # Copy Logo File
-                message = 'Checking Logo Files..'
-                item = QListWidgetItem(message)
-                self.projectprogressdlg.ProgressList.addItem(item)
-                self.copy_file(logo, input_directory, False)
-                item.setText(message + ' Done')
-                self.projectprogressdlg.ProgressList.addItem(item)
                 # Copy Rainfall Classification File
                 message = 'Checking Rainfall Classification Files..'
                 item = QListWidgetItem(message)
@@ -2212,6 +2383,20 @@ class Otoklim:
                 item = QListWidgetItem(message)
                 self.projectprogressdlg.ProgressList.addItem(item)
                 self.copy_file(map_template, input_directory, False)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Copy Map Template 2 File
+                message = 'Checking QGIS Map Template 2 Files..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                self.copy_file(map_template_2, input_directory, False)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Copy Map Template 3 File
+                message = 'Checking QGIS Map Template 3 Files..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                self.copy_file(map_template_3, input_directory, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
                 # Create Project JSON File
@@ -2292,11 +2477,6 @@ class Otoklim:
                             "LOCATION": "IN_FILE_LOC",
                             "FORMAT": "CSV",
                         },
-                        "LOGO_FILE": {
-                            "NAME": os.path.basename(logo),
-                            "LOCATION": "IN_FILE_LOC",
-                            "FORMAT": "PNG/JPG",
-                        },
                         "RAINFALL_FILE": {
                             "NAME": os.path.basename(csv_rainfall),
                             "LOCATION": "IN_FILE_LOC",
@@ -2309,6 +2489,16 @@ class Otoklim:
                         },
                         "MAP_TEMP": {
                             "NAME": os.path.basename(map_template),
+                            "LOCATION": "IN_FILE_LOC",
+                            "FORMAT": "QPT",
+                        },
+                        "MAP_TEMP_2": {
+                            "NAME": os.path.basename(map_template_2),
+                            "LOCATION": "IN_FILE_LOC",
+                            "FORMAT": "QPT",
+                        },
+                        "MAP_TEMP_3": {
+                            "NAME": os.path.basename(map_template_3),
                             "LOCATION": "IN_FILE_LOC",
                             "FORMAT": "QPT",
                         },
@@ -2408,7 +2598,49 @@ class Otoklim:
                                 "FORMAT": "TIF"
                             },
                         },
-                        "GENERATE_MAP": {},
+                        "GENERATE_MAP": {
+                            "PROCESSED": 0,
+                            "RASTER_ACH_1": {
+                                "REGION_LIST": "",
+                                "LOCATION": "MAP_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_ASH_1": {
+                                "REGION_LIST": "",
+                                "LOCATION": "MAP_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PCH_1": {
+                                "REGION_LIST": "",
+                                "LOCATION": "MAP_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PSH_1": {
+                                "REGION_LIST": "",
+                                "LOCATION": "MAP_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PCH_2": {
+                                "REGION_LIST": "",
+                                "LOCATION": "MAP_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PSH_2": {
+                                "REGION_LIST": "",
+                                "LOCATION": "MAP_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PCH_3": {
+                                "REGION_LIST": "",
+                                "LOCATION": "MAP_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                            "RASTER_PSH_3": {
+                                "REGION_LIST": "",
+                                "LOCATION": "MAP_FILE_LOC",
+                                "FORMAT": "TIF"
+                            },
+                        },
                         "GENERATE_CSV": {}
                     }
                 }
@@ -2448,10 +2680,11 @@ class Otoklim:
             self.otoklimdlg.villages.whatsThis(),
             self.otoklimdlg.bathymetry.whatsThis(),
             self.otoklimdlg.rainpostfile.whatsThis(),
-            self.otoklimdlg.logofile.whatsThis(),
             self.otoklimdlg.rainfallfile.whatsThis(),
             self.otoklimdlg.normalrainfile.whatsThis(),
             self.otoklimdlg.maptemplate.whatsThis(),
+            self.otoklimdlg.maptemplate2.whatsThis(),
+            self.otoklimdlg.maptemplate3.whatsThis(),
             self.otoklimdlg.Input_Value_CSV.whatsThis(),
             self.otoklimdlg.Select_Province.whatsThis(),
             self.otoklimdlg.Select_Month.whatsThis(),
@@ -2991,15 +3224,703 @@ class Otoklim:
                     processing.runalg('grass7:r.recode', rasterinterpolated, output_rainfall, False, "%f,%f,%f,%f" % (extent.xMinimum(), extent.xMaximum(), extent.yMinimum(), extent.yMaximum()), 0.001, raster_classified)
                 else:
                     processing.runalg('grass7:r.recode', rasterinterpolated, output_normalrain, False, "%f,%f,%f,%f" % (extent.xMinimum(), extent.xMaximum(), extent.yMinimum(), extent.yMaximum()), 0.001, raster_classified)
-
             with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     otoklim_project["PROCESSING"]["CLASSIFICATION"]["PROCESSED"] = 1
             with open(project, 'w') as jsonfile:
                 jsonfile.write(json.dumps(otoklim_project, indent=4))
             self.otoklimdlg.testParameter.setEnabled(False)
-            self.otoklimdlg.classificationPanelAccord.setEnabled(True)
-            self.otoklimdlg.classificationPanel.setEnabled(True)
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(True)
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(True)
+            self.otoklimdlg.generatemapPanel.setEnabled(True)
+            self.otoklimdlg.generatecsvPanel.setEnabled(True)
+            self.otoklimdlg.generatemapPanel.show()
+            self.otoklimdlg.generatecsvPanel.show()
+            with open(project, 'r') as jsonfile:
+                otoklim_project = json.load(jsonfile)
+                province_id = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["ID_PROV"]
+                region_csv = os.path.join(otoklim_project["LOCATION"]["PRC_FILE_LOC"], str(province_id) +  "_regionlist.csv")
+            self.region_listing(province_id, region_csv, False)
+        except Exception as e:
+            self.errormessagedlg.ErrorMessage.setText(str(e))
+            self.errormessagedlg.exec_()
+
+    def region_listing(self, province_id, region_csv, save):
+        """Function to listing region to lost widget"""
+        if province_id:
+            all_regions = []
+            layer = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
+            layer_kab = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Provinsi', 'ogr')
+            layer_kec = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Provinsi', 'ogr')
+            exp = "\"ID_PROV\"='{}'".format(province_id)
+            layer.setSubsetString(exp)
+            fields = layer.pendingFields()
+            if not os.path.exists(region_csv) or save:
+                try:
+                    os.remove(region_csv)
+                except OSError:
+                    pass
+                with open(region_csv, "wb+") as csvfile:
+                    csv_writer = csv.writer(csvfile, delimiter=",")
+                    # Single Province Listing
+                    for feature in layer.getFeatures():
+                        csv_writer.writerow([feature['PROVINSI'].capitalize(), feature['ADM_REGION'].capitalize(), feature['ID_PROV'], ''])
+                    district_list = []
+                    layer_kab.setSubsetString(exp)
+                    # City \ District Listing
+                    for feature in layer_kab.getFeatures():
+                        district_list.append((feature['KABUPATEN'].capitalize(), feature['ADM_REGION'].capitalize(), feature['ID_KAB'], '- '))
+                    for kab in sorted(district_list, key=lambda x: x[0]):
+                        csv_writer.writerow(kab)
+                        subdistrict_list = []
+                        exp = "\"ID_KAB\"='{}'".format(kab[2])
+                        layer_kec.setSubsetString(exp)
+                        # Sub-District Listing
+                        for feature in layer_kec.getFeatures():
+                            subdistrict_list.append((feature['KECAMATAN'].capitalize(), feature['ADM_REGION'].capitalize(), feature['ID_KEC'], '-- '))
+                        for kec in sorted(subdistrict_list, key=lambda x: x[0]):
+                            csv_writer.writerow(kec)
+            with open(region_csv, 'rb') as csvfile:
+                spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+                region_list = [row for row in spamreader]
+            for region in region_list:
+                item = QListWidgetItem(region[3] + region[1] + ' ' + region[0])
+                item.setWhatsThis(str(region[0]) + '|' + str(region[2]))
+                self.otoklimdlg.listWidget_option_1.addItem(item)
+                item2 = QListWidgetItem(region[3] + region[1] + ' ' + region[0])
+                item2.setWhatsThis(str(region[0]) + '|' + str(region[2]))
+                self.otoklimdlg.listWidget_option_2.addItem(item2)
+
+    def search_option_1(self):
+        """Function to search region"""
+        key = self.otoklimdlg.search_option1.text()
+        project = os.path.join(
+            self.otoklimdlg.projectworkspace.text(),
+            self.otoklimdlg.projectfilename.text()
+        )
+        with open(project, 'r') as jsonfile:
+            otoklim_project = json.load(jsonfile)
+            province_id = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["ID_PROV"]
+            region_csv = os.path.join(otoklim_project["LOCATION"]["PRC_FILE_LOC"], str(province_id) +  "_regionlist.csv")
+        with open(region_csv, 'rb') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+            region_list = [row for row in spamreader]
+        filter_list = [row for row in region_list if str(key).upper() in row[0].upper()]
+        self.otoklimdlg.listWidget_option_1.clear()
+        for region in filter_list:
+            item = QListWidgetItem(region[3] + region[1] + ' ' + region[0])
+            item.setWhatsThis(str(region[0]) + '|' + str(region[2]))
+            self.otoklimdlg.listWidget_option_1.addItem(item)
+    
+    def search_option_2(self):
+        """Function to search region"""
+        key = self.otoklimdlg.search_option2.text()
+        project = os.path.join(
+            self.otoklimdlg.projectworkspace.text(),
+            self.otoklimdlg.projectfilename.text()
+        )
+        with open(project, 'r') as jsonfile:
+            otoklim_project = json.load(jsonfile)
+            province_id = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["ID_PROV"]
+            region_csv = os.path.join(otoklim_project["LOCATION"]["PRC_FILE_LOC"], str(province_id) +  "_regionlist.csv")
+        with open(region_csv, 'rb') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+            region_list = [row for row in spamreader]
+        filter_list = [row for row in region_list if str(key).upper() in row[0].upper()]
+        self.otoklimdlg.listWidget_option_2.clear()
+        for region in filter_list:
+            item = QListWidgetItem(region[3] + region[1] + ' ' + region[0])
+            item.setWhatsThis(str(region[0]) + '|' + str(region[2]))
+            self.otoklimdlg.listWidget_option_2.addItem(item)
+
+    def add_to_selected_1(self):
+        """Function to move selected region"""
+        items = []
+        for index in xrange(self.otoklimdlg.listWidget_selected_1.count()):
+            items.append(self.otoklimdlg.listWidget_selected_1.item(index))
+        selected_items = [i.text() for i in items]
+
+        for item in self.otoklimdlg.listWidget_option_1.selectedItems():
+            if item.text() not in selected_items:
+                newitem = QListWidgetItem(item.text())
+                newitem.setWhatsThis(item.whatsThis())
+                self.otoklimdlg.listWidget_selected_1.addItem(newitem)
+            else:
+                pass
+    
+    def add_to_selected_2(self):
+        """Function to move selected region"""
+        items = []
+        for index in xrange(self.otoklimdlg.listWidget_selected_2.count()):
+            items.append(self.otoklimdlg.listWidget_selected_2.item(index))
+        selected_items = [i.text() for i in items]
+
+        for item in self.otoklimdlg.listWidget_option_2.selectedItems():
+            if item.text() not in selected_items:
+                newitem = QListWidgetItem(item.text())
+                newitem.setWhatsThis(item.whatsThis())
+                self.otoklimdlg.listWidget_selected_2.addItem(newitem)
+            else:
+                pass
+
+    def delete_from_selected_1(self):
+        """Function to remove selected region"""
+        for item in self.otoklimdlg.listWidget_selected_1.selectedItems():
+            self.otoklimdlg.listWidget_selected_1.takeItem(
+                self.otoklimdlg.listWidget_selected_1.row(item)
+            )
+    
+    def delete_from_selected_2(self):
+        """Function to remove selected region"""
+        for item in self.otoklimdlg.listWidget_selected_2.selectedItems():
+            self.otoklimdlg.listWidget_selected_2.takeItem(
+                self.otoklimdlg.listWidget_selected_2.row(item)
+            )
+
+    def generate_map(self):
+        """Function to generate map"""
+        prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
+        out_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'output')
+        map_directory = os.path.join(out_directory, 'map')
+        date = self.select_date_now()
+        months = date[0]
+        years = date[1]
+        items = []
+        for index in xrange(self.otoklimdlg.listWidget_selected_1.count()):
+            items.append(self.otoklimdlg.listWidget_selected_1.item(index))
+
+        slc_id_list = [int(float(i.whatsThis().split('|')[1])) for i in items]
+        slc_name_list = [str(i.whatsThis().split('|')[0]) for i in items]
+        project = os.path.join(
+            self.otoklimdlg.projectworkspace.text(),
+            self.otoklimdlg.projectfilename.text()
+        )
+        try:
+            prc_list = []
+            if self.otoklimdlg.ach_1_map.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_ach_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ACH_1"]["NAME"]
+                    param = os.path.splitext(raster_ach_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ach_1)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_ACH_1"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[0]
+                    year = years[0]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_ach_1])
+            if self.otoklimdlg.ash_1_map.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_ash_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ASH_1"]["NAME"]
+                    param = os.path.splitext(raster_ash_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ash_1)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_ASH_1"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[0]
+                    year = years[0]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_ash_1])
+            if self.otoklimdlg.pch_1_map.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_pch_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_1"]["NAME"]
+                    param = os.path.splitext(raster_pch_1)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_1)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_1"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[1]
+                    year = years[1]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_pch_1])
+            if self.otoklimdlg.psh_1_map.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_psh_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_1"]["NAME"]
+                    param = os.path.splitext(raster_psh_1)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_1)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_1"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[1]
+                    year = years[1]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_psh_1])
+            if self.otoklimdlg.pch_2_map.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_pch_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_2"]["NAME"]
+                    param = os.path.splitext(raster_pch_2)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_2)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_2"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[2]
+                    year = years[2]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_pch_2])
+            if self.otoklimdlg.psh_2_map.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_psh_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_2"]["NAME"]
+                    param = os.path.splitext(raster_psh_2)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_2)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_2"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[2]
+                    year = years[2]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_psh_2])
+            if self.otoklimdlg.pch_3_map.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_pch_3 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_3"]["NAME"]
+                    param = os.path.splitext(raster_pch_3)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_3)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_3"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[3]
+                    year = years[3]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_pch_3])
+            if self.otoklimdlg.psh_3_map.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_psh_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_3"]["NAME"]
+                    param = os.path.splitext(raster_psh_3)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_3)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_3"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[3]
+                    year = years[3]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_psh_3])
+            # Start Listing
+            for value in prc_list:
+                raster_classified = os.path.join(prcs_directory, value[1])
+                temp_raster = os.path.join(prcs_directory, 'tmp' + str(value[1]))
+                os.mkdir(temp_raster)
+                for slc_id, slc_name in zip(slc_id_list, slc_name_list):
+                    if len(str(slc_id)) == 2:
+                        projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
+                        output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
+                        # Raster Value Styling
+                        layer_raster = QgsRasterLayer(raster_classified, 'Raster')
+                        s = QgsRasterShader()
+                        c = QgsColorRampShader()
+                        c.setColorRampType(QgsColorRampShader.EXACT)
+                        i = []
+                        if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                            color = []
+                            label = []
+                            lng = 1
+                            list_value = []
+                            with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
+                                spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                                for row in spamreader:
+                                    #row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
+                                    color.append(row['color'])
+                                    # LABEL NOT FIX
+                                    label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
+                                    list_value.append(row['new_value'])
+                                    lng += 1
+                        else:
+                            with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
+                                spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                                for row in spamreader:
+                                    #row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
+                                    color.append(row['color'])
+                                    # LABEL NOT FIX
+                                    label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
+                                    list_value.append(row['new_value'])
+                                    lng += 1
+                        for n in range(1, lng):
+                            i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1])))
+                        c.setColorRampItemList(i)
+                        s.setRasterShaderFunction(c)
+                        ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
+                        layer_raster.setRenderer(ps)
+
+                        # Province Styling
+                        layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
+                        symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
+                        layer_provinsi.rendererV2().setSymbol(symbol)
+                        layer_provinsi.triggerRepaint()
+                        palyr = QgsPalLayerSettings()
+                        palyr.readFromLayer(layer_provinsi)
+                        palyr.enabled = True
+                        palyr.fieldName = 'PROVINSI'
+                        palyr.placement = QgsPalLayerSettings.OverPoint
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '14', '')
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
+                        palyr.writeToLayer(layer_provinsi)
+                        # Districts Styling
+                        layer_kabupaten = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
+                        exp = "\"ID_PROV\"='{}'".format(str(slc_id))
+                        layer_kabupaten.setSubsetString(exp)
+                        symbol = QgsFillSymbolV2.createSimple({'color': '0,0,0,0', 'outline_color': '0,0,0,255', 'outline_style': 'dot', 'outline_width': '0.25'})
+                        layer_kabupaten.rendererV2().setSymbol(symbol)
+                        palyr = QgsPalLayerSettings()
+                        palyr.readFromLayer(layer_kabupaten)
+                        palyr.enabled = True
+                        palyr.fieldName = 'KABUPATEN'
+                        palyr.placement = QgsPalLayerSettings.OverPoint
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '8', '')
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
+                        palyr.writeToLayer(layer_kabupaten)
+                        # Bathymetry
+                        layer_bath = QgsRasterLayer(self.otoklimdlg.bathymetry.text(), 'Bathymetry')
+                        # Add Layer To QGIS Canvas
+                        canvas = qgis.utils.iface.mapCanvas()
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_bath)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_raster)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
+                        # Set Extent
+                        canvas.setExtent(layer_kabupaten.extent())
+                        canvas.refresh()
+                        # Create QGIS Porject File
+                        f = QFileInfo(projectqgs)
+                        p = QgsProject.instance()
+                        p.write(f)
+                        QgsProject.instance().clear()
+                        # Read Map
+                        template_file = open(self.otoklimdlg.maptemplate.text())
+                        template_content = template_file.read()
+                        template_file.close()
+                        document = QDomDocument()
+                        document.setContent(template_content)
+                        if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                            title_type = "CURAH"
+                        else:
+                            title_type = "SIFAT"
+                        map_title = 'PETA PERKIRAAN ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
+                        substitution_map = {'map_title': map_title}
+                        canvas = QgsMapCanvas()
+                        QgsProject.instance().read(QFileInfo(projectqgs))
+                        bridge = QgsLayerTreeMapCanvasBridge(QgsProject.instance().layerTreeRoot(), canvas)
+                        bridge.setCanvasLayers()
+                        composition = QgsComposition(canvas.mapSettings())
+                        composition.loadFromTemplate(document, substitution_map)
+                        map_item = composition.getComposerItemById('map')
+                        map_item.setMapCanvas(canvas)
+                        composition.refreshItems()
+                        composition.exportAsPDF(output_pdf)
+                        # Remove unuse file
+                        raster = QgsMapLayerRegistry.instance().mapLayersByName('Raster')[0]
+                        kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
+                        provinsi = QgsMapLayerRegistry.instance().mapLayersByName('Provinsi')[0]
+                        bathymetry = QgsMapLayerRegistry.instance().mapLayersByName('Bathymetry')[0]
+                        all_layer = [raster.id(), kabupaten.id(), provinsi.id(), bathymetry.id()]
+                        QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
+                    elif len(str(slc_id)) == 4:
+                        projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
+                        output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
+                        # Raster Value Styling
+                        rasterclassified = QgsRasterLayer(raster_classified, 'Raster')
+                        # Special Case For Districts (clipping)
+                        layer_districts = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_districts)
+                        exp = "\"ID_KAB\"='{}'".format(str(slc_id))
+                        layer_districts.setSubsetString(exp)
+                        raster_cropped = os.path.join(temp_raster, str(slc_name) + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.tif')
+                        processing.runalg(
+                            "gdalogr:cliprasterbymasklayer", 
+                            rasterclassified, 
+                            layer_districts, 
+                            -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", 
+                            raster_cropped
+                        )
+                        QgsMapLayerRegistry.instance().removeMapLayer(layer_districts.id())
+                        layer_raster = QgsRasterLayer(raster_cropped, 'Raster')
+
+                        s = QgsRasterShader()
+                        c = QgsColorRampShader()
+                        c.setColorRampType(QgsColorRampShader.EXACT)
+                        i = []
+                        if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                            color = []
+                            label = []
+                            lng = 1
+                            list_value = []
+                            with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
+                                spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                                for row in spamreader:
+                                    #row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
+                                    color.append(row['color'])
+                                    # LABEL NOT FIX
+                                    label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
+                                    list_value.append(row['new_value'])
+                                    lng += 1
+                        else:
+                            with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
+                                spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                                for row in spamreader:
+                                    #row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
+                                    color.append(row['color'])
+                                    # LABEL NOT FIX
+                                    label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
+                                    list_value.append(row['new_value'])
+                                    lng += 1
+                        for n in range(1, lng):
+                            i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1])))
+                        c.setColorRampItemList(i)
+                        s.setRasterShaderFunction(c)
+                        ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
+                        layer_raster.setRenderer(ps)
+
+                        # Province Styling
+                        layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
+                        symbol = QgsFillSymbolV2.createSimple({'color': '240,240,240,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
+                        layer_provinsi.rendererV2().setSymbol(symbol)
+                        layer_provinsi.triggerRepaint()
+
+                        # Districts Styling
+                        layer_kabupaten = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
+                        exp = "\"ID_PROV\"='{}'".format(str(slc_id)[0:2])
+                        layer_kabupaten.setSubsetString(exp)
+                        symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
+                        layer_kabupaten.rendererV2().setSymbol(symbol)
+                        layer_kabupaten.triggerRepaint()
+                        palyr = QgsPalLayerSettings()
+                        palyr.readFromLayer(layer_kabupaten)
+                        palyr.enabled = True
+                        palyr.fieldName = 'KABUPATEN'
+                        palyr.placement = QgsPalLayerSettings.OverPoint
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '14', '')
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
+                        palyr.writeToLayer(layer_kabupaten)
+                        # Sub-Districts Styling
+                        layer_kecamatan = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
+                        exp = "\"ID_KAB\"='{}'".format(str(slc_id))
+                        layer_kecamatan.setSubsetString(exp)
+                        symbol = QgsFillSymbolV2.createSimple({'color': '0,0,0,0', 'outline_color': '0,0,0,255', 'outline_style': 'dot', 'outline_width': '0.25'})
+                        layer_kecamatan.rendererV2().setSymbol(symbol)
+                        palyr = QgsPalLayerSettings()
+                        palyr.readFromLayer(layer_kecamatan)
+                        palyr.enabled = True
+                        palyr.fieldName = 'KECAMATAN'
+                        palyr.placement = QgsPalLayerSettings.OverPoint
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '8', '')
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
+                        palyr.writeToLayer(layer_kecamatan)
+                        # Bathymetry
+                        layer_bath = QgsRasterLayer(self.otoklimdlg.bathymetry.text(), 'Bathymetry')
+                        # Add Layer To QGIS Canvas
+                        canvas = qgis.utils.iface.mapCanvas()
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_bath)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_raster)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan)
+                        # Set Extent
+                        canvas.setExtent(layer_kecamatan.extent())
+                        canvas.refresh()
+                        # Create QGIS Porject File
+                        f = QFileInfo(projectqgs)
+                        p = QgsProject.instance()
+                        p.write(f)
+                        QgsProject.instance().clear()
+                        QgsMapLayerRegistry.instance().removeMapLayer(layer_raster.id())
+                        del layer_raster
+                        # Read Map
+                        template_file = open(self.otoklimdlg.maptemplate2.text())
+                        template_content = template_file.read()
+                        template_file.close()
+                        document = QDomDocument()
+                        document.setContent(template_content)
+                        if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                            title_type = "CURAH"
+                        else:
+                            title_type = "SIFAT"
+                        map_title = 'PETA PERKIRAAN ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
+                        substitution_map = {'map_title': map_title}
+                        canvas = QgsMapCanvas()
+                        QgsProject.instance().read(QFileInfo(projectqgs))
+                        bridge = QgsLayerTreeMapCanvasBridge(QgsProject.instance().layerTreeRoot(), canvas)
+                        bridge.setCanvasLayers()
+                        composition = QgsComposition(canvas.mapSettings())
+                        composition.loadFromTemplate(document, substitution_map)
+                        map_item = composition.getComposerItemById('map')
+                        map_item.setMapCanvas(canvas)
+                        map_item.zoomToExtent(canvas.extent())
+                        composition.refreshItems()
+                        composition.exportAsPDF(output_pdf)
+                        # Remove unuse file
+                        raster = QgsMapLayerRegistry.instance().mapLayersByName('Raster')[0]
+                        kecamatan = QgsMapLayerRegistry.instance().mapLayersByName('Kecamatan')[0]
+                        kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
+                        provinsi = QgsMapLayerRegistry.instance().mapLayersByName('Provinsi')[0]
+                        bathymetry = QgsMapLayerRegistry.instance().mapLayersByName('Bathymetry')[0]
+                        all_layer = [raster.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), kecamatan.id()]
+                        QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
+                        del raster
+                        os.remove(projectqgs)
+                        # Remove Raster
+                        layer_raster = QgsRasterLayer(raster_cropped, 'Raster')
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_raster)
+                        QgsMapLayerRegistry.instance().removeMapLayer(layer_raster.id())
+                        del layer_raster
+                        os.remove(raster_cropped)
+                    else:
+                        print slc_id
+                        projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
+                        output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
+                        # Raster Value Styling
+                        rasterclassified = QgsRasterLayer(raster_classified, 'Raster')
+                        # Special Case For Sub-Districts (clipping)
+                        layer_subdistricts = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_subdistricts)
+                        exp = "\"ID_KEC\"='{}'".format(str(slc_id))
+                        layer_subdistricts.setSubsetString(exp)
+                        raster_cropped = os.path.join(temp_raster, str(slc_name) + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.tif')
+                        processing.runalg(
+                            "gdalogr:cliprasterbymasklayer", 
+                            rasterclassified, 
+                            layer_subdistricts, 
+                            -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", 
+                            raster_cropped
+                        )
+                        QgsMapLayerRegistry.instance().removeMapLayer(layer_subdistricts.id())
+                        layer_raster = QgsRasterLayer(raster_cropped, 'Raster')
+
+                        s = QgsRasterShader()
+                        c = QgsColorRampShader()
+                        c.setColorRampType(QgsColorRampShader.EXACT)
+                        i = []
+                        if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                            color = []
+                            label = []
+                            lng = 1
+                            list_value = []
+                            with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
+                                spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                                for row in spamreader:
+                                    #row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
+                                    color.append(row['color'])
+                                    # LABEL NOT FIX
+                                    label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
+                                    list_value.append(row['new_value'])
+                                    lng += 1
+                        else:
+                            with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
+                                spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                                for row in spamreader:
+                                    #row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
+                                    color.append(row['color'])
+                                    # LABEL NOT FIX
+                                    label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
+                                    list_value.append(row['new_value'])
+                                    lng += 1
+                        for n in range(1, lng):
+                            i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1])))
+                        c.setColorRampItemList(i)
+                        s.setRasterShaderFunction(c)
+                        ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
+                        layer_raster.setRenderer(ps)
+
+                        # Province Styling
+                        layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
+                        symbol = QgsFillSymbolV2.createSimple({'color': '240,240,240,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
+                        layer_provinsi.rendererV2().setSymbol(symbol)
+                        layer_provinsi.triggerRepaint()
+
+                        # Districts Styling
+                        layer_kabupaten = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
+                        exp = "\"ID_PROV\"='{}'".format(str(slc_id)[0:2])
+                        layer_kabupaten.setSubsetString(exp)
+                        symbol = QgsFillSymbolV2.createSimple({'color': '223,223,223,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
+                        layer_kabupaten.rendererV2().setSymbol(symbol)
+                        layer_kabupaten.triggerRepaint()
+
+                        # Sub-Districts Styling
+                        layer_kecamatan = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
+                        exp = "\"ID_KAB\"='{}'".format(str(slc_id)[0:4])
+                        layer_kecamatan.setSubsetString(exp)
+                        symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
+                        layer_kecamatan.rendererV2().setSymbol(symbol)
+                        layer_kecamatan.triggerRepaint()
+                        palyr = QgsPalLayerSettings()
+                        palyr.readFromLayer(layer_kecamatan)
+                        palyr.enabled = True
+                        palyr.fieldName = 'KECAMATAN'
+                        palyr.placement = QgsPalLayerSettings.OverPoint
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '14', '')
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
+                        palyr.writeToLayer(layer_kecamatan)
+
+                        # Sub-Districts Styling
+                        layer_desa = QgsVectorLayer(self.otoklimdlg.villages.text(), 'Desa', 'ogr')
+                        exp = "\"ID_KEC\"='{}'".format(str(slc_id))
+                        layer_desa.setSubsetString(exp)
+                        symbol = QgsFillSymbolV2.createSimple({'color': '0,0,0,0', 'outline_color': '0,0,0,255', 'outline_style': 'dot', 'outline_width': '0.25'})
+                        layer_desa.rendererV2().setSymbol(symbol)
+                        palyr = QgsPalLayerSettings()
+                        palyr.readFromLayer(layer_desa)
+                        palyr.enabled = True
+                        palyr.fieldName = 'DESA'
+                        palyr.placement = QgsPalLayerSettings.OverPoint
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '8', '')
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
+                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
+                        palyr.writeToLayer(layer_desa)
+                        # Bathymetry
+                        layer_bath = QgsRasterLayer(self.otoklimdlg.bathymetry.text(), 'Bathymetry')
+                        # Add Layer To QGIS Canvas
+                        canvas = qgis.utils.iface.mapCanvas()
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_bath)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_raster)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_desa)
+                        # Set Extent
+                        canvas.setExtent(layer_desa.extent())
+                        canvas.refresh()
+                        # Create QGIS Porject File
+                        f = QFileInfo(projectqgs)
+                        p = QgsProject.instance()
+                        p.write(f)
+                        QgsProject.instance().clear()
+                        QgsMapLayerRegistry.instance().removeMapLayer(layer_raster.id())
+                        del layer_raster
+                        # Read Map
+                        template_file = open(self.otoklimdlg.maptemplate3.text())
+                        template_content = template_file.read()
+                        template_file.close()
+                        document = QDomDocument()
+                        document.setContent(template_content)
+                        if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                            title_type = "CURAH"
+                        else:
+                            title_type = "SIFAT"
+                        map_title = 'PETA PERKIRAAN ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
+                        substitution_map = {'map_title': map_title}
+                        canvas = QgsMapCanvas()
+                        QgsProject.instance().read(QFileInfo(projectqgs))
+                        bridge = QgsLayerTreeMapCanvasBridge(QgsProject.instance().layerTreeRoot(), canvas)
+                        bridge.setCanvasLayers()
+                        composition = QgsComposition(canvas.mapSettings())
+                        composition.loadFromTemplate(document, substitution_map)
+                        map_item = composition.getComposerItemById('map')
+                        map_item.setMapCanvas(canvas)
+                        map_item.zoomToExtent(canvas.extent())
+                        composition.refreshItems()
+                        composition.exportAsPDF(output_pdf)
+                        # Remove unuse file
+                        raster = QgsMapLayerRegistry.instance().mapLayersByName('Raster')[0]
+                        desa = QgsMapLayerRegistry.instance().mapLayersByName('Desa')[0]
+                        kecamatan = QgsMapLayerRegistry.instance().mapLayersByName('Kecamatan')[0]
+                        kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
+                        provinsi = QgsMapLayerRegistry.instance().mapLayersByName('Provinsi')[0]
+                        bathymetry = QgsMapLayerRegistry.instance().mapLayersByName('Bathymetry')[0]
+                        all_layer = [raster.id(), desa.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), kecamatan.id()]
+                        QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
+                        del raster
+                        os.remove(projectqgs)
+                        # Remove Raster
+                        layer_raster = QgsRasterLayer(raster_cropped, 'Raster')
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_raster)
+                        QgsMapLayerRegistry.instance().removeMapLayer(layer_raster.id())
+                        del layer_raster
+                        os.remove(raster_cropped)
+                shutil.rmtree(temp_raster)
+
         except Exception as e:
             self.errormessagedlg.ErrorMessage.setText(str(e))
             self.errormessagedlg.exec_()
