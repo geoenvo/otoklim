@@ -55,6 +55,7 @@ from qgis.core import (
     QgsComposition
 )
 from qgis.gui import QgsMapCanvas, QgsLayerTreeMapCanvasBridge
+from qgis.analysis import QgsZonalStatistics
 from osgeo import gdal, ogr, osr
 from gdalconst import GA_ReadOnly
 import qgis.utils
@@ -67,6 +68,8 @@ import subprocess
 import datetime
 import processing
 import csv
+import numpy as np
+import math
 
 
 class Otoklim:
@@ -513,6 +516,9 @@ class Otoklim:
 
         # Add Generate Map Trigger Logic
         self.otoklimdlg.generatemapButton.clicked.connect(self.generate_map)
+
+        # Add Generate CSV Trigger Logic
+        self.otoklimdlg.generatecsvButton.clicked.connect(self.generate_csv)
 
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
@@ -2603,45 +2609,87 @@ class Otoklim:
                             "RASTER_ACH_1": {
                                 "REGION_LIST": "",
                                 "LOCATION": "MAP_FILE_LOC",
-                                "FORMAT": "TIF"
+                                "FORMAT": "PDF"
                             },
                             "RASTER_ASH_1": {
                                 "REGION_LIST": "",
                                 "LOCATION": "MAP_FILE_LOC",
-                                "FORMAT": "TIF"
+                                "FORMAT": "PDF"
                             },
                             "RASTER_PCH_1": {
                                 "REGION_LIST": "",
                                 "LOCATION": "MAP_FILE_LOC",
-                                "FORMAT": "TIF"
+                                "FORMAT": "PDF"
                             },
                             "RASTER_PSH_1": {
                                 "REGION_LIST": "",
                                 "LOCATION": "MAP_FILE_LOC",
-                                "FORMAT": "TIF"
+                                "FORMAT": "PDF"
                             },
                             "RASTER_PCH_2": {
                                 "REGION_LIST": "",
                                 "LOCATION": "MAP_FILE_LOC",
-                                "FORMAT": "TIF"
+                                "FORMAT": "PDF"
                             },
                             "RASTER_PSH_2": {
                                 "REGION_LIST": "",
                                 "LOCATION": "MAP_FILE_LOC",
-                                "FORMAT": "TIF"
+                                "FORMAT": "PDF"
                             },
                             "RASTER_PCH_3": {
                                 "REGION_LIST": "",
                                 "LOCATION": "MAP_FILE_LOC",
-                                "FORMAT": "TIF"
+                                "FORMAT": "PDF"
                             },
                             "RASTER_PSH_3": {
                                 "REGION_LIST": "",
                                 "LOCATION": "MAP_FILE_LOC",
-                                "FORMAT": "TIF"
+                                "FORMAT": "PDF"
                             },
                         },
-                        "GENERATE_CSV": {}
+                        "GENERATE_CSV": {
+                            "PROCESSED": 0,
+                            "RASTER_ACH_1": {
+                                "REGION_LIST": "",
+                                "LOCATION": "CSV_FILE_LOC",
+                                "FORMAT": "CSV"
+                            },
+                            "RASTER_ASH_1": {
+                                "REGION_LIST": "",
+                                "LOCATION": "CSV_FILE_LOC",
+                                "FORMAT": "CSV"
+                            },
+                            "RASTER_PCH_1": {
+                                "REGION_LIST": "",
+                                "LOCATION": "CSV_FILE_LOC",
+                                "FORMAT": "CSV"
+                            },
+                            "RASTER_PSH_1": {
+                                "REGION_LIST": "",
+                                "LOCATION": "CSV_FILE_LOC",
+                                "FORMAT": "CSV"
+                            },
+                            "RASTER_PCH_2": {
+                                "REGION_LIST": "",
+                                "LOCATION": "CSV_FILE_LOC",
+                                "FORMAT": "CSV"
+                            },
+                            "RASTER_PSH_2": {
+                                "REGION_LIST": "",
+                                "LOCATION": "CSV_FILE_LOC",
+                                "FORMAT": "CSV"
+                            },
+                            "RASTER_PCH_3": {
+                                "REGION_LIST": "",
+                                "LOCATION": "CSV_FILE_LOC",
+                                "FORMAT": "CSV"
+                            },
+                            "RASTER_PSH_3": {
+                                "REGION_LIST": "",
+                                "LOCATION": "CSV_FILE_LOC",
+                                "FORMAT": "CSV"
+                            },
+                        }
                     }
                 }
                 otoklim_file = os.path.join(
@@ -3920,7 +3968,371 @@ class Otoklim:
                         del layer_raster
                         os.remove(raster_cropped)
                 shutil.rmtree(temp_raster)
+        except Exception as e:
+            self.errormessagedlg.ErrorMessage.setText(str(e))
+            self.errormessagedlg.exec_()
+    
+    def get_category(self, title, value):
+        """Get Category"""
+        # CATEGORY NOT FIX -> MAKE DYNAMICALLY BASED ON CLASSIFICATION CSV FILE
+        if title.startswith('c'):
+            if value == 1:
+                val = "0 - 20"
+            elif value == 2:
+                val = "21 - 50"
+            elif value == 3:
+                val = "51 - 100"
+            elif value == 4:
+                val = "101 - 150"
+            elif value == 5:
+                val = "151 - 200"
+            elif value == 6:
+                val = "201 - 300"
+            elif value == 7:
+                val = "301 - 400"
+            elif value == 8:
+                val = "401 - 500"
+            elif value == 9:
+                val = "> 500"
+            else:
+                val = str(value) + '_error'
+        else:
+            if value == 1:
+                val = "0 - 30"
+            elif value == 2:
+                val = "31 - 50"
+            elif value == 3:
+                val = "51 - 84"
+            elif value == 4:
+                val = "85 - 115"
+            elif value == 5:
+                val = "116 - 150"
+            elif value == 6:
+                val = "151 - 200"
+            elif value == 7:
+                val = "> 200"
+            else:
+                val = str(value) + '_error'
+        return val
 
+    def create_default_csv(self, prc_list, csv_directory, prcs_directory):
+        """Create Default CSV File"""
+        driver = ogr.GetDriverByName("ESRI Shapefile")
+        kabupaten_csv = os.path.join(csv_directory, 'kabupaten.csv')
+        kecamatan_csv = os.path.join(csv_directory, 'kecamatan.csv')
+        desa_csv = os.path.join(csv_directory, 'desa.csv')
+        output_csv_list = [kabupaten_csv, kecamatan_csv, desa_csv]
+        # Create ZS Shapefile
+        def create_zs_shp(region, region_type):
+            zs_shp = os.path.join(prcs_directory, str(region_type) + '.shp')
+            try:
+                os.remove(zs_shp)
+            except:
+                pass
+            layer = QgsVectorLayer(str(region), str(region_type), 'ogr')
+            exp = "\"PROVINSI\"='{}'".format(self.otoklimdlg.Select_Province.currentText())
+            it = layer.getFeatures(QgsFeatureRequest(QgsExpression(exp)))
+            ids = [i.id() for i in it]
+            layer.setSelectedFeatures(ids)
+            QgsVectorFileWriter.writeAsVectorFormat(layer, zs_shp, "utf-8", layer.crs(), "ESRI Shapefile", 1)
+            del layer
+            return zs_shp
+        copied_shp_list = [
+            create_zs_shp(self.otoklimdlg.districts.text(), 'kabupaten_kota'), 
+            create_zs_shp(self.otoklimdlg.subdistricts.text(), 'kecamatan'), 
+            create_zs_shp(self.otoklimdlg.villages.text(), 'desa')]
+        region_id_list = [1, 2, 3]
+        for copied_shp, output_csv, region_id in zip(copied_shp_list, output_csv_list, region_id_list):
+            with open(output_csv, "wb+") as csvfile:
+                csv_writer = csv.writer(csvfile, delimiter=',')
+                if region_id == 1:
+                    main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota']
+                elif region_id == 2:
+                    main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota', 'ID_Kecamatan', 'Kecamatan']
+                else:
+                    main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota', 'ID_Kecamatan', 'Kecamatan', 'ID_Desa', 'Desa']
+                header = main_header
+                for prc in prc_list:
+                    param_header = [prc[0].upper() + '_min', prc[0].upper() + '_maj', prc[0].upper() + '_ket']
+                    header += param_header
+                csv_writer.writerow(header)
+                for prc in prc_list:
+                    raster = os.path.join(prcs_directory, prc[1])
+                    if prc[0][0:3] == 'ach' or prc[0][0:3] == 'pch':
+                        typ = 'ch'
+                    else:
+                        typ = 'sh'
+                    polygonLayer = QgsVectorLayer(copied_shp, 'zonepolygons', "ogr")
+                    zoneStat = QgsZonalStatistics(polygonLayer, raster, typ, 1, QgsZonalStatistics.Min|QgsZonalStatistics.Max|QgsZonalStatistics.Minority|QgsZonalStatistics.Majority)
+                    zoneStat.calculateStatistics(None)
+                    del polygonLayer
+
+                layer = QgsVectorLayer(copied_shp, 'layer', 'ogr')
+                fields = layer.pendingFields()
+                field_names = [field.name() for field in fields]
+                dataSource = driver.Open(copied_shp, 0)
+                layersource = dataSource.GetLayer()
+                n = 1
+                for feature in layersource:
+                    if region_id == 1:
+                        main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN")]
+                    elif region_id == 2:
+                        main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN"), feature.GetField("ID_KEC"), feature.GetField("KECAMATAN")]
+                    else:
+                        main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN"), feature.GetField("ID_KEC"), feature.GetField("KECAMATAN"), feature.GetField("ID_DES"), feature.GetField("DESA")]
+                    param_values = []
+                    h = 0
+                    for fieldname in field_names:
+                        if fieldname.startswith('ch'):
+                            break
+                        h += 1
+                    m = 0
+                    for field1, field2, field3, field4 in zip(field_names[h:], field_names[h+1:], field_names[h+2:], field_names[h+3:]):
+                        if m == 0:
+                            v_r = False
+                            v_m = False
+                            v_t = False
+                            v_bn = False
+                            v_n = False
+                            minor_val = self.get_category(field3, feature.GetField(str(field3)))
+                            major_val = self.get_category(field4, feature.GetField(str(field4)))
+                            param_values.append(minor_val)
+                            param_values.append(major_val)
+                            min_val = feature.GetField(str(field1))
+                            max_val = feature.GetField(str(field2))
+                            ket_list = []
+                            if min_val and max_val:
+                                for value in range(int(min_val), int(max_val) + 1):
+                                    if field1.startswith('c'):
+                                        if value == 1 or value == 2 or value == 3 and not v_r:
+                                            ket_list.append('R')
+                                            v_r = True
+                                        elif value == 4 or value == 5 or value == 6 and not v_m:
+                                            ket_list.append('M')
+                                            v_m = True
+                                        elif value == 7 and not v_t:
+                                            ket_list.append('T')
+                                            v_t = True
+                                        else:
+                                            ket_list.append('ST')
+                                            break
+                                    else:
+                                        if value == 1 or value == 2 or value == 3 and not v_bn:
+                                            ket_list.append('BN')
+                                            v_bn = True
+                                        elif value == 4 and not v_n:
+                                            ket_list.append('N')
+                                            v_n = True
+                                        else:
+                                            ket_list.append('AN')
+                                            break
+                                param_values.append('/'.join(ket_list))
+                            else:
+                                param_values.append('error')
+                        m += 1
+                        if m == 4:
+                            m = 0
+                    csv_writer.writerow(main_values + param_values)
+                    n += 1
+                dataSource.Destroy()
+        return kabupaten_csv, kecamatan_csv, desa_csv
+
+    def generate_csv(self):
+        """Function to generate CSV"""
+        prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
+        out_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'output')
+        csv_directory = os.path.join(out_directory, 'csv')
+        kabupaten_csv = os.path.join(csv_directory, 'kabupaten.csv')
+        kecamatan_csv = os.path.join(csv_directory, 'kecamatan.csv')
+        desa_csv = os.path.join(csv_directory, 'desa.csv')
+        date = self.select_date_now()
+        months = date[0]
+        years = date[1]
+        items = []
+        for index in xrange(self.otoklimdlg.listWidget_selected_2.count()):
+            items.append(self.otoklimdlg.listWidget_selected_2.item(index))
+
+        slc_id_list = [int(float(i.whatsThis().split('|')[1])) for i in items]
+        slc_name_list = [str(i.whatsThis().split('|')[0]) for i in items]
+        project = os.path.join(
+            self.otoklimdlg.projectworkspace.text(),
+            self.otoklimdlg.projectfilename.text()
+        )
+        try:
+            prc_list = []
+            if self.otoklimdlg.ach_1_csv.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_ach_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ACH_1"]["NAME"]
+                    param = os.path.splitext(raster_ach_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ach_1)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_ACH_1"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[0]
+                    year = years[0]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_ach_1])
+            if self.otoklimdlg.ash_1_csv.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_ash_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ASH_1"]["NAME"]
+                    param = os.path.splitext(raster_ash_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ash_1)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_ASH_1"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[0]
+                    year = years[0]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_ash_1])
+            if self.otoklimdlg.pch_1_csv.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_pch_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_1"]["NAME"]
+                    param = os.path.splitext(raster_pch_1)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_1)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PCH_1"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[1]
+                    year = years[1]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_pch_1])
+            if self.otoklimdlg.psh_1_csv.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_psh_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_1"]["NAME"]
+                    param = os.path.splitext(raster_psh_1)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_1)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PSH_1"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[1]
+                    year = years[1]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_psh_1])
+            if self.otoklimdlg.pch_2_csv.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_pch_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_2"]["NAME"]
+                    param = os.path.splitext(raster_pch_2)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_2)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PCH_2"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[2]
+                    year = years[2]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_pch_2])
+            if self.otoklimdlg.psh_2_csv.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_psh_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_2"]["NAME"]
+                    param = os.path.splitext(raster_psh_2)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_2)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PSH_2"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[2]
+                    year = years[2]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_psh_2])
+            if self.otoklimdlg.pch_3_csv.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_pch_3 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_3"]["NAME"]
+                    param = os.path.splitext(raster_pch_3)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_3)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PCH_3"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[3]
+                    year = years[3]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_pch_3])
+            if self.otoklimdlg.psh_3_csv.isChecked():
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    raster_psh_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_3"]["NAME"]
+                    param = os.path.splitext(raster_psh_3)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_3)[0].split('_')[2]
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PSH_3"]["REGION_LIST"] = str(slc_id_list)
+                    month = months[3]
+                    year = years[3]
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                prc_list.append([param, raster_psh_3])
+            # Create CSV Default File
+            if len(prc_list) > 0:
+                default_csv = self.create_default_csv(prc_list, csv_directory, prcs_directory)
+            # Start Listing
+            for prc in prc_list:
+                raster_classified = os.path.join(prcs_directory, prc[1])
+                temp_raster = os.path.join(prcs_directory, 'tmp' + str(prc[1]))
+                os.mkdir(temp_raster)
+                for slc_id, slc_name in zip(slc_id_list, slc_name_list):
+                    if len(str(slc_id)) == 2:
+                        summary_csv = os.path.join(csv_directory, str(slc_name).lower() + '_sum_'+ prc[0].lower() +'.csv')
+                        with open(summary_csv, "wb+") as csvfile:
+                            read_raster = gdal.Open(raster_classified, GA_ReadOnly)
+                            raster_value = np.array(read_raster.GetRasterBand(1).ReadAsArray(), dtype ="int")
+                            unique, counts = np.unique(raster_value, return_counts=True)
+                            unique_counts = dict(zip(unique, counts))
+                            unique_counts.pop(255, None)
+                            all_cell = sum(unique_counts.values())
+                            csv_writer = csv.writer(csvfile, delimiter=',')
+                            if prc[0][0:3] == 'ach' or prc[0][0:3] == 'pch':
+                                kat = 'ch'
+                                for n in range(1,10):
+                                    if n not in unique_counts:
+                                        unique_counts[n] = 0
+                            else:
+                                kat = 'sh'
+                                for n in range(1,8):
+                                    if n not in unique_counts:
+                                        unique_counts[n] = 0
+                            csv_writer.writerow(['kategori_'+ kat, 'persentase (%)', 'jumlah_kabupaten'])
+                            for key, value in zip(unique_counts.keys(), unique_counts.values()):
+                                percentage = math.ceil((value / float(all_cell)) * 100)
+                                kategori = self.get_category(kat, key)
+                                with open(default_csv[0], 'rb') as csvfile:
+                                    spamreader = csv.DictReader(csvfile, delimiter=',', quotechar='|')
+                                    cumulative_kat = 0
+                                    for i in spamreader:
+                                        if i[prc[0].upper() + '_maj'] == kategori:
+                                            cumulative_kat += 1
+                                csv_writer.writerow([kategori, percentage, cumulative_kat])
+                            del read_raster
+                    elif len(str(slc_id)) == 4:
+                        layer_kab = QgsVectorLayer(self.otoklimdlg.districts.text(), str(slc_name), "ogr")
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_kab)
+                        exp = "\"ID_KAB\"='{}'".format(str(slc_id))
+                        layer_kab.setSubsetString(exp)
+                        cliped = os.path.join(temp_raster, str(slc_id) + '_' + str(prc[0]) + '_clp.tif')
+                        processing.runalg("gdalogr:cliprasterbymasklayer", raster_classified, layer_kab, -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", cliped)
+                        summary_csv = os.path.join(csv_directory, str(slc_name).lower() + '_sum_'+ prc[0].lower() + '_' + str(slc_id) + '.csv')
+                        with open(summary_csv, "wb+") as csvfile:
+                            read_raster = gdal.Open(cliped, GA_ReadOnly)
+                            raster_value = np.array(read_raster.GetRasterBand(1).ReadAsArray(), dtype ="int")
+                            unique, counts = np.unique(raster_value, return_counts=True)
+                            unique_counts = dict(zip(unique, counts))
+                            unique_counts.pop(255, None)
+                            unique_counts.pop(-1, None)
+                            all_cell = sum(unique_counts.values())
+                            csv_writer = csv.writer(csvfile, delimiter=',')
+                            if prc[0][0:3] == 'ach' or prc[0][0:3] == 'pch':
+                                kat = 'ch'
+                                for n in range(1,10):
+                                    if n not in unique_counts:
+                                        unique_counts[n] = 0
+                            else:
+                                kat = 'sh'
+                                for n in range(1,8):
+                                    if n not in unique_counts:
+                                        unique_counts[n] = 0
+                            csv_writer.writerow(['kategori_'+ kat, 'persentase (%)', 'jumlah_kecamatan'])
+                            for key, value in zip(unique_counts.keys(), unique_counts.values()):
+                                percentage = math.ceil((value / float(all_cell)) * 100)
+                                kategori = self.get_category(kat, key)
+                                with open(default_csv[1], 'rb') as csvfile:
+                                    spamreader = csv.DictReader(csvfile, delimiter=',', quotechar='|')
+                                    cumulative_kat = 0
+                                    for i in spamreader:
+                                        if i[prc[0].upper() + '_maj'] == kategori and i['Kabupaten_Kota'] == str(slc_name).upper() and i['ID_Kabupaten_Kota'] == str(float(slc_id)):
+                                            cumulative_kat += 1
+                                csv_writer.writerow([kategori, percentage, cumulative_kat])
+                            del read_raster
+                        QgsMapLayerRegistry.instance().removeMapLayer(layer_kab.id())
+                        del layer_kab
+                    else:
+                        pass
+                shutil.rmtree(temp_raster)
         except Exception as e:
             self.errormessagedlg.ErrorMessage.setText(str(e))
             self.errormessagedlg.exec_()

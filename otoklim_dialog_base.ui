@@ -48,7 +48,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>0</y>
+         <y>-848</y>
          <width>870</width>
          <height>1787</height>
         </rect>
@@ -2402,6 +2402,36 @@
            <number>1</number>
           </property>
           <layout class="QGridLayout" name="gridLayout_26">
+           <item row="1" column="0">
+            <widget class="QLineEdit" name="search_option2">
+             <property name="minimumSize">
+              <size>
+               <width>360</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>65</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="maxLength">
+              <number>200</number>
+             </property>
+             <property name="dragEnabled">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
            <item row="0" column="0">
             <widget class="QGroupBox" name="groupBox_6">
              <property name="enabled">
@@ -2527,7 +2557,7 @@
                </widget>
               </item>
               <item row="0" column="3">
-               <widget class="QPushButton" name="interpolateButton_4">
+               <widget class="QPushButton" name="generatecsvButton">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
@@ -2537,7 +2567,7 @@
                </widget>
               </item>
               <item row="1" column="3">
-               <widget class="QPushButton" name="showInterpolateFolder_4">
+               <widget class="QPushButton" name="showGenerateCSVFolder">
                 <property name="enabled">
                  <bool>false</bool>
                 </property>
@@ -2657,36 +2687,6 @@
                </widget>
               </item>
              </layout>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLineEdit" name="search_option2">
-             <property name="minimumSize">
-              <size>
-               <width>360</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>65</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <pointsize>8</pointsize>
-              </font>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="maxLength">
-              <number>200</number>
-             </property>
-             <property name="dragEnabled">
-              <bool>true</bool>
-             </property>
             </widget>
            </item>
           </layout>
