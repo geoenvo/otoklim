@@ -520,6 +520,12 @@ class Otoklim:
         # Add Generate CSV Trigger Logic
         self.otoklimdlg.generatecsvButton.clicked.connect(self.generate_csv)
 
+        # Open Folder Trigger Logic
+        self.otoklimdlg.showInterpolateFolder.clicked.connect(self.show_interpolate_folder)
+        self.otoklimdlg.showClassificationFolder.clicked.connect(self.show_classification_folder)
+        self.otoklimdlg.showGenerateMapFolder.clicked.connect(self.show_generatemap_folder)
+        self.otoklimdlg.showGenerateCSVFolder.clicked.connect(self.show_generatecsv_folder)
+
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
         action.triggered.connect(callback)
@@ -711,6 +717,7 @@ class Otoklim:
             self.otoklimdlg.classificationPanelAccord.setEnabled(True)
             self.otoklimdlg.groupBox_3.setEnabled(True)
             self.otoklimdlg.interpolateButton.setEnabled(True)
+            self.otoklimdlg.showInterpolateFolder.setEnabled(True)
             ach_1 = json['PROCESSING']['IDW_INTERPOLATION']['RASTER_ACH_1']["NAME"]
             if ach_1:
                 self.otoklimdlg.ach_1.setEnabled(True)
@@ -781,6 +788,7 @@ class Otoklim:
             self.otoklimdlg.generatecsvPanelAccord.setEnabled(True)
             self.otoklimdlg.classificationPanel.show()
             self.otoklimdlg.classifyButton.setEnabled(True)
+            self.otoklimdlg.showClassificationFolder.setEnabled(True)
             ach_1 = json['PROCESSING']['CLASSIFICATION']['RASTER_ACH_1']["NAME"]
             if ach_1:
                 self.otoklimdlg.ach_1_class.setEnabled(True)
@@ -845,6 +853,13 @@ class Otoklim:
                 self.otoklimdlg.addpsh_3_class.setWhatsThis(
                     os.path.join(json['LOCATION'][json['PROCESSING']['CLASSIFICATION']['RASTER_PSH_3']['LOCATION']], psh_3)
                 )
+        generatemap_prc = json['PROCESSING']['GENERATE_MAP']['PROCESSED']
+        if generatemap_prc:
+            self.otoklimdlg.showGenerateMapFolder.setEnabled(True)
+
+        generatecsv_prc = json['PROCESSING']['GENERATE_CSV']['PROCESSED']
+        if generatecsv_prc:
+            self.otoklimdlg.showGenerateCSVFolder.setEnabled(True)
 
         # Region Listing
         province_id = json['PROCESSING']['IDW_INTERPOLATION']['ID_PROV']
@@ -1995,6 +2010,54 @@ class Otoklim:
         else:
             self.otoklimdlg.generatecsvPanel.show()
 
+    def show_interpolate_folder(self):
+        """Show Interpolate file folder"""
+        project = os.path.join(
+            self.otoklimdlg.projectworkspace.text(),
+            self.otoklimdlg.projectfilename.text()
+        )
+        with open(project, 'r') as jsonfile:
+            otoklim_project = json.load(jsonfile)
+            interpolate_workspace = otoklim_project["LOCATION"]["PRC_FILE_LOC"]
+        process_var = 'explorer ' + interpolate_workspace
+        subprocess.Popen(process_var)
+
+    def show_classification_folder(self):
+        """Show Classification file folder"""
+        project = os.path.join(
+            self.otoklimdlg.projectworkspace.text(),
+            self.otoklimdlg.projectfilename.text()
+        )
+        with open(project, 'r') as jsonfile:
+            otoklim_project = json.load(jsonfile)
+            interpolate_workspace = otoklim_project["LOCATION"]["PRC_FILE_LOC"]
+        process_var = 'explorer ' + interpolate_workspace
+        subprocess.Popen(process_var)
+
+    def show_generatemap_folder(self):
+        """Show Generated Map Folder"""
+        project = os.path.join(
+            self.otoklimdlg.projectworkspace.text(),
+            self.otoklimdlg.projectfilename.text()
+        )
+        with open(project, 'r') as jsonfile:
+            otoklim_project = json.load(jsonfile)
+            interpolate_workspace = otoklim_project["LOCATION"]["MAP_FILE_LOC"]
+        process_var = 'explorer ' + interpolate_workspace
+        subprocess.Popen(process_var)
+
+    def show_generatecsv_folder(self):
+        """Show Generated CSV Folder"""
+        project = os.path.join(
+            self.otoklimdlg.projectworkspace.text(),
+            self.otoklimdlg.projectfilename.text()
+        )
+        with open(project, 'r') as jsonfile:
+            otoklim_project = json.load(jsonfile)
+            interpolate_workspace = otoklim_project["LOCATION"]["CSV_FILE_LOC"]
+        process_var = 'explorer ' + interpolate_workspace
+        subprocess.Popen(process_var)
+
     def save_change(self):
         """Save Edited Parameter"""
         project = os.path.join(
@@ -2956,6 +3019,7 @@ class Otoklim:
                     otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["PROCESSED"] = 1
             with open(project, 'w') as jsonfile:
                 jsonfile.write(json.dumps(otoklim_project, indent=4))
+            self.otoklimdlg.showInterpolateFolder.setEnabled(True)
             self.otoklimdlg.testParameter.setEnabled(False)
             self.otoklimdlg.classificationPanelAccord.setEnabled(True)
             self.otoklimdlg.classificationPanel.setEnabled(True)
@@ -3277,6 +3341,7 @@ class Otoklim:
                     otoklim_project["PROCESSING"]["CLASSIFICATION"]["PROCESSED"] = 1
             with open(project, 'w') as jsonfile:
                 jsonfile.write(json.dumps(otoklim_project, indent=4))
+            self.otoklimdlg.showClassificationFolder.setEnabled(True)
             self.otoklimdlg.testParameter.setEnabled(False)
             self.otoklimdlg.generatemapPanelAccord.setEnabled(True)
             self.otoklimdlg.generatecsvPanelAccord.setEnabled(True)
@@ -3968,6 +4033,7 @@ class Otoklim:
                         del layer_raster
                         os.remove(raster_cropped)
                 shutil.rmtree(temp_raster)
+                self.otoklimdlg.showGenerateMapFolder.setEnabled(True)
         except Exception as e:
             self.errormessagedlg.ErrorMessage.setText(str(e))
             self.errormessagedlg.exec_()
@@ -4135,6 +4201,14 @@ class Otoklim:
                     csv_writer.writerow(main_values + param_values)
                     n += 1
                 dataSource.Destroy()
+            del layer
+        # Delete Unuse SHP
+        for shp in copied_shp_list:
+            QgsVectorFileWriter.deleteShapeFile(shp)
+            try:
+                os.remove(os.path.splitext(shp)[0] +  '.cpg')
+            except OSError:
+                pass
         return kabupaten_csv, kecamatan_csv, desa_csv
 
     def generate_csv(self):
@@ -4333,6 +4407,7 @@ class Otoklim:
                     else:
                         pass
                 shutil.rmtree(temp_raster)
+                self.otoklimdlg.showGenerateCSVFolder.setEnabled(True)
         except Exception as e:
             self.errormessagedlg.ErrorMessage.setText(str(e))
             self.errormessagedlg.exec_()
