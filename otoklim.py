@@ -4405,7 +4405,46 @@ class Otoklim:
                         QgsMapLayerRegistry.instance().removeMapLayer(layer_kab.id())
                         del layer_kab
                     else:
-                        pass
+                        layer_kec = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), str(slc_name), "ogr")
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_kec)
+                        exp = "\"ID_KEC\"='{}'".format(str(slc_id))
+                        layer_kec.setSubsetString(exp)
+                        cliped = os.path.join(temp_raster, str(slc_id) + '_' + str(prc[0]) + '_clp.tif')
+                        processing.runalg("gdalogr:cliprasterbymasklayer", raster_classified, layer_kec, -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", cliped)
+                        summary_csv = os.path.join(csv_directory, str(slc_name).lower() + '_sum_'+ prc[0].lower() + '_' + str(slc_id) + '.csv')
+                        with open(summary_csv, "wb+") as csvfile:
+                            read_raster = gdal.Open(cliped, GA_ReadOnly)
+                            raster_value = np.array(read_raster.GetRasterBand(1).ReadAsArray(), dtype ="int")
+                            unique, counts = np.unique(raster_value, return_counts=True)
+                            unique_counts = dict(zip(unique, counts))
+                            unique_counts.pop(255, None)
+                            unique_counts.pop(-1, None)
+                            all_cell = sum(unique_counts.values())
+                            csv_writer = csv.writer(csvfile, delimiter=',')
+                            if prc[0][0:3] == 'ach' or prc[0][0:3] == 'pch':
+                                kat = 'ch'
+                                for n in range(1,10):
+                                    if n not in unique_counts:
+                                        unique_counts[n] = 0
+                            else:
+                                kat = 'sh'
+                                for n in range(1,8):
+                                    if n not in unique_counts:
+                                        unique_counts[n] = 0
+                            csv_writer.writerow(['kategori_'+ kat, 'persentase (%)', 'jumlah_desa'])
+                            for key, value in zip(unique_counts.keys(), unique_counts.values()):
+                                percentage = math.ceil((value / float(all_cell)) * 100)
+                                kategori = self.get_category(kat, key)
+                                with open(default_csv[2], 'rb') as csvfile:
+                                    spamreader = csv.DictReader(csvfile, delimiter=',', quotechar='|')
+                                    cumulative_kat = 0
+                                    for i in spamreader:
+                                        if i[prc[0].upper() + '_maj'] == kategori and i['Kecamatan'] == str(slc_name).upper() and i['ID_Kecamatan'] == str(float(slc_id)):
+                                            cumulative_kat += 1
+                                csv_writer.writerow([kategori, percentage, cumulative_kat])
+                            del read_raster
+                        QgsMapLayerRegistry.instance().removeMapLayer(layer_kec.id())
+                        del layer_kec
                 shutil.rmtree(temp_raster)
                 self.otoklimdlg.showGenerateCSVFolder.setEnabled(True)
         except Exception as e:
