@@ -3,7 +3,7 @@
 /***************************************************************************
  Otoklim
                                  A QGIS plugin
- Lorem ipsum dolor sit amet
+ This Plugin used to support the automation of the seasonal prediction & analysis produced by BMKG Climatological Station
                               -------------------
         begin                : 2017-07-03
         git sha              : $Format:%H$
@@ -2832,7 +2832,7 @@ class Otoklim:
         elif mth == 'September':
             mth = 9
         elif mth == 'Oktober':
-            mth = 0
+            mth = 10
         elif mth == 'November':
             mth = 11
         else:
@@ -4084,9 +4084,9 @@ class Otoklim:
     def create_default_csv(self, prc_list, csv_directory, prcs_directory):
         """Create Default CSV File"""
         driver = ogr.GetDriverByName("ESRI Shapefile")
-        kabupaten_csv = os.path.join(csv_directory, 'kabupaten.csv')
-        kecamatan_csv = os.path.join(csv_directory, 'kecamatan.csv')
-        desa_csv = os.path.join(csv_directory, 'desa.csv')
+        kabupaten_csv = os.path.join(csv_directory, '1_kabupaten.csv')
+        kecamatan_csv = os.path.join(csv_directory, '2_kecamatan.csv')
+        desa_csv = os.path.join(csv_directory, '3_desa.csv')
         output_csv_list = [kabupaten_csv, kecamatan_csv, desa_csv]
         # Create ZS Shapefile
         def create_zs_shp(region, region_type):

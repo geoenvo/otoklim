@@ -9,12 +9,16 @@
 [general]
 name=Otoklim
 qgisMinimumVersion=2.0
-description=Lorem ipsum dolor sit amet
+description=This Plugin used to support the automation of the seasonal prediction & analysis produced by BMKG Climatological Station
 version=0.1
 author=Geo Enviro Omega
 email=faizalprbw@gmail.com
 
-about=Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc eu posuere sapien, ut fermentum orci. Nullam id condimentum metus. Etiam lobortis dapibus lectus sit amet auctor. Suspendisse non libero et purus rhoncus aliquam quis in metus. Suspendisse placerat rhoncus augue, et euismod libero ultricies eget. In in ligula non arcu fermentum blandit sit amet at odio. Nullam condimentum, enim eu volutpat fermentum, risus mauris scelerisque leo, gravida ultrices nisi libero non lorem. Cras varius orci at lectus sollicitudin suscipit. Phasellus eu nulla feugiat lorem pharetra bibendum quis id sapien.
+about=This Plugin used to support the automation of the seasonal prediction & analysis produced by BMKG Climatological Station. 
+    Otoklim Plugin have following functionalities such as:
+        1. Interpolate the rainfall points dataset (historical or prediction/future) into a raster format
+        2. Generate maps from interpolated data into a desired map layout
+        3. Generate csv datagrid per city/district & village/sub-district, from rainfall points dataset 
 
 tracker=https://github.com/geoenvo/otoklim
 repository=https://github.com/geoenvo/otoklim
