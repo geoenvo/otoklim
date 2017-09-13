@@ -50,6 +50,7 @@ from qgis.core import (
     QgsColorRampShader,
     QgsSingleBandPseudoColorRenderer,
     QgsFillSymbolV2,
+    QgsLineSymbolV2,
     QgsPalLayerSettings,
     QgsProject,
     QgsComposition
@@ -2325,8 +2326,8 @@ class Otoklim:
             csv_rainfall = self.otoklimdlg.rainfallfile.text()
             csv_normalrain = self.otoklimdlg.normalrainfile.text()
             map_template = self.otoklimdlg.maptemplate.text()
-            map_template_2 = self.otoklimdlg.maptemplate_2.text()
-            map_template_3 = self.otoklimdlg.maptemplate_3.text()
+            map_template_2 = self.otoklimdlg.maptemplate2.text()
+            map_template_3 = self.otoklimdlg.maptemplate3.text()
             project_name = self.saveasprodlg.ProjectName.text()
         self.createprojectdlg.project_dir.setText(str(project_directory))
         result = self.createprojectdlg.exec_()
@@ -3598,6 +3599,27 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_3])
+            # Polygon to Line Conversion
+            provinsi_line = os.path.join(prcs_directory, 'provinsi_line.shp')
+            if not os.path.exists(provinsi_line):
+                processing.runandload("qgis:polygonstolines", self.otoklimdlg.province.text(), provinsi_line)
+                lineprovince = QgsMapLayerRegistry.instance().mapLayersByName('Lines from polygons')[0]
+                QgsMapLayerRegistry.instance().removeMapLayer(lineprovince.id())
+            kabupaten_line = os.path.join(prcs_directory, 'kabupaten_line.shp')
+            if not os.path.exists(kabupaten_line):
+                processing.runandload("qgis:polygonstolines", self.otoklimdlg.districts.text(), kabupaten_line)
+                linekabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Lines from polygons')[0]
+                QgsMapLayerRegistry.instance().removeMapLayer(linekabupaten.id())
+            kecamatan_line = os.path.join(prcs_directory, 'kecamatan_line.shp')
+            if not os.path.exists(kecamatan_line):
+                processing.runandload("qgis:polygonstolines", self.otoklimdlg.subdistricts.text(), kecamatan_line)
+                linekecamatan = QgsMapLayerRegistry.instance().mapLayersByName('Lines from polygons')[0]
+                QgsMapLayerRegistry.instance().removeMapLayer(linekecamatan.id())
+            desa_line = os.path.join(prcs_directory, 'desa_line.shp')
+            if not os.path.exists(desa_line):
+                processing.runandload("qgis:polygonstolines", self.otoklimdlg.villages.text(), desa_line)
+                linedesa = QgsMapLayerRegistry.instance().mapLayersByName('Lines from polygons')[0]
+                QgsMapLayerRegistry.instance().removeMapLayer(linedesa.id())
             # Start Listing
             for value in prc_list:
                 raster_classified = os.path.join(prcs_directory, value[1])
@@ -3608,7 +3630,7 @@ class Otoklim:
                         projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
                         output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
                         # Raster Value Styling
-                        layer_raster = QgsRasterLayer(raster_classified, 'Raster')
+                        layer_raster = QgsRasterLayer(raster_classified, '')
                         s = QgsRasterShader()
                         c = QgsColorRampShader()
                         c.setColorRampType(QgsColorRampShader.EXACT)
@@ -3628,6 +3650,10 @@ class Otoklim:
                                     list_value.append(row['new_value'])
                                     lng += 1
                         else:
+                            color = []
+                            label = []
+                            lng = 1
+                            list_value = []
                             with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
                                 spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
                                 for row in spamreader:
@@ -3638,7 +3664,7 @@ class Otoklim:
                                     list_value.append(row['new_value'])
                                     lng += 1
                         for n in range(1, lng):
-                            i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1])))
+                            i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1]), label[n-1]))
                         c.setColorRampItemList(i)
                         s.setRasterShaderFunction(c)
                         ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
@@ -3646,8 +3672,11 @@ class Otoklim:
 
                         # Province Styling
                         layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
-                        symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
+                        symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,0', 'outline_style': 'solid', 'outline_width': '0.5'})
                         layer_provinsi.rendererV2().setSymbol(symbol)
+                        layer_provinsi_line = QgsVectorLayer(provinsi_line, 'Batas Provinsi', 'ogr')
+                        symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'solid', 'width': '0.5'})
+                        layer_provinsi_line.rendererV2().setSymbol(symbol)
                         layer_provinsi.triggerRepaint()
                         palyr = QgsPalLayerSettings()
                         palyr.readFromLayer(layer_provinsi)
@@ -3662,8 +3691,12 @@ class Otoklim:
                         layer_kabupaten = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
                         exp = "\"ID_PROV\"='{}'".format(str(slc_id))
                         layer_kabupaten.setSubsetString(exp)
-                        symbol = QgsFillSymbolV2.createSimple({'color': '0,0,0,0', 'outline_color': '0,0,0,255', 'outline_style': 'dot', 'outline_width': '0.25'})
+                        symbol = QgsFillSymbolV2.createSimple({'color': '0,0,0,0', 'outline_color': '0,0,0,0', 'outline_style': 'dot', 'outline_width': '0.25'})
                         layer_kabupaten.rendererV2().setSymbol(symbol)
+                        layer_kabupaten_line = QgsVectorLayer(kabupaten_line, 'Batas Kabupaten', 'ogr')
+                        layer_kabupaten_line.setSubsetString(exp)
+                        symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'dot', 'width': '0.25'})
+                        layer_kabupaten_line.rendererV2().setSymbol(symbol)
                         palyr = QgsPalLayerSettings()
                         palyr.readFromLayer(layer_kabupaten)
                         palyr.enabled = True
@@ -3681,6 +3714,8 @@ class Otoklim:
                         QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_raster)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten_line)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi_line)
                         # Set Extent
                         canvas.setExtent(layer_kabupaten.extent())
                         canvas.refresh()
@@ -3709,20 +3744,24 @@ class Otoklim:
                         composition.loadFromTemplate(document, substitution_map)
                         map_item = composition.getComposerItemById('map')
                         map_item.setMapCanvas(canvas)
+                        legend_item = composition.getComposerItemById('legend_line')
+                        legend_item.updateLegend()
                         composition.refreshItems()
                         composition.exportAsPDF(output_pdf)
                         # Remove unuse file
-                        raster = QgsMapLayerRegistry.instance().mapLayersByName('Raster')[0]
+                        raster = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
                         kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
                         provinsi = QgsMapLayerRegistry.instance().mapLayersByName('Provinsi')[0]
                         bathymetry = QgsMapLayerRegistry.instance().mapLayersByName('Bathymetry')[0]
-                        all_layer = [raster.id(), kabupaten.id(), provinsi.id(), bathymetry.id()]
+                        provinsiline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Provinsi')[0]
+                        kabupatenline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kabupaten')[0]
+                        all_layer = [raster.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), provinsiline.id(), kabupatenline.id()]
                         QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
                     elif len(str(slc_id)) == 4:
                         projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
                         output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
                         # Raster Value Styling
-                        rasterclassified = QgsRasterLayer(raster_classified, 'Raster')
+                        rasterclassified = QgsRasterLayer(raster_classified, '')
                         # Special Case For Districts (clipping)
                         layer_districts = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
                         QgsMapLayerRegistry.instance().addMapLayer(layer_districts)
@@ -3737,7 +3776,7 @@ class Otoklim:
                             raster_cropped
                         )
                         QgsMapLayerRegistry.instance().removeMapLayer(layer_districts.id())
-                        layer_raster = QgsRasterLayer(raster_cropped, 'Raster')
+                        layer_raster = QgsRasterLayer(raster_cropped, '')
 
                         s = QgsRasterShader()
                         c = QgsColorRampShader()
@@ -3758,6 +3797,10 @@ class Otoklim:
                                     list_value.append(row['new_value'])
                                     lng += 1
                         else:
+                            color = []
+                            label = []
+                            lng = 1
+                            list_value = []
                             with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
                                 spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
                                 for row in spamreader:
@@ -3768,7 +3811,7 @@ class Otoklim:
                                     list_value.append(row['new_value'])
                                     lng += 1
                         for n in range(1, lng):
-                            i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1])))
+                            i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1]), label[n-1]))
                         c.setColorRampItemList(i)
                         s.setRasterShaderFunction(c)
                         ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
@@ -3784,9 +3827,13 @@ class Otoklim:
                         layer_kabupaten = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
                         exp = "\"ID_PROV\"='{}'".format(str(slc_id)[0:2])
                         layer_kabupaten.setSubsetString(exp)
-                        symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
+                        symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,0', 'outline_style': 'solid', 'outline_width': '0.5'})
                         layer_kabupaten.rendererV2().setSymbol(symbol)
                         layer_kabupaten.triggerRepaint()
+                        layer_kabupaten_line = QgsVectorLayer(kabupaten_line, 'Batas Kabupaten', 'ogr')
+                        layer_kabupaten_line.setSubsetString(exp)
+                        symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'solid', 'width': '0.5'})
+                        layer_kabupaten_line.rendererV2().setSymbol(symbol)
                         palyr = QgsPalLayerSettings()
                         palyr.readFromLayer(layer_kabupaten)
                         palyr.enabled = True
@@ -3800,8 +3847,12 @@ class Otoklim:
                         layer_kecamatan = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
                         exp = "\"ID_KAB\"='{}'".format(str(slc_id))
                         layer_kecamatan.setSubsetString(exp)
-                        symbol = QgsFillSymbolV2.createSimple({'color': '0,0,0,0', 'outline_color': '0,0,0,255', 'outline_style': 'dot', 'outline_width': '0.25'})
+                        symbol = QgsFillSymbolV2.createSimple({'color': '0,0,0,0', 'outline_color': '0,0,0,0', 'outline_style': 'dot', 'outline_width': '0.25'})
                         layer_kecamatan.rendererV2().setSymbol(symbol)
+                        layer_kecamatan_line = QgsVectorLayer(kecamatan_line, 'Batas Kecamatan', 'ogr')
+                        layer_kecamatan_line.setSubsetString(exp)
+                        symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'dot', 'width': '0.25'})
+                        layer_kecamatan_line.rendererV2().setSymbol(symbol)
                         palyr = QgsPalLayerSettings()
                         palyr.readFromLayer(layer_kecamatan)
                         palyr.enabled = True
@@ -3820,6 +3871,8 @@ class Otoklim:
                         QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_raster)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan_line)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten_line)
                         # Set Extent
                         canvas.setExtent(layer_kecamatan.extent())
                         canvas.refresh()
@@ -3854,17 +3907,19 @@ class Otoklim:
                         composition.refreshItems()
                         composition.exportAsPDF(output_pdf)
                         # Remove unuse file
-                        raster = QgsMapLayerRegistry.instance().mapLayersByName('Raster')[0]
+                        raster = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
                         kecamatan = QgsMapLayerRegistry.instance().mapLayersByName('Kecamatan')[0]
                         kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
                         provinsi = QgsMapLayerRegistry.instance().mapLayersByName('Provinsi')[0]
                         bathymetry = QgsMapLayerRegistry.instance().mapLayersByName('Bathymetry')[0]
-                        all_layer = [raster.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), kecamatan.id()]
+                        kabupatenline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kabupaten')[0]
+                        kecamatanline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kecamatan')[0]
+                        all_layer = [raster.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), kecamatan.id(), kabupatenline.id(), kecamatanline.id()]
                         QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
                         del raster
                         os.remove(projectqgs)
                         # Remove Raster
-                        layer_raster = QgsRasterLayer(raster_cropped, 'Raster')
+                        layer_raster = QgsRasterLayer(raster_cropped, '')
                         QgsMapLayerRegistry.instance().addMapLayer(layer_raster)
                         QgsMapLayerRegistry.instance().removeMapLayer(layer_raster.id())
                         del layer_raster
@@ -3874,7 +3929,7 @@ class Otoklim:
                         projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
                         output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
                         # Raster Value Styling
-                        rasterclassified = QgsRasterLayer(raster_classified, 'Raster')
+                        rasterclassified = QgsRasterLayer(raster_classified, '')
                         # Special Case For Sub-Districts (clipping)
                         layer_subdistricts = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
                         QgsMapLayerRegistry.instance().addMapLayer(layer_subdistricts)
@@ -3889,7 +3944,7 @@ class Otoklim:
                             raster_cropped
                         )
                         QgsMapLayerRegistry.instance().removeMapLayer(layer_subdistricts.id())
-                        layer_raster = QgsRasterLayer(raster_cropped, 'Raster')
+                        layer_raster = QgsRasterLayer(raster_cropped, '')
 
                         s = QgsRasterShader()
                         c = QgsColorRampShader()
@@ -3910,6 +3965,10 @@ class Otoklim:
                                     list_value.append(row['new_value'])
                                     lng += 1
                         else:
+                            color = []
+                            label = []
+                            lng = 1
+                            list_value = []
                             with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
                                 spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
                                 for row in spamreader:
@@ -3920,7 +3979,7 @@ class Otoklim:
                                     list_value.append(row['new_value'])
                                     lng += 1
                         for n in range(1, lng):
-                            i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1])))
+                            i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1]), label[n-1]))
                         c.setColorRampItemList(i)
                         s.setRasterShaderFunction(c)
                         ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
@@ -3944,9 +4003,13 @@ class Otoklim:
                         layer_kecamatan = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
                         exp = "\"ID_KAB\"='{}'".format(str(slc_id)[0:4])
                         layer_kecamatan.setSubsetString(exp)
-                        symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
+                        symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,0', 'outline_style': 'solid', 'outline_width': '0.5'})
                         layer_kecamatan.rendererV2().setSymbol(symbol)
                         layer_kecamatan.triggerRepaint()
+                        layer_kecamatan_line = QgsVectorLayer(kecamatan_line, 'Batas Kecamatan', 'ogr')
+                        layer_kecamatan_line.setSubsetString(exp)
+                        symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'solid', 'width': '0.5'})
+                        layer_kecamatan_line.rendererV2().setSymbol(symbol)
                         palyr = QgsPalLayerSettings()
                         palyr.readFromLayer(layer_kecamatan)
                         palyr.enabled = True
@@ -3957,12 +4020,16 @@ class Otoklim:
                         palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
                         palyr.writeToLayer(layer_kecamatan)
 
-                        # Sub-Districts Styling
+                        # Villages Styling
                         layer_desa = QgsVectorLayer(self.otoklimdlg.villages.text(), 'Desa', 'ogr')
                         exp = "\"ID_KEC\"='{}'".format(str(slc_id))
                         layer_desa.setSubsetString(exp)
-                        symbol = QgsFillSymbolV2.createSimple({'color': '0,0,0,0', 'outline_color': '0,0,0,255', 'outline_style': 'dot', 'outline_width': '0.25'})
+                        symbol = QgsFillSymbolV2.createSimple({'color': '0,0,0,0', 'outline_color': '0,0,0,0', 'outline_style': 'dot', 'outline_width': '0.25'})
                         layer_desa.rendererV2().setSymbol(symbol)
+                        layer_desa_line = QgsVectorLayer(desa_line, 'Batas Desa', 'ogr')
+                        layer_desa_line.setSubsetString(exp)
+                        symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'dot', 'width': '0.25'})
+                        layer_desa_line.rendererV2().setSymbol(symbol)
                         palyr = QgsPalLayerSettings()
                         palyr.readFromLayer(layer_desa)
                         palyr.enabled = True
@@ -3982,6 +4049,8 @@ class Otoklim:
                         QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_raster)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_desa)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_desa_line)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan_line)
                         # Set Extent
                         canvas.setExtent(layer_desa.extent())
                         canvas.refresh()
@@ -4016,18 +4085,20 @@ class Otoklim:
                         composition.refreshItems()
                         composition.exportAsPDF(output_pdf)
                         # Remove unuse file
-                        raster = QgsMapLayerRegistry.instance().mapLayersByName('Raster')[0]
+                        raster = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
                         desa = QgsMapLayerRegistry.instance().mapLayersByName('Desa')[0]
                         kecamatan = QgsMapLayerRegistry.instance().mapLayersByName('Kecamatan')[0]
                         kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
                         provinsi = QgsMapLayerRegistry.instance().mapLayersByName('Provinsi')[0]
                         bathymetry = QgsMapLayerRegistry.instance().mapLayersByName('Bathymetry')[0]
-                        all_layer = [raster.id(), desa.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), kecamatan.id()]
+                        kecamatanline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kecamatan')[0]
+                        desaline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Desa')[0]
+                        all_layer = [raster.id(), desa.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), kecamatan.id(), kecamatanline.id(), desaline.id()]
                         QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
                         del raster
                         os.remove(projectqgs)
                         # Remove Raster
-                        layer_raster = QgsRasterLayer(raster_cropped, 'Raster')
+                        layer_raster = QgsRasterLayer(raster_cropped, '')
                         QgsMapLayerRegistry.instance().addMapLayer(layer_raster)
                         QgsMapLayerRegistry.instance().removeMapLayer(layer_raster.id())
                         del layer_raster
@@ -4158,8 +4229,10 @@ class Otoklim:
                             v_r = False
                             v_m = False
                             v_t = False
+                            v_st = False
                             v_bn = False
                             v_n = False
+                            v_an = False
                             minor_val = self.get_category(field3, feature.GetField(str(field3)))
                             major_val = self.get_category(field4, feature.GetField(str(field4)))
                             param_values.append(minor_val)
@@ -4170,28 +4243,28 @@ class Otoklim:
                             if min_val and max_val:
                                 for value in range(int(min_val), int(max_val) + 1):
                                     if field1.startswith('c'):
-                                        if value == 1 or value == 2 or value == 3 and not v_r:
+                                        if (value == 1 or value == 2 or value == 3) and not v_r:
                                             ket_list.append('R')
                                             v_r = True
-                                        elif value == 4 or value == 5 or value == 6 and not v_m:
+                                        elif (value == 4 or value == 5 or value == 6) and not v_m:
                                             ket_list.append('M')
                                             v_m = True
                                         elif value == 7 and not v_t:
                                             ket_list.append('T')
                                             v_t = True
-                                        else:
+                                        elif (value == 8 or value == 9) and not v_st:
                                             ket_list.append('ST')
-                                            break
+                                            v_st = True
                                     else:
-                                        if value == 1 or value == 2 or value == 3 and not v_bn:
+                                        if (value == 1 or value == 2 or value == 3) and not v_bn:
                                             ket_list.append('BN')
                                             v_bn = True
                                         elif value == 4 and not v_n:
                                             ket_list.append('N')
                                             v_n = True
-                                        else:
+                                        elif (value == 5 or value == 6 or value == 7) and not v_an:
                                             ket_list.append('AN')
-                                            break
+                                            v_an = True
                                 param_values.append('/'.join(ket_list))
                             else:
                                 param_values.append('error')
