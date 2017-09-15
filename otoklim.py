@@ -63,7 +63,6 @@ import qgis.utils
 import os.path
 import os
 import shutil
-import csv
 import json
 import subprocess
 import datetime
@@ -1764,6 +1763,7 @@ class Otoklim:
             spamreader = csv.reader(csvfile, delimiter=str(delimiter), quotechar='|')
             header = spamreader.next()
             error_field = None
+            error_field_param = None
             if type == 'rainpost':
                 if 'post_id' not in header:
                     error_field = 'post_id'
@@ -1787,24 +1787,19 @@ class Otoklim:
             else:
                 if 'post_id' not in header:
                     error_field = 'post_id'
-                elif 'ACH_1' not in header:
-                    error_field = 'ACH_1'
-                elif 'ASH_1' not in header:
-                    error_field = 'ASH_1'
-                elif 'PCH_1' not in header:
-                    error_field = 'PCH_1'
-                elif 'PSH_1' not in header:
-                    error_field = 'PSH_1'
-                elif 'PCH_2' not in header:
-                    error_field = 'PCH_2'
-                elif 'PSH_2' not in header:
-                    error_field = 'PSH_2'
-                elif 'PCH_3' not in header:
-                    error_field = 'PCH_3'
-                elif 'PSH_3' not in header:
-                    error_field = 'PSH_3'
+                if len(header) < 2:
+                    error_field = "interpolation's parameters"
+                else:
+                    for param in header[1:]:
+                        if param not in ['ACH_1', 'ASH_1', 'PCH_1', 'PSH_1', 'PCH_2', 'PSH_2', 'PCH_3', 'PSH_3']:
+                            error_field_param = str(param) + ' unknown parameter' 
             if error_field:
                 errormessage = error_field + ' field not exists on file header'
+                raise Exception(errormessage)
+                item = QListWidgetItem(errormessage)
+                self.projectprogressdlg.ProgressList.addItem(item)
+            if error_field_param:
+                errormessage = error_field_param
                 raise Exception(errormessage)
                 item = QListWidgetItem(errormessage)
                 self.projectprogressdlg.ProgressList.addItem(item)
@@ -1885,49 +1880,57 @@ class Otoklim:
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
-                        int(row['ACH_1'])
+                        if 'ACH_1' in row:
+                            int(row['ACH_1'])
                     except:
                         error_message = ': ACH_1 [' + row['ACH_1'] + '] value must be integer'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
-                        int(row['ASH_1'])
+                        if 'ASH_1' in row:
+                            int(row['ASH_1'])
                     except:
                         error_message = ': ASH_1 [' + row['ASH_1'] + '] value must be integer'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
-                        int(row['PCH_1'])
+                        if 'PCH_1' in row:
+                            int(row['PCH_1'])
                     except:
                         error_message = ': PCH_1 [' + row['PCH_1'] + '] value must be integer'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
-                        int(row['PSH_1'])
+                        if 'PSH_1' in row:
+                            int(row['PSH_1'])
                     except:
                         error_message = ': PSH_1 [' + row['PSH_1'] + '] value must be integer'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
-                        int(row['PCH_2'])
+                        if 'PCH_2' in row:
+                            int(row['PCH_2'])
                     except:
                         error_message = ': PCH_2 [' + row['PCH_2'] + '] value must be integer'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
-                        int(row['PSH_2'])
+                        if 'PSH_2' in row:
+                            int(row['PSH_2'])
                     except:
                         error_message = ': PSH_2 [' + row['PSH_2'] + '] value must be integer'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
-                        int(row['PCH_3'])
+                        if 'PCH_3' in row:
+                            int(row['PCH_3'])
                     except:
                         error_message = ': PCH_3 [' + row['PCH_3'] + '] value must be integer'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
-                        int(row['PSH_3'])
+                        if 'PSH_3' in row:
+                            int(row['PSH_3'])
                     except:
                         error_message = ': PSH_3 [' + row['PSH_3'] + '] value must be integer'
                         errormessage = 'error at line: ' + str(line) + error_message
@@ -2885,16 +2888,14 @@ class Otoklim:
         """Function To Run IDW Interpolation"""
         prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
         provinsi_polygon_file = os.path.join(prcs_directory, 'provinsi_polygon.shp')
-        filename_shp = os.path.join(prcs_directory, 'rainpost_point.shp')
+        layer_provinsi = QgsVectorLayer(provinsi_polygon_file, 'layer', 'ogr')
         temp = os.path.join(prcs_directory, 'tmp_' + '{:%Y%m%d_%H%M%S}'.format(datetime.datetime.now()))
         os.mkdir(temp)
-        self.copy_file(filename_shp, temp, True)
-        filename_shp_tmp = os.path.join(temp, 'rainpost_point.shp')
-        layer = QgsVectorLayer(filename_shp_tmp, 'layer', 'ogr')
-        layer_provinsi = QgsVectorLayer(provinsi_polygon_file, 'layer', 'ogr')
-        fields = layer.pendingFields()
-        field_names = [field.name() for field in fields]
-        idw_params = field_names[5:]
+        combine_file = os.path.join(prcs_directory, 'combine.csv')
+        with open(combine_file, "r") as csvfile:
+            reader = csv.reader(csvfile)
+            headers = next(reader)
+            idw_params = headers[5:]
         project = os.path.join(
             self.otoklimdlg.projectworkspace.text(),
             self.otoklimdlg.projectfilename.text()
@@ -2991,6 +2992,12 @@ class Otoklim:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
 
             for param in prc_list:
+                filename_shp = os.path.join(prcs_directory, 'rainpost_point_' + str(param) + '.shp')
+                self.copy_file(filename_shp, temp, True)
+                filename_shp_tmp = os.path.join(temp, 'rainpost_point_' + str(param) + '.shp')
+                layer = QgsVectorLayer(filename_shp_tmp, 'layer', 'ogr')
+                fields = layer.pendingFields()
+                field_names = [field.name() for field in fields]
                 raster_interpolated = os.path.join(temp, param + '_raster_idw.tif')
                 raster_cropped = os.path.join(prcs_directory, 'interpolated_' + str(param).lower() + '.tif')
                 if os.path.exists(raster_cropped):
@@ -3038,14 +3045,15 @@ class Otoklim:
             filelist = [f for f in os.listdir(file_directory) if os.path.isfile(os.path.join(file_directory, f))]
             for file in filelist:
                 os.remove(os.path.join(file_directory, file))
+            delimiter = self.otoklimdlg.csvdelimiter.text()
             file_input = self.otoklimdlg.Input_Value_CSV.text()
             rainpost_file = self.otoklimdlg.rainpostfile.text()
             combine_file = os.path.join(file_directory, 'combine.csv')
-            delimiter = self.otoklimdlg.csvdelimiter.text()
             date = self.select_date_now()
             months = date[0]
             years = date[1]
             try:
+                self.check_csv(file_input, delimiter, 'input_value')
                 # Combine CSV
                 dict_input = {}
                 dict_station = {}
@@ -3058,8 +3066,14 @@ class Otoklim:
                         else:
                             idw_params = row[1:]
                             for month in months:
-                                idw_params[n] = idw_params[n].split('_')[0] + '_' + str(month[0])
-                                idw_params[n+1] = idw_params[n+1].split('_')[0] + '_' + str(month[0])
+                                try:
+                                    idw_params[n] = idw_params[n].split('_')[0] + '_' + str(month[0])
+                                except IndexError:
+                                    pass
+                                try:
+                                    idw_params[n+1] = idw_params[n+1].split('_')[0] + '_' + str(month[0])
+                                except IndexError:
+                                    pass
                                 n += 2
                             header_input = idw_params
                         n += 1
@@ -3084,37 +3098,54 @@ class Otoklim:
                 
                 # CSV To Shapefile
                 csv_file = combine_file
-                filename_shp = os.path.join(file_directory, 'rainpost_point.shp')
-                filename_prj = os.path.join(file_directory, 'rainpost_point.prj')
-                data_source = driver.CreateDataSource(filename_shp)
-                srs = osr.SpatialReference()
-                srs.ImportFromEPSG(4326)
-                srs.MorphToESRI()
-                prj_file = open(filename_prj, 'w')
-                prj_file.write(srs.ExportToWkt())
-                prj_file.close()
-                filename_shp = filename_shp.encode('utf-8')
-                layer = data_source.CreateLayer(filename_shp, srs, ogr.wkbPoint)
-                with open(csv_file, 'rb') as csvfile:
-                    reader = csv.reader(csvfile)
-                    headers = reader.next()
-                    n = 0
-                    for h in headers:
-                        if n <= 2:
-                            layer.CreateField(ogr.FieldDefn(h, ogr.OFTString))
-                        else:
-                            layer.CreateField(ogr.FieldDefn(h, ogr.OFTReal))
-                        n += 1
-                with open(csv_file, 'rb') as csvfile:
-                    spamreader = csv.DictReader(csvfile, delimiter=str(delimiter), quotechar='|')
-                    for row in spamreader:
-                        point = ogr.Geometry(ogr.wkbPoint)
-                        feature = ogr.Feature(layer.GetLayerDefn())
-                        point.AddPoint(float(row['lon']), float(row['lat']))
+                for param in idw_params:
+                    filename_shp = os.path.join(file_directory, 'rainpost_point_' + str(param) + '.shp')
+                    filename_prj = os.path.join(file_directory, 'rainpost_point_' + str(param) + '.shp')
+                    data_source = driver.CreateDataSource(filename_shp)
+                    srs = osr.SpatialReference()
+                    srs.ImportFromEPSG(4326)
+                    srs.MorphToESRI()
+                    prj_file = open(filename_prj, 'w')
+                    prj_file.write(srs.ExportToWkt())
+                    prj_file.close()
+                    filename_shp = filename_shp.encode('utf-8')
+                    layer = data_source.CreateLayer(filename_shp, srs, ogr.wkbPoint)
+                    with open(csv_file, 'rb') as csvfile:
+                        reader = csv.reader(csvfile)
+                        headers = reader.next()
+                        n = 0
+                        hdr = []
                         for h in headers:
-                            feature.SetField(h, row[h])
-                        feature.SetGeometry(point)
-                        layer.CreateFeature(feature)
+                            if n <= 2:
+                                layer.CreateField(ogr.FieldDefn(h, ogr.OFTString))
+                            else:
+                                if n > 4:
+                                    if h == param:
+                                        layer.CreateField(ogr.FieldDefn(h, ogr.OFTReal))
+                                    else:
+                                        hdr.append(h)
+                                else:
+                                    layer.CreateField(ogr.FieldDefn(h, ogr.OFTReal))
+                            n += 1
+                        headers = [h for h in headers if h not in hdr]
+                    with open(csv_file, 'rb') as csvfile:
+                        spamreader = csv.DictReader(csvfile, delimiter=str(delimiter), quotechar='|')
+                        for row in spamreader:
+                            create_feature = True
+                            point = ogr.Geometry(ogr.wkbPoint)
+                            feature = ogr.Feature(layer.GetLayerDefn())
+                            point.AddPoint(float(row['lon']), float(row['lat']))
+                            for h in headers:
+                                if h in header_input:
+                                    if row[h]:
+                                        feature.SetField(h, row[h])
+                                    else:
+                                        create_feature = False
+                                else:
+                                    feature.SetField(h, row[h])
+                            if create_feature:
+                                feature.SetGeometry(point)
+                                layer.CreateFeature(feature)
                 
                 # Province Polygon Querry
                 provinsi_polygon = os.path.join(file_directory, 'provinsi_polygon.shp')
@@ -3151,6 +3182,24 @@ class Otoklim:
                     otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_2"]["NAME"] = ""
                     otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_3"]["NAME"] = ""
                     otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_3"]["NAME"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]['PROCESSED'] = 0
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_ACH_1"]["REGION_LIST"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_ASH_1"]["REGION_LIST"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_1"]["REGION_LIST"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_1"]["REGION_LIST"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_2"]["REGION_LIST"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_2"]["REGION_LIST"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_3"]["REGION_LIST"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_3"]["REGION_LIST"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]['PROCESSED'] = 0
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_ACH_1"]["REGION_LIST"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_ASH_1"]["REGION_LIST"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PCH_1"]["REGION_LIST"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PSH_1"]["REGION_LIST"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PCH_2"]["REGION_LIST"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PSH_2"]["REGION_LIST"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PCH_3"]["REGION_LIST"] = ""
+                    otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PSH_3"]["REGION_LIST"] = ""
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 self.otoklimdlg.ach_1.setChecked(False)
@@ -3169,12 +3218,47 @@ class Otoklim:
                 self.otoklimdlg.addpsh_2.setEnabled(False)
                 self.otoklimdlg.addpch_3.setEnabled(False)
                 self.otoklimdlg.addpsh_3.setEnabled(False)
+                self.otoklimdlg.ach_1_class.setChecked(False)
+                self.otoklimdlg.ash_1_class.setChecked(False)
+                self.otoklimdlg.pch_1_class.setChecked(False)
+                self.otoklimdlg.psh_1_class.setChecked(False)
+                self.otoklimdlg.pch_2_class.setChecked(False)
+                self.otoklimdlg.psh_2_class.setChecked(False)
+                self.otoklimdlg.pch_3_class.setChecked(False)
+                self.otoklimdlg.psh_3_class.setChecked(False)
+                self.otoklimdlg.addach_1_class.setEnabled(False)
+                self.otoklimdlg.addash_1_class.setEnabled(False)
+                self.otoklimdlg.addpch_1_class.setEnabled(False)
+                self.otoklimdlg.addpsh_1_class.setEnabled(False)
+                self.otoklimdlg.addpch_2_class.setEnabled(False)
+                self.otoklimdlg.addpsh_2_class.setEnabled(False)
+                self.otoklimdlg.addpch_3_class.setEnabled(False)
+                self.otoklimdlg.addpsh_3_class.setEnabled(False)
+                self.otoklimdlg.ach_1_map.setChecked(False)
+                self.otoklimdlg.ash_1_map.setChecked(False)
+                self.otoklimdlg.pch_1_map.setChecked(False)
+                self.otoklimdlg.psh_1_map.setChecked(False)
+                self.otoklimdlg.pch_2_map.setChecked(False)
+                self.otoklimdlg.psh_2_map.setChecked(False)
+                self.otoklimdlg.pch_3_map.setChecked(False)
+                self.otoklimdlg.psh_3_map.setChecked(False)
+                self.otoklimdlg.ach_1_csv.setChecked(False)
+                self.otoklimdlg.ash_1_csv.setChecked(False)
+                self.otoklimdlg.pch_1_csv.setChecked(False)
+                self.otoklimdlg.psh_1_csv.setChecked(False)
+                self.otoklimdlg.pch_2_csv.setChecked(False)
+                self.otoklimdlg.psh_2_csv.setChecked(False)
+                self.otoklimdlg.pch_3_csv.setChecked(False)
+                self.otoklimdlg.psh_3_csv.setChecked(False)
                 self.otoklimdlg.classificationPanelAccord.setEnabled(False)
                 self.otoklimdlg.classificationPanel.hide()
                 self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
                 self.otoklimdlg.generatemapPanel.hide()
+                self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
+                self.otoklimdlg.generatecsvPanel.hide()
             except Exception as e:
                 print e
+                self.otoklimdlg.groupBox_3.setEnabled(False)
                 self.errormessagedlg.ErrorMessage.setText(str(e))
                 self.errormessagedlg.exec_()
 
