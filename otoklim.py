@@ -20,8 +20,8 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt4.QtCore import Qt, QSettings, QTranslator, qVersion, QCoreApplication, QFileInfo
-from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem, QCloseEvent, QColor
+from PyQt4.QtCore import Qt, QSettings, QTranslator, qVersion, QCoreApplication, QFileInfo, QSize
+from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem, QCloseEvent, QColor, QPainter, QImage
 from PyQt4.QtXml import QDomDocument
 # Initialize Qt resources from file resources.py
 import resources
@@ -3712,7 +3712,8 @@ class Otoklim:
                 for slc_id, slc_name in zip(slc_id_list, slc_name_list):
                     if len(str(slc_id)) == 2:
                         projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
-                        output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
+                        #output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
+                        output_jpg = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
                         # Raster Value Styling
                         layer_raster = QgsRasterLayer(raster_classified, '')
                         s = QgsRasterShader()
@@ -3831,7 +3832,22 @@ class Otoklim:
                         legend_item = composition.getComposerItemById('legend_line')
                         legend_item.updateLegend()
                         composition.refreshItems()
-                        composition.exportAsPDF(output_pdf)
+                        #composition.exportAsPDF(output_pdf)
+                        # Save as image
+                        dpi = 300
+                        dpmm = dpi / 25.4
+                        width = int(dpmm * composition.paperWidth())
+                        height = int(dpmm * composition.paperHeight())
+                        # create output image and initialize it
+                        image = QImage(QSize(width, height), QImage.Format_ARGB32)
+                        image.setDotsPerMeterX(dpmm * 1000)
+                        image.setDotsPerMeterY(dpmm * 1000)
+                        image.fill(0)
+                        # render the composition
+                        imagePainter = QPainter(image)
+                        composition.renderPage(imagePainter, 0)
+                        imagePainter.end()
+                        image.save(output_jpg, "jpg")
                         # Remove unuse file
                         raster = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
                         kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
@@ -3843,7 +3859,7 @@ class Otoklim:
                         QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
                     elif len(str(slc_id)) == 4:
                         projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
-                        output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
+                        # output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
                         # Raster Value Styling
                         rasterclassified = QgsRasterLayer(raster_classified, '')
                         # Special Case For Districts (clipping)
@@ -3989,7 +4005,22 @@ class Otoklim:
                         map_item.setMapCanvas(canvas)
                         map_item.zoomToExtent(canvas.extent())
                         composition.refreshItems()
-                        composition.exportAsPDF(output_pdf)
+                        #composition.exportAsPDF(output_pdf)
+                        # Save as image
+                        dpi = 300
+                        dpmm = dpi / 25.4
+                        width = int(dpmm * composition.paperWidth())
+                        height = int(dpmm * composition.paperHeight())
+                        # create output image and initialize it
+                        image = QImage(QSize(width, height), QImage.Format_ARGB32)
+                        image.setDotsPerMeterX(dpmm * 1000)
+                        image.setDotsPerMeterY(dpmm * 1000)
+                        image.fill(0)
+                        # render the composition
+                        imagePainter = QPainter(image)
+                        composition.renderPage(imagePainter, 0)
+                        imagePainter.end()
+                        image.save(output_jpg, "jpg")
                         # Remove unuse file
                         raster = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
                         kecamatan = QgsMapLayerRegistry.instance().mapLayersByName('Kecamatan')[0]
@@ -4009,9 +4040,8 @@ class Otoklim:
                         del layer_raster
                         os.remove(raster_cropped)
                     else:
-                        print slc_id
                         projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
-                        output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
+                        output_jpg = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
                         # Raster Value Styling
                         rasterclassified = QgsRasterLayer(raster_classified, '')
                         # Special Case For Sub-Districts (clipping)
@@ -4167,7 +4197,22 @@ class Otoklim:
                         map_item.setMapCanvas(canvas)
                         map_item.zoomToExtent(canvas.extent())
                         composition.refreshItems()
-                        composition.exportAsPDF(output_pdf)
+                        #composition.exportAsPDF(output_pdf)
+                        # Save as image
+                        dpi = 300
+                        dpmm = dpi / 25.4
+                        width = int(dpmm * composition.paperWidth())
+                        height = int(dpmm * composition.paperHeight())
+                        # create output image and initialize it
+                        image = QImage(QSize(width, height), QImage.Format_ARGB32)
+                        image.setDotsPerMeterX(dpmm * 1000)
+                        image.setDotsPerMeterY(dpmm * 1000)
+                        image.fill(0)
+                        # render the composition
+                        imagePainter = QPainter(image)
+                        composition.renderPage(imagePainter, 0)
+                        imagePainter.end()
+                        image.save(output_jpg, "jpg")
                         # Remove unuse file
                         raster = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
                         desa = QgsMapLayerRegistry.instance().mapLayersByName('Desa')[0]
