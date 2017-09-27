@@ -26,37 +26,37 @@ import os
 from PyQt4 import QtGui, uic
 
 BASE, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'otoklim_dialog_base.ui'))
+    os.path.dirname(__file__), 'ui/otoklim_dialog_base.ui'))
 
 ASK_PROJECT, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'otoklim_dialog_ask_project.ui'))
+    os.path.dirname(__file__), 'ui/otoklim_dialog_ask_project.ui'))
 
 NEW_PROJECT, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'otoklim_dialog_new_project.ui'))
+    os.path.dirname(__file__), 'ui/otoklim_dialog_new_project.ui'))
 
 CREATE_PROJECT, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'otoklim_dialog_create_project.ui'))
+    os.path.dirname(__file__), 'ui/otoklim_dialog_create_project.ui'))
 
 PROJECT_PROGRESS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'otoklim_dialog_project_progress.ui'))
+    os.path.dirname(__file__), 'ui/otoklim_dialog_project_progress.ui'))
 
 DIR_CONFIRM, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'otoklim_dialog_directory_confirm.ui'))
+    os.path.dirname(__file__), 'ui/otoklim_dialog_directory_confirm.ui'))
 
 SAVE_AS_PRO, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'otoklim_dialog_save_as_project.ui'))
+    os.path.dirname(__file__), 'ui/otoklim_dialog_save_as_project.ui'))
 
 EDIT_CSV, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'otoklim_dialog_edit_delimiter.ui'))
+    os.path.dirname(__file__), 'ui/otoklim_dialog_edit_delimiter.ui'))
 
 ERROR_MSG, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'otoklim_dialog_error_message.ui'))
+    os.path.dirname(__file__), 'ui/otoklim_dialog_error_message.ui'))
 
 SAVE_CONFIRM, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'otoklim_dialog_save_confirm.ui'))
+    os.path.dirname(__file__), 'ui/otoklim_dialog_save_confirm.ui'))
 
 REPLACE_CONFIRM, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'otoklim_dialog_replace_confirm.ui'))
+    os.path.dirname(__file__), 'ui/otoklim_dialog_replace_confirm.ui'))
 
 
 class OtoklimDialog(QtGui.QMainWindow, BASE):

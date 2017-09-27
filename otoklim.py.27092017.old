@@ -3274,6 +3274,7 @@ class Otoklim:
         row_keeper = []
         with open(filename_rainfall, 'rb') as csvfile:
             spamreader = csv.DictReader(csvfile, delimiter=',', quotechar='|')
+            data = spamreader.next()
             for row in spamreader:
                 row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
         with open(output_rainfall, "wb+") as txtfile:
@@ -3287,6 +3288,7 @@ class Otoklim:
         row_keeper = []
         with open(filename_normalrain, 'rb') as csvfile:
             spamreader = csv.DictReader(csvfile, delimiter=',', quotechar='|')
+            data = spamreader.next()
             for row in spamreader:
                 row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
         with open(output_normalrain, "wb+") as txtfile:
@@ -3662,7 +3664,7 @@ class Otoklim:
             if self.otoklimdlg.pch_3_map.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
-                    raster_pch_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_3"]["NAME"]
+                    raster_pch_3 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_3"]["NAME"]
                     param = os.path.splitext(raster_pch_3)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_3)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_3"]["REGION_LIST"] = str(slc_id_list)
                     month = months[3]
@@ -3710,7 +3712,7 @@ class Otoklim:
                 for slc_id, slc_name in zip(slc_id_list, slc_name_list):
                     if len(str(slc_id)) == 2:
                         projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
-                        # output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
+                        #output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
                         output_jpg = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
                         # Raster Value Styling
                         layer_raster = QgsRasterLayer(raster_classified, '')
@@ -3726,15 +3728,10 @@ class Otoklim:
                             with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
                                 spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
                                 for row in spamreader:
-                                    if str(row['lower_limit']) == '*':
-                                        label.append('< ' + str(row['upper_limit']))
-                                    elif str(row['upper_limit']) == '*':
-                                        label.append('> ' + str(row['lower_limit']))
-                                    else:
-                                        label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
+                                    #row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
                                     color.append(row['color'])
                                     # LABEL NOT FIX
-                                    #label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
+                                    label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
                                     list_value.append(row['new_value'])
                                     lng += 1
                         else:
@@ -3745,15 +3742,10 @@ class Otoklim:
                             with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
                                 spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
                                 for row in spamreader:
-                                    if str(row['lower_limit']) == '*':
-                                        label.append('< ' + str(row['upper_limit']))
-                                    elif str(row['upper_limit']) == '*':
-                                        label.append('> ' + str(row['lower_limit']))
-                                    else:
-                                        label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
+                                    #row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
                                     color.append(row['color'])
                                     # LABEL NOT FIX
-                                    #label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
+                                    label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
                                     list_value.append(row['new_value'])
                                     lng += 1
                         for n in range(1, lng):
@@ -3842,7 +3834,7 @@ class Otoklim:
                         composition.refreshItems()
                         #composition.exportAsPDF(output_pdf)
                         # Save as image
-                        dpi = 150
+                        dpi = 300
                         dpmm = dpi / 25.4
                         width = int(dpmm * composition.paperWidth())
                         height = int(dpmm * composition.paperHeight())
@@ -3868,7 +3860,6 @@ class Otoklim:
                     elif len(str(slc_id)) == 4:
                         projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
                         # output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
-                        output_jpg = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
                         # Raster Value Styling
                         rasterclassified = QgsRasterLayer(raster_classified, '')
                         # Special Case For Districts (clipping)
@@ -3899,15 +3890,10 @@ class Otoklim:
                             with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
                                 spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
                                 for row in spamreader:
-                                    if str(row['lower_limit']) == '*':
-                                        label.append('< ' + str(row['upper_limit']))
-                                    elif str(row['upper_limit']) == '*':
-                                        label.append('> ' + str(row['lower_limit']))
-                                    else:
-                                        label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
+                                    #row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
                                     color.append(row['color'])
                                     # LABEL NOT FIX
-                                    #label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
+                                    label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
                                     list_value.append(row['new_value'])
                                     lng += 1
                         else:
@@ -3918,15 +3904,10 @@ class Otoklim:
                             with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
                                 spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
                                 for row in spamreader:
-                                    if str(row['lower_limit']) == '*':
-                                        label.append('< ' + str(row['upper_limit']))
-                                    elif str(row['upper_limit']) == '*':
-                                        label.append('> ' + str(row['lower_limit']))
-                                    else:
-                                        label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
+                                    #row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
                                     color.append(row['color'])
                                     # LABEL NOT FIX
-                                    #label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
+                                    label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
                                     list_value.append(row['new_value'])
                                     lng += 1
                         for n in range(1, lng):
@@ -4091,15 +4072,10 @@ class Otoklim:
                             with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
                                 spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
                                 for row in spamreader:
-                                    if str(row['lower_limit']) == '*':
-                                        label.append('< ' + str(row['upper_limit']))
-                                    elif str(row['upper_limit']) == '*':
-                                        label.append('> ' + str(row['lower_limit']))
-                                    else:
-                                        label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
+                                    #row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
                                     color.append(row['color'])
                                     # LABEL NOT FIX
-                                    #label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
+                                    label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
                                     list_value.append(row['new_value'])
                                     lng += 1
                         else:
@@ -4110,15 +4086,10 @@ class Otoklim:
                             with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
                                 spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
                                 for row in spamreader:
-                                    if str(row['lower_limit']) == '*':
-                                        label.append('< ' + str(row['upper_limit']))
-                                    elif str(row['upper_limit']) == '*':
-                                        label.append('> ' + str(row['lower_limit']))
-                                    else:
-                                        label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
+                                    #row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
                                     color.append(row['color'])
                                     # LABEL NOT FIX
-                                    #label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
+                                    label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
                                     list_value.append(row['new_value'])
                                     lng += 1
                         for n in range(1, lng):
@@ -4310,8 +4281,7 @@ class Otoklim:
                 val = str(value) + '_error'
         return val
 
-    '''
-    def create_default_csv(self, prc_list, csv_directory, prcs_directory, slc_id_list):
+    def create_default_csv(self, prc_list, csv_directory, prcs_directory):
         """Create Default CSV File"""
         driver = ogr.GetDriverByName("ESRI Shapefile")
         kabupaten_csv = os.path.join(csv_directory, '1_kabupaten.csv')
@@ -4338,8 +4308,7 @@ class Otoklim:
             create_zs_shp(self.otoklimdlg.subdistricts.text(), 'kecamatan'), 
             create_zs_shp(self.otoklimdlg.villages.text(), 'desa')]
         region_id_list = [1, 2, 3]
-        # for copied_shp, output_csv, region_id in zip(copied_shp_list, output_csv_list, region_id_list):
-        for output_csv, region_id in zip(output_csv_list, region_id_list):
+        for copied_shp, output_csv, region_id in zip(copied_shp_list, output_csv_list, region_id_list):
             with open(output_csv, "wb+") as csvfile:
                 csv_writer = csv.writer(csvfile, delimiter=',')
                 if region_id == 1:
@@ -4353,7 +4322,6 @@ class Otoklim:
                     param_header = [prc[0].upper() + '_min', prc[0].upper() + '_maj', prc[0].upper() + '_ket']
                     header += param_header
                 csv_writer.writerow(header)
-                # Update 25092017 Zonal Statistic unuse
                 for prc in prc_list:
                     raster = os.path.join(prcs_directory, prc[1])
                     if prc[0][0:3] == 'ach' or prc[0][0:3] == 'pch':
@@ -4372,69 +4340,68 @@ class Otoklim:
                 layersource = dataSource.GetLayer()
                 n = 1
                 for feature in layersource:
-                    if (region_id == 1 and feature.GetField("ID_PROV") in slc_id_list) or (region_id == 2 and feature.GetField("ID_KAB") in slc_id_list) or (region_id == 3 and feature.GetField("ID_KEC") in slc_id_list):
-                        if region_id == 1:
-                            main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN")]
-                        elif region_id == 2:
-                            main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN"), feature.GetField("ID_KEC"), feature.GetField("KECAMATAN")]
-                        else:
-                            main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN"), feature.GetField("ID_KEC"), feature.GetField("KECAMATAN"), feature.GetField("ID_DES"), feature.GetField("DESA")]
-                        param_values = []
-                        h = 0
-                        for fieldname in field_names:
-                            if fieldname.startswith('ch'):
-                                break
-                            h += 1
-                        m = 0
-                        for field1, field2, field3, field4 in zip(field_names[h:], field_names[h+1:], field_names[h+2:], field_names[h+3:]):
-                            if m == 0:
-                                v_r = False
-                                v_m = False
-                                v_t = False
-                                v_st = False
-                                v_bn = False
-                                v_n = False
-                                v_an = False
-                                minor_val = self.get_category(field3, feature.GetField(str(field3)))
-                                major_val = self.get_category(field4, feature.GetField(str(field4)))
-                                param_values.append(minor_val)
-                                param_values.append(major_val)
-                                min_val = feature.GetField(str(field1))
-                                max_val = feature.GetField(str(field2))
-                                ket_list = []
-                                if min_val and max_val:
-                                    for value in range(int(min_val), int(max_val) + 1):
-                                        if field1.startswith('c'):
-                                            if (value == 1 or value == 2 or value == 3) and not v_r:
-                                                ket_list.append('R')
-                                                v_r = True
-                                            elif (value == 4 or value == 5 or value == 6) and not v_m:
-                                                ket_list.append('M')
-                                                v_m = True
-                                            elif value == 7 and not v_t:
-                                                ket_list.append('T')
-                                                v_t = True
-                                            elif (value == 8 or value == 9) and not v_st:
-                                                ket_list.append('ST')
-                                                v_st = True
-                                        else:
-                                            if (value == 1 or value == 2 or value == 3) and not v_bn:
-                                                ket_list.append('BN')
-                                                v_bn = True
-                                            elif value == 4 and not v_n:
-                                                ket_list.append('N')
-                                                v_n = True
-                                            elif (value == 5 or value == 6 or value == 7) and not v_an:
-                                                ket_list.append('AN')
-                                                v_an = True
-                                    param_values.append('/'.join(ket_list))
-                                else:
-                                    param_values.append('error')
-                            m += 1
-                            if m == 4:
-                                m = 0
-                        csv_writer.writerow(main_values + param_values)
-                        n += 1
+                    if region_id == 1:
+                        main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN")]
+                    elif region_id == 2:
+                        main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN"), feature.GetField("ID_KEC"), feature.GetField("KECAMATAN")]
+                    else:
+                        main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN"), feature.GetField("ID_KEC"), feature.GetField("KECAMATAN"), feature.GetField("ID_DES"), feature.GetField("DESA")]
+                    param_values = []
+                    h = 0
+                    for fieldname in field_names:
+                        if fieldname.startswith('ch'):
+                            break
+                        h += 1
+                    m = 0
+                    for field1, field2, field3, field4 in zip(field_names[h:], field_names[h+1:], field_names[h+2:], field_names[h+3:]):
+                        if m == 0:
+                            v_r = False
+                            v_m = False
+                            v_t = False
+                            v_st = False
+                            v_bn = False
+                            v_n = False
+                            v_an = False
+                            minor_val = self.get_category(field3, feature.GetField(str(field3)))
+                            major_val = self.get_category(field4, feature.GetField(str(field4)))
+                            param_values.append(minor_val)
+                            param_values.append(major_val)
+                            min_val = feature.GetField(str(field1))
+                            max_val = feature.GetField(str(field2))
+                            ket_list = []
+                            if min_val and max_val:
+                                for value in range(int(min_val), int(max_val) + 1):
+                                    if field1.startswith('c'):
+                                        if (value == 1 or value == 2 or value == 3) and not v_r:
+                                            ket_list.append('R')
+                                            v_r = True
+                                        elif (value == 4 or value == 5 or value == 6) and not v_m:
+                                            ket_list.append('M')
+                                            v_m = True
+                                        elif value == 7 and not v_t:
+                                            ket_list.append('T')
+                                            v_t = True
+                                        elif (value == 8 or value == 9) and not v_st:
+                                            ket_list.append('ST')
+                                            v_st = True
+                                    else:
+                                        if (value == 1 or value == 2 or value == 3) and not v_bn:
+                                            ket_list.append('BN')
+                                            v_bn = True
+                                        elif value == 4 and not v_n:
+                                            ket_list.append('N')
+                                            v_n = True
+                                        elif (value == 5 or value == 6 or value == 7) and not v_an:
+                                            ket_list.append('AN')
+                                            v_an = True
+                                param_values.append('/'.join(ket_list))
+                            else:
+                                param_values.append('error')
+                        m += 1
+                        if m == 4:
+                            m = 0
+                    csv_writer.writerow(main_values + param_values)
+                    n += 1
                 dataSource.Destroy()
             del layer
         # Delete Unuse SHP
@@ -4445,13 +4412,15 @@ class Otoklim:
             except OSError:
                 pass
         return kabupaten_csv, kecamatan_csv, desa_csv
-        '''
 
     def generate_csv(self):
         """Function to generate CSV"""
         prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
         out_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'output')
         csv_directory = os.path.join(out_directory, 'csv')
+        kabupaten_csv = os.path.join(csv_directory, 'kabupaten.csv')
+        kecamatan_csv = os.path.join(csv_directory, 'kecamatan.csv')
+        desa_csv = os.path.join(csv_directory, 'desa.csv')
         date = self.select_date_now()
         months = date[0]
         years = date[1]
@@ -4557,90 +4526,7 @@ class Otoklim:
                 prc_list.append([param, raster_psh_3])
             # Create CSV Default File
             if len(prc_list) > 0:
-                # default_csv = self.create_default_csv(prc_list, csv_directory, prcs_directory, slc_id_list)
-                # Update 26092017, New output CSV
-                driver = ogr.GetDriverByName("ESRI Shapefile")
-                kabupaten_csv = os.path.join(csv_directory, '1_kabupaten.csv')
-                kecamatan_csv = os.path.join(csv_directory, '2_kecamatan.csv')
-                desa_csv = os.path.join(csv_directory, '3_desa.csv')
-                output_csv_list = [kabupaten_csv, kecamatan_csv, desa_csv]
-                region_id_list = [1, 2, 3]
-                shp_list = [
-                    self.otoklimdlg.districts.text(), 
-                    self.otoklimdlg.subdistricts.text(),
-                    self.otoklimdlg.villages.text()
-                ]
-                for shp, output_csv, region_id in zip(shp_list, output_csv_list, region_id_list):
-                    with open(output_csv, "wb+") as csvfile:
-                        csv_writer = csv.writer(csvfile, delimiter=',')
-                        if region_id == 1:
-                            main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota']
-                        elif region_id == 2:
-                            main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota', 'ID_Kecamatan', 'Kecamatan']
-                        else:
-                            main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota', 'ID_Kecamatan', 'Kecamatan', 'ID_Desa', 'Desa']
-                        header = main_header
-                        for prc in prc_list:
-                            param_header = [prc[0].upper() + '_SBK', prc[0].upper() + '_SB', prc[0].upper() + '_SBB', prc[0].upper() + '_M']
-                            header += param_header
-                        csv_writer.writerow(header)
-                        layer = QgsVectorLayer(shp, 'layer', 'ogr')
-                        fields = layer.pendingFields()
-                        field_names = [field.name() for field in fields]
-                        dataSource = driver.Open(shp, 0)
-                        layersource = dataSource.GetLayer()
-                        n = 1
-                        for feature in layersource:
-                            if (region_id == 1 and feature.GetField("ID_PROV") in slc_id_list) or (region_id == 2 and feature.GetField("ID_KAB") in slc_id_list) or (region_id == 3 and feature.GetField("ID_KEC") in slc_id_list):
-                                if region_id == 1:
-                                    main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN")]
-                                elif region_id == 2:
-                                    main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN"), feature.GetField("ID_KEC"), feature.GetField("KECAMATAN")]
-                                else:
-                                    main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN"), feature.GetField("ID_KEC"), feature.GetField("KECAMATAN"), feature.GetField("ID_DES"), feature.GetField("DESA")]
-                                param_values = []
-
-                                # LOGIC START HERE
-
-                                for prc in prc_list:
-                                    sbk = sb = sbb = m = '-'
-                                    raster_classified = os.path.join(prcs_directory, prc[1])
-                                    temp_raster = os.path.join(prcs_directory, 'tmp' + str(prc[1]))
-                                    os.mkdir(temp_raster)
-                                    for slc_id, slc_name in zip(slc_id_list, slc_name_list):
-                                        if len(str(slc_id)) == 2:
-                                            read_raster = gdal.Open(raster_classified, GA_ReadOnly)
-                                            raster_value = np.array(read_raster.GetRasterBand(1).ReadAsArray(), dtype ="int")
-                                            unique, counts = np.unique(raster_value, return_counts=True)
-                                            unique_counts = dict(zip(unique, counts))
-                                            unique_counts.pop(255, None)
-                                            all_cell = sum(unique_counts.values())
-                                            if prc[0][0:3] == 'ach' or prc[0][0:3] == 'pch':
-                                                kat = 'ch'
-                                                for n in range(1,10):
-                                                    if n not in unique_counts:
-                                                        unique_counts[n] = 0
-                                            else:
-                                                kat = 'sh'
-                                                for n in range(1,8):
-                                                    if n not in unique_counts:
-                                                        unique_counts[n] = 0
-                                            for key, value in zip(unique_counts.keys(), unique_counts.values()):
-                                                percentage = math.ceil((value / float(all_cell)) * 100)
-                                                kategori = self.get_category(kat, key)
-                                                if percentage >= 0 and percentage < 20:
-                                                    sbk = kategori
-                                                #param_values STUCK
-                                
-                                # END HERE
-
-
-                                csv_writer.writerow(main_values + param_values)
-                        dataSource.Destroy()
-
-
-            '''
-            # Update 26092017, comment unuse output csv
+                default_csv = self.create_default_csv(prc_list, csv_directory, prcs_directory)
             # Start Listing
             for prc in prc_list:
                 raster_classified = os.path.join(prcs_directory, prc[1])
@@ -4763,7 +4649,6 @@ class Otoklim:
                         del layer_kec
                 shutil.rmtree(temp_raster)
                 self.otoklimdlg.showGenerateCSVFolder.setEnabled(True)
-            '''
         except Exception as e:
             self.errormessagedlg.ErrorMessage.setText(str(e))
             self.errormessagedlg.exec_()
