@@ -3015,6 +3015,8 @@ class Otoklim:
                     "%f,%f,%f,%f" % (extent.xMinimum(), extent.xMaximum(), extent.yMinimum(), extent.yMaximum()), 0.001, -1.0, 0.0001,
                     raster_interpolated
                 )
+                processing.runalg('saga:clipgridwithpolygon', raster_interpolated, provinsi_polygon_file, raster_cropped)
+                '''
                 processing.runalg(
                     "gdalogr:cliprasterbymasklayer", 
                     raster_interpolated,
@@ -3022,6 +3024,7 @@ class Otoklim:
                     -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", 
                     raster_cropped
                 )
+                '''
             with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["PROCESSED"] = 1
@@ -3877,6 +3880,8 @@ class Otoklim:
                         exp = "\"ID_KAB\"='{}'".format(str(slc_id))
                         layer_districts.setSubsetString(exp)
                         raster_cropped = os.path.join(temp_raster, str(slc_name) + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.tif')
+                        processing.runalg('saga:clipgridwithpolygon', rasterclassified, layer_districts, raster_cropped)
+                        '''
                         processing.runalg(
                             "gdalogr:cliprasterbymasklayer", 
                             rasterclassified, 
@@ -3884,6 +3889,7 @@ class Otoklim:
                             -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", 
                             raster_cropped
                         )
+                        '''
                         QgsMapLayerRegistry.instance().removeMapLayer(layer_districts.id())
                         layer_raster = QgsRasterLayer(raster_cropped, '')
 
@@ -4069,6 +4075,8 @@ class Otoklim:
                         exp = "\"ID_KEC\"='{}'".format(str(slc_id))
                         layer_subdistricts.setSubsetString(exp)
                         raster_cropped = os.path.join(temp_raster, str(slc_name) + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.tif')
+                        processing.runalg('saga:clipgridwithpolygon', rasterclassified, layer_subdistricts, raster_cropped)
+                        '''
                         processing.runalg(
                             "gdalogr:cliprasterbymasklayer", 
                             rasterclassified, 
@@ -4076,6 +4084,7 @@ class Otoklim:
                             -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", 
                             raster_cropped
                         )
+                        '''
                         QgsMapLayerRegistry.instance().removeMapLayer(layer_subdistricts.id())
                         layer_raster = QgsRasterLayer(raster_cropped, '')
 
@@ -4460,7 +4469,7 @@ class Otoklim:
             items.append(self.otoklimdlg.listWidget_selected_2.item(index))
 
         slc_id_list = [int(float(i.whatsThis().split('|')[1])) for i in items]
-        slc_name_list = [str(i.whatsThis().split('|')[0]) for i in items]
+        # slc_name_list = [str(i.whatsThis().split('|')[0]) for i in items]
         project = os.path.join(
             self.otoklimdlg.projectworkspace.text(),
             self.otoklimdlg.projectfilename.text()
@@ -4536,7 +4545,7 @@ class Otoklim:
             if self.otoklimdlg.pch_3_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
-                    raster_pch_3 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_3"]["NAME"]
+                    raster_pch_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_3"]["NAME"]
                     param = os.path.splitext(raster_pch_3)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_3)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PCH_3"]["REGION_LIST"] = str(slc_id_list)
                     month = months[3]
@@ -4572,7 +4581,7 @@ class Otoklim:
                 ]
                 for shp, output_csv, region_id in zip(shp_list, output_csv_list, region_id_list):
                     with open(output_csv, "wb+") as csvfile:
-                        csv_writer = csv.writer(csvfile, delimiter=',')
+                        # csv_writer = csv.writer(csvfile, delimiter=',')
                         if region_id == 1:
                             main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota']
                         elif region_id == 2:
@@ -4580,10 +4589,13 @@ class Otoklim:
                         else:
                             main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota', 'ID_Kecamatan', 'Kecamatan', 'ID_Desa', 'Desa']
                         header = main_header
+                        param = []
                         for prc in prc_list:
                             param_header = [prc[0].upper() + '_SBK', prc[0].upper() + '_SB', prc[0].upper() + '_SBB', prc[0].upper() + '_M']
+                            param.append(param_header)
                             header += param_header
-                        csv_writer.writerow(header)
+                        csv_writer = csv.DictWriter(csvfile, fieldnames=header,  delimiter=',')
+                        csv_writer.writeheader()
                         layer = QgsVectorLayer(shp, 'layer', 'ogr')
                         fields = layer.pendingFields()
                         field_names = [field.name() for field in fields]
@@ -4593,51 +4605,110 @@ class Otoklim:
                         for feature in layersource:
                             if (region_id == 1 and feature.GetField("ID_PROV") in slc_id_list) or (region_id == 2 and feature.GetField("ID_KAB") in slc_id_list) or (region_id == 3 and feature.GetField("ID_KEC") in slc_id_list):
                                 if region_id == 1:
-                                    main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN")]
+                                    main_values = {
+                                        'No': n,
+                                        'Provinsi': feature.GetField("PROVINSI"),
+                                        'ID_Kabupaten_Kota': feature.GetField("ID_KAB"),
+                                        'Kabupaten_Kota': feature.GetField("KABUPATEN")
+                                    }
                                 elif region_id == 2:
-                                    main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN"), feature.GetField("ID_KEC"), feature.GetField("KECAMATAN")]
+                                    main_values = {
+                                        'No': n,
+                                        'Provinsi': feature.GetField("PROVINSI"),
+                                        'ID_Kabupaten_Kota': feature.GetField("ID_KAB"),
+                                        'Kabupaten_Kota': feature.GetField("KABUPATEN"),
+                                        'ID_Kecamatan': feature.GetField("ID_KEC"),
+                                        'Kecamatan': feature.GetField("KECAMATAN")
+                                    }
                                 else:
-                                    main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN"), feature.GetField("ID_KEC"), feature.GetField("KECAMATAN"), feature.GetField("ID_DES"), feature.GetField("DESA")]
-                                param_values = []
-
+                                    main_values = {
+                                        'No': n,
+                                        'Provinsi': feature.GetField("PROVINSI"),
+                                        'ID_Kabupaten_Kota': feature.GetField("ID_KAB"),
+                                        'Kabupaten_Kota': feature.GetField("KABUPATEN"),
+                                        'ID_Kecamatan': feature.GetField("ID_KEC"),
+                                        'Kecamatan': feature.GetField("KECAMATAN"),
+                                        'ID_Desa': feature.GetField("ID_DES"),
+                                        'Desa': feature.GetField("DESA")
+                                    }
+                                param_values = {}
                                 # LOGIC START HERE
-
                                 for prc in prc_list:
-                                    sbk = sb = sbb = m = '-'
+                                    sbk = []
+                                    sb = []
+                                    sbb = []
+                                    m = []
                                     raster_classified = os.path.join(prcs_directory, prc[1])
                                     temp_raster = os.path.join(prcs_directory, 'tmp' + str(prc[1]))
-                                    os.mkdir(temp_raster)
-                                    for slc_id, slc_name in zip(slc_id_list, slc_name_list):
-                                        if len(str(slc_id)) == 2:
-                                            read_raster = gdal.Open(raster_classified, GA_ReadOnly)
-                                            raster_value = np.array(read_raster.GetRasterBand(1).ReadAsArray(), dtype ="int")
-                                            unique, counts = np.unique(raster_value, return_counts=True)
-                                            unique_counts = dict(zip(unique, counts))
-                                            unique_counts.pop(255, None)
-                                            all_cell = sum(unique_counts.values())
-                                            if prc[0][0:3] == 'ach' or prc[0][0:3] == 'pch':
-                                                kat = 'ch'
-                                                for n in range(1,10):
-                                                    if n not in unique_counts:
-                                                        unique_counts[n] = 0
-                                            else:
-                                                kat = 'sh'
-                                                for n in range(1,8):
-                                                    if n not in unique_counts:
-                                                        unique_counts[n] = 0
-                                            for key, value in zip(unique_counts.keys(), unique_counts.values()):
-                                                percentage = math.ceil((value / float(all_cell)) * 100)
-                                                kategori = self.get_category(kat, key)
-                                                if percentage >= 0 and percentage < 20:
-                                                    sbk = kategori
-                                                #param_values STUCK
-                                
+                                    if os.path.exists(temp_raster):
+                                        pass
+                                    else:
+                                        os.mkdir(temp_raster)
+                                    # for slc_id, slc_name in zip(slc_id_list, slc_name_list):
+                                    if region_id == 1:
+                                        layer = QgsVectorLayer(shp, str(feature.GetField("KABUPATEN")), "ogr")
+                                        QgsMapLayerRegistry.instance().addMapLayer(layer)
+                                        exp = "\"ID_KAB\"='{}'".format(str(feature.GetField("ID_KAB")))
+                                        layer.setSubsetString(exp)
+                                        cliped = os.path.join(temp_raster, str(feature.GetField("ID_KAB")) + '_' + str(prc[0]) + '_clp.tif')
+                                        # processing.runalg("gdalogr:cliprasterbymasklayer", raster_classified, layer, -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", cliped)
+                                    elif region_id == 2:
+                                        layer = QgsVectorLayer(shp, str(feature.GetField("KECAMATAN")), "ogr")
+                                        QgsMapLayerRegistry.instance().addMapLayer(layer)
+                                        exp = "\"ID_KEC\"='{}'".format(str(feature.GetField("ID_KEC")))
+                                        layer.setSubsetString(exp)
+                                        cliped = os.path.join(temp_raster, str(feature.GetField("ID_KEC")) + '_' + str(prc[0]) + '_clp.tif')
+                                    else:
+                                        layer = QgsVectorLayer(shp, str(feature.GetField("DESA")), "ogr")
+                                        QgsMapLayerRegistry.instance().addMapLayer(layer)
+                                        exp = "\"ID_DES\"='{}'".format(str(feature.GetField("ID_DES")))
+                                        layer.setSubsetString(exp)
+                                        cliped = os.path.join(temp_raster, str(feature.GetField("ID_DES")) + '_' + str(prc[0]) + '_clp.tif')
+                                    processing.runalg('saga:clipgridwithpolygon', raster_classified, layer, cliped)
+                                    read_raster = gdal.Open(cliped, GA_ReadOnly)
+                                    raster_value = np.array(read_raster.GetRasterBand(1).ReadAsArray(), dtype ="int")
+                                    unique, counts = np.unique(raster_value, return_counts=True)
+                                    unique_counts = dict(zip(unique, counts))
+                                    unique_counts.pop(255, None)
+                                    unique_counts.pop(-1, None)
+                                    all_cell = sum(unique_counts.values())
+                                    if prc[0][0:3] == 'ach' or prc[0][0:3] == 'pch':
+                                        kat = 'ch'
+                                        for i in range(1,10):
+                                            if i not in unique_counts:
+                                                unique_counts[i] = 0
+                                    else:
+                                        kat = 'sh'
+                                        for i in range(1,8):
+                                            if i not in unique_counts:
+                                                unique_counts[i] = 0
+                                    for key, value in zip(unique_counts.keys(), unique_counts.values()):
+                                        percentage = math.ceil((value / float(all_cell)) * 100)
+                                        kategori = self.get_category(kat, key)
+                                        if percentage > 0 and percentage < 20:
+                                            sbk.append(kategori)
+                                        elif percentage >= 20 and percentage < 50:
+                                            sb.append(kategori)
+                                        elif percentage >= 50 and percentage < 99:
+                                            sbb.append(kategori)
+                                        elif percentage == 100:
+                                            m.append(kategori)
+                                    del read_raster
+                                    QgsMapLayerRegistry.instance().removeMapLayer(layer.id())
+                                    del layer
+                                    param_values.update({
+                                        prc[0].upper() + '_SBK': sbk,
+                                        prc[0].upper() + '_SB': sb,
+                                        prc[0].upper() + '_SBB': sbb,
+                                        prc[0].upper() + '_M': m
+                                    })
+                                    # shutil.rmtree(temp_raster) 
+                                main_values.update(param_values)
+                                csv_writer.writerow(main_values)
+                                n += 1
                                 # END HERE
-
-
-                                csv_writer.writerow(main_values + param_values)
                         dataSource.Destroy()
-
+            self.otoklimdlg.showGenerateCSVFolder.setEnabled(True)
 
             '''
             # Update 26092017, comment unuse output csv
