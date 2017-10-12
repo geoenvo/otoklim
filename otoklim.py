@@ -21,7 +21,7 @@
  ***************************************************************************/
 """
 from PyQt4.QtCore import Qt, QSettings, QTranslator, qVersion, QCoreApplication, QFileInfo, QSize
-from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem, QCloseEvent, QColor, QPainter, QImage
+from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem, QTreeWidgetItem, QCloseEvent, QColor, QPainter, QImage
 from PyQt4.QtXml import QDomDocument
 # Initialize Qt resources from file resources.py
 import resources
@@ -3445,7 +3445,7 @@ class Otoklim:
             self.errormessagedlg.exec_()
 
     def region_listing(self, province_id, region_csv, save):
-        """Function to listing region to lost widget"""
+        """Function to listing region to tree widget"""
         if province_id:
             all_regions = []
             layer = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
@@ -3463,12 +3463,12 @@ class Otoklim:
                     csv_writer = csv.writer(csvfile, delimiter=",")
                     # Single Province Listing
                     for feature in layer.getFeatures():
-                        csv_writer.writerow([feature['PROVINSI'].capitalize(), feature['ADM_REGION'].capitalize(), feature['ID_PROV'], ''])
+                        csv_writer.writerow([feature['PROVINSI'].capitalize(), feature['ADM_REGION'].capitalize(), feature['ID_PROV']])
                     district_list = []
                     layer_kab.setSubsetString(exp)
                     # City \ District Listing
                     for feature in layer_kab.getFeatures():
-                        district_list.append((feature['KABUPATEN'].capitalize(), feature['ADM_REGION'].capitalize(), feature['ID_KAB'], '- '))
+                        district_list.append((feature['KABUPATEN'].capitalize(), feature['ADM_REGION'].capitalize(), feature['ID_KAB']))
                     for kab in sorted(district_list, key=lambda x: x[0]):
                         csv_writer.writerow(kab)
                         subdistrict_list = []
@@ -3476,12 +3476,36 @@ class Otoklim:
                         layer_kec.setSubsetString(exp)
                         # Sub-District Listing
                         for feature in layer_kec.getFeatures():
-                            subdistrict_list.append((feature['KECAMATAN'].capitalize(), feature['ADM_REGION'].capitalize(), feature['ID_KEC'], '-- '))
+                            subdistrict_list.append((feature['KECAMATAN'].capitalize(), feature['ADM_REGION'].capitalize(), feature['ID_KEC']))
                         for kec in sorted(subdistrict_list, key=lambda x: x[0]):
                             csv_writer.writerow(kec)
             with open(region_csv, 'rb') as csvfile:
                 spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
                 region_list = [row for row in spamreader]
+            for region in region_list:
+                item = QTreeWidgetItem([region[1] + ' ' + region[0]])
+                item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                if len(str(int(float(region[2])))) == 2:
+                    parent_1 = item
+                    self.otoklimdlg.treeWidget_option_1.addTopLevelItem(item)
+                elif len(str(int(float(region[2])))) == 4:
+                    parent_1.addChild(item)
+                    child_1 = item
+                else:
+                    child_1.addChild(item)
+                self.otoklimdlg.treeWidget_option_1.expandToDepth(0)
+                item2 = QTreeWidgetItem([region[1] + ' ' + region[0]])
+                item2.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                if len(str(int(float(region[2])))) == 2:
+                    parent_2 = item2
+                    self.otoklimdlg.treeWidget_option_2.addTopLevelItem(item2)
+                elif len(str(int(float(region[2])))) == 4:
+                    parent_2.addChild(item2)
+                    child_2 = item2
+                else:
+                    child_2.addChild(item2)
+                self.otoklimdlg.treeWidget_option_2.expandToDepth(0)
+            '''
             for region in region_list:
                 item = QListWidgetItem(region[3] + region[1] + ' ' + region[0])
                 item.setWhatsThis(str(region[0]) + '|' + str(region[2]))
@@ -3489,6 +3513,7 @@ class Otoklim:
                 item2 = QListWidgetItem(region[3] + region[1] + ' ' + region[0])
                 item2.setWhatsThis(str(region[0]) + '|' + str(region[2]))
                 self.otoklimdlg.listWidget_option_2.addItem(item2)
+            '''
 
     def search_option_1(self):
         """Function to search region"""
@@ -3505,11 +3530,45 @@ class Otoklim:
             spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
             region_list = [row for row in spamreader]
         filter_list = [row for row in region_list if str(key).upper() in row[0].upper()]
+        default = (filter_list == region_list)
+        self.otoklimdlg.treeWidget_option_1.clear()
+        for region in filter_list:
+            item = QTreeWidgetItem([region[1] + ' ' + region[0]])
+            item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+            if len(str(int(float(region[2])))) == 2 or default:
+                parent = item
+                self.otoklimdlg.treeWidget_option_1.addTopLevelItem(item)
+                parent_code = str(int(float(region[2])))
+                for region in region_list:
+                    item = QTreeWidgetItem([region[1] + ' ' + region[0]])
+                    item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                    if len(str(int(float(region[2])))) == 4 and str(region[2][:2]) == parent_code:
+                        parent.addChild(item)
+                        child = item
+                    elif len(str(int(float(region[2])))) > 4 and str(region[2][:2]) == parent_code:
+                        child.addChild(item)
+                if default:
+                    self.otoklimdlg.treeWidget_option_1.expandToDepth(0)
+                    break
+            elif len(str(int(float(region[2])))) == 4:
+                parent = item
+                self.otoklimdlg.treeWidget_option_1.addTopLevelItem(item)
+                parent_code = str(int(float(region[2])))
+                for region in region_list:
+                    item = QTreeWidgetItem([region[1] + ' ' + region[0]])
+                    item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                    if len(str(int(float(region[2])))) > 4 and str(region[2][:4]) == parent_code:
+                        parent.addChild(item)
+            else:
+                self.otoklimdlg.treeWidget_option_1.addTopLevelItem(item)
+            #self.otoklimdlg.treeWidget_option_1.expandToDepth(0)
+        '''
         self.otoklimdlg.listWidget_option_1.clear()
         for region in filter_list:
             item = QListWidgetItem(region[3] + region[1] + ' ' + region[0])
             item.setWhatsThis(str(region[0]) + '|' + str(region[2]))
             self.otoklimdlg.listWidget_option_1.addItem(item)
+        '''
     
     def search_option_2(self):
         """Function to search region"""
@@ -3526,15 +3585,61 @@ class Otoklim:
             spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
             region_list = [row for row in spamreader]
         filter_list = [row for row in region_list if str(key).upper() in row[0].upper()]
+        default = (filter_list == region_list)
+        self.otoklimdlg.treeWidget_option_2.clear()
+        for region in filter_list:
+            item = QTreeWidgetItem([region[1] + ' ' + region[0]])
+            item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+            if len(str(int(float(region[2])))) == 2 or default:
+                parent = item
+                self.otoklimdlg.treeWidget_option_2.addTopLevelItem(item)
+                parent_code = str(int(float(region[2])))
+                for region in region_list:
+                    item = QTreeWidgetItem([region[1] + ' ' + region[0]])
+                    item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                    if len(str(int(float(region[2])))) == 4 and str(region[2][:2]) == parent_code:
+                        parent.addChild(item)
+                        child = item
+                    elif len(str(int(float(region[2])))) > 4 and str(region[2][:2]) == parent_code:
+                        child.addChild(item)
+                if default:
+                    self.otoklimdlg.treeWidget_option_2.expandToDepth(0)
+                    break
+            elif len(str(int(float(region[2])))) == 4:
+                parent = item
+                self.otoklimdlg.treeWidget_option_2.addTopLevelItem(item)
+                parent_code = str(int(float(region[2])))
+                for region in region_list:
+                    item = QTreeWidgetItem([region[1] + ' ' + region[0]])
+                    item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                    if len(str(int(float(region[2])))) > 4 and str(region[2][:4]) == parent_code:
+                        parent.addChild(item)
+            else:
+                self.otoklimdlg.treeWidget_option_2.addTopLevelItem(item)
+            #self.otoklimdlg.treeWidget_option_2.expandToDepth(0)
+        '''
         self.otoklimdlg.listWidget_option_2.clear()
         for region in filter_list:
             item = QListWidgetItem(region[3] + region[1] + ' ' + region[0])
             item.setWhatsThis(str(region[0]) + '|' + str(region[2]))
             self.otoklimdlg.listWidget_option_2.addItem(item)
+        '''
 
     def add_to_selected_1(self):
         """Function to move selected region"""
         items = []
+        for index in xrange(self.otoklimdlg.treeWidget_selected_1.topLevelItemCount()):
+            items.append(self.otoklimdlg.treeWidget_selected_1.topLevelItem(index))
+        selected_items = [i.text(0) for i in items]
+
+        for item in self.otoklimdlg.treeWidget_option_1.selectedItems():
+            if item.text(0) not in selected_items:
+                newitem = QTreeWidgetItem([item.text(0)])
+                newitem.setWhatsThis(0, item.whatsThis(1))
+                self.otoklimdlg.treeWidget_selected_1.addTopLevelItem(newitem)
+            else:
+                pass
+        '''
         for index in xrange(self.otoklimdlg.listWidget_selected_1.count()):
             items.append(self.otoklimdlg.listWidget_selected_1.item(index))
         selected_items = [i.text() for i in items]
@@ -3546,10 +3651,23 @@ class Otoklim:
                 self.otoklimdlg.listWidget_selected_1.addItem(newitem)
             else:
                 pass
+        '''
     
     def add_to_selected_2(self):
         """Function to move selected region"""
         items = []
+        for index in xrange(self.otoklimdlg.treeWidget_selected_2.topLevelItemCount()):
+            items.append(self.otoklimdlg.treeWidget_selected_2.topLevelItem(index))
+        selected_items = [i.text(0) for i in items]
+
+        for item in self.otoklimdlg.treeWidget_option_2.selectedItems():
+            if item.text(0) not in selected_items:
+                newitem = QTreeWidgetItem([item.text(0)])
+                newitem.setWhatsThis(0, item.whatsThis(1))
+                self.otoklimdlg.treeWidget_selected_2.addTopLevelItem(newitem)
+            else:
+                pass
+        '''
         for index in xrange(self.otoklimdlg.listWidget_selected_2.count()):
             items.append(self.otoklimdlg.listWidget_selected_2.item(index))
         selected_items = [i.text() for i in items]
@@ -3561,20 +3679,33 @@ class Otoklim:
                 self.otoklimdlg.listWidget_selected_2.addItem(newitem)
             else:
                 pass
+        '''
 
     def delete_from_selected_1(self):
         """Function to remove selected region"""
+        for item in self.otoklimdlg.treeWidget_selected_1.selectedItems():
+            self.otoklimdlg.treeWidget_selected_1.takeTopLevelItem(
+                self.otoklimdlg.treeWidget_selected_1.indexOfTopLevelItem(item)
+            )
+        '''
         for item in self.otoklimdlg.listWidget_selected_1.selectedItems():
             self.otoklimdlg.listWidget_selected_1.takeItem(
                 self.otoklimdlg.listWidget_selected_1.row(item)
             )
+        '''
     
     def delete_from_selected_2(self):
         """Function to remove selected region"""
+        for item in self.otoklimdlg.treeWidget_selected_2.selectedItems():
+            self.otoklimdlg.treeWidget_selected_2.takeTopLevelItem(
+                self.otoklimdlg.treeWidget_selected_2.indexOfTopLevelItem(item)
+            )
+        '''
         for item in self.otoklimdlg.listWidget_selected_2.selectedItems():
             self.otoklimdlg.listWidget_selected_2.takeItem(
                 self.otoklimdlg.listWidget_selected_2.row(item)
             )
+        '''
 
     def generate_map(self):
         """Function to generate map"""
@@ -3585,11 +3716,14 @@ class Otoklim:
         months = date[0]
         years = date[1]
         items = []
+        for index in xrange(self.otoklimdlg.treeWidget_selected_1.topLevelItemCount()):
+            items.append(self.otoklimdlg.treeWidget_selected_1.topLevelItem(index))
+        '''
         for index in xrange(self.otoklimdlg.listWidget_selected_1.count()):
             items.append(self.otoklimdlg.listWidget_selected_1.item(index))
-
-        slc_id_list = [int(float(i.whatsThis().split('|')[1])) for i in items]
-        slc_name_list = [str(i.whatsThis().split('|')[0]) for i in items]
+        '''
+        slc_id_list = [int(float(i.whatsThis(0).split('|')[1])) for i in items]
+        slc_name_list = [str(i.whatsThis(0).split('|')[0]) for i in items]
         project = os.path.join(
             self.otoklimdlg.projectworkspace.text(),
             self.otoklimdlg.projectfilename.text()
@@ -4465,10 +4599,14 @@ class Otoklim:
         months = date[0]
         years = date[1]
         items = []
+        for index in xrange(self.otoklimdlg.treeWidget_selected_2.topLevelItemCount()):
+            items.append(self.otoklimdlg.treeWidget_selected_2.topLevelItem(index))
+        '''
         for index in xrange(self.otoklimdlg.listWidget_selected_2.count()):
             items.append(self.otoklimdlg.listWidget_selected_2.item(index))
+        '''
 
-        slc_id_list = [int(float(i.whatsThis().split('|')[1])) for i in items]
+        slc_id_list = [int(float(i.whatsThis(0).split('|')[1])) for i in items]
         # slc_name_list = [str(i.whatsThis().split('|')[0]) for i in items]
         project = os.path.join(
             self.otoklimdlg.projectworkspace.text(),
@@ -4702,7 +4840,7 @@ class Otoklim:
                                         prc[0].upper() + '_SBB': sbb,
                                         prc[0].upper() + '_M': m
                                     })
-                                    # shutil.rmtree(temp_raster) 
+                                    shutil.rmtree(temp_raster) 
                                 main_values.update(param_values)
                                 csv_writer.writerow(main_values)
                                 n += 1

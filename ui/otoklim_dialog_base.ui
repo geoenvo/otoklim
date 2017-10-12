@@ -2223,18 +2223,27 @@
              </property>
              <layout class="QHBoxLayout" name="horizontalLayout_2">
               <item>
-               <widget class="QListWidget" name="listWidget_option_1">
+               <widget class="QTreeWidget" name="treeWidget_option_1">
                 <property name="font">
                  <font>
                   <family>Tahoma</family>
                   <pointsize>9</pointsize>
-                  <weight>50</weight>
-                  <bold>false</bold>
                  </font>
                 </property>
                 <property name="selectionMode">
                  <enum>QAbstractItemView::MultiSelection</enum>
                 </property>
+                <property name="selectionBehavior">
+                 <enum>QAbstractItemView::SelectItems</enum>
+                </property>
+                <property name="headerHidden">
+                 <bool>true</bool>
+                </property>
+                <column>
+                 <property name="text">
+                  <string notr="true">1</string>
+                 </property>
+                </column>
                </widget>
               </item>
               <item>
@@ -2303,18 +2312,27 @@
                </widget>
               </item>
               <item>
-               <widget class="QListWidget" name="listWidget_selected_1">
+               <widget class="QTreeWidget" name="treeWidget_selected_1">
                 <property name="font">
                  <font>
                   <family>Tahoma</family>
-                  <pointsize>10</pointsize>
-                  <weight>50</weight>
-                  <bold>false</bold>
+                  <pointsize>9</pointsize>
                  </font>
                 </property>
                 <property name="selectionMode">
                  <enum>QAbstractItemView::MultiSelection</enum>
                 </property>
+                <property name="selectionBehavior">
+                 <enum>QAbstractItemView::SelectItems</enum>
+                </property>
+                <property name="headerHidden">
+                 <bool>true</bool>
+                </property>
+                <column>
+                 <property name="text">
+                  <string notr="true">1</string>
+                 </property>
+                </column>
                </widget>
               </item>
              </layout>
@@ -2466,16 +2484,6 @@
               <bool>false</bool>
              </property>
              <layout class="QGridLayout" name="gridLayout_27">
-              <item row="1" column="2">
-               <widget class="QCheckBox" name="psh_3_csv">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="text">
-                 <string>PSH +3</string>
-                </property>
-               </widget>
-              </item>
               <item row="0" column="2">
                <widget class="QCheckBox" name="pch_3_csv">
                 <property name="enabled">
@@ -2496,23 +2504,13 @@
                 </property>
                </widget>
               </item>
-              <item row="2" column="1">
-               <widget class="QCheckBox" name="psh_2_csv">
+              <item row="1" column="2">
+               <widget class="QCheckBox" name="psh_3_csv">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
                 <property name="text">
-                 <string>PSH +2</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QCheckBox" name="pch_2_csv">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="text">
-                 <string>PCH +2</string>
+                 <string>PSH +3</string>
                 </property>
                </widget>
               </item>
@@ -2523,16 +2521,6 @@
                 </property>
                 <property name="text">
                  <string>ACH -1</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="2">
-               <widget class="QCheckBox" name="check_all_csv">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="text">
-                 <string>All</string>
                 </property>
                </widget>
               </item>
@@ -2556,13 +2544,23 @@
                 </property>
                </widget>
               </item>
-              <item row="0" column="3">
-               <widget class="QPushButton" name="generatecsvButton">
+              <item row="2" column="2">
+               <widget class="QCheckBox" name="check_all_csv">
                 <property name="enabled">
                  <bool>true</bool>
                 </property>
                 <property name="text">
-                 <string>Generate CSV</string>
+                 <string>All</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QCheckBox" name="psh_2_csv">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="text">
+                 <string>PSH +2</string>
                 </property>
                </widget>
               </item>
@@ -2573,6 +2571,26 @@
                 </property>
                 <property name="text">
                  <string>Show In Folder</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="3">
+               <widget class="QPushButton" name="generatecsvButton">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="text">
+                 <string>Generate CSV</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QCheckBox" name="pch_2_csv">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="text">
+                 <string>PCH +2</string>
                 </property>
                </widget>
               </item>
@@ -2592,18 +2610,27 @@
              </property>
              <layout class="QHBoxLayout" name="horizontalLayout_3">
               <item>
-               <widget class="QListWidget" name="listWidget_option_2">
+               <widget class="QTreeWidget" name="treeWidget_option_2">
                 <property name="font">
                  <font>
                   <family>Tahoma</family>
                   <pointsize>9</pointsize>
-                  <weight>50</weight>
-                  <bold>false</bold>
                  </font>
                 </property>
                 <property name="selectionMode">
                  <enum>QAbstractItemView::MultiSelection</enum>
                 </property>
+                <property name="selectionBehavior">
+                 <enum>QAbstractItemView::SelectItems</enum>
+                </property>
+                <property name="headerHidden">
+                 <bool>true</bool>
+                </property>
+                <column>
+                 <property name="text">
+                  <string notr="true">1</string>
+                 </property>
+                </column>
                </widget>
               </item>
               <item>
@@ -2672,18 +2699,27 @@
                </widget>
               </item>
               <item>
-               <widget class="QListWidget" name="listWidget_selected_2">
+               <widget class="QTreeWidget" name="treeWidget_selected_2">
                 <property name="font">
                  <font>
                   <family>Tahoma</family>
-                  <pointsize>10</pointsize>
-                  <weight>50</weight>
-                  <bold>false</bold>
+                  <pointsize>9</pointsize>
                  </font>
                 </property>
                 <property name="selectionMode">
                  <enum>QAbstractItemView::MultiSelection</enum>
                 </property>
+                <property name="selectionBehavior">
+                 <enum>QAbstractItemView::SelectItems</enum>
+                </property>
+                <property name="headerHidden">
+                 <bool>true</bool>
+                </property>
+                <column>
+                 <property name="text">
+                  <string notr="true">1</string>
+                 </property>
+                </column>
                </widget>
               </item>
              </layout>
