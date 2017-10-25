@@ -48,7 +48,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-1107</y>
+         <y>-908</y>
          <width>870</width>
          <height>1787</height>
         </rect>
@@ -2204,6 +2204,16 @@
                 </property>
                 <property name="text">
                  <string>PSH +1</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="3">
+               <widget class="QCheckBox" name="province_extent">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
+                <property name="text">
+                 <string>Province Polygon as Extent</string>
                 </property>
                </widget>
               </item>

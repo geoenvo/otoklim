@@ -1881,58 +1881,58 @@ class Otoklim:
                         raise Exception(errormessage)
                     try:
                         if 'ACH_1' in row:
-                            int(row['ACH_1'])
+                            float(row['ACH_1'])
                     except:
-                        error_message = ': ACH_1 [' + row['ACH_1'] + '] value must be integer'
+                        error_message = ': ACH_1 [' + row['ACH_1'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
                         if 'ASH_1' in row:
-                            int(row['ASH_1'])
+                            float(row['ASH_1'])
                     except:
-                        error_message = ': ASH_1 [' + row['ASH_1'] + '] value must be integer'
+                        error_message = ': ASH_1 [' + row['ASH_1'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
                         if 'PCH_1' in row:
-                            int(row['PCH_1'])
+                            float(row['PCH_1'])
                     except:
-                        error_message = ': PCH_1 [' + row['PCH_1'] + '] value must be integer'
+                        error_message = ': PCH_1 [' + row['PCH_1'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
                         if 'PSH_1' in row:
-                            int(row['PSH_1'])
+                            float(row['PSH_1'])
                     except:
-                        error_message = ': PSH_1 [' + row['PSH_1'] + '] value must be integer'
+                        error_message = ': PSH_1 [' + row['PSH_1'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
                         if 'PCH_2' in row:
-                            int(row['PCH_2'])
+                            float(row['PCH_2'])
                     except:
-                        error_message = ': PCH_2 [' + row['PCH_2'] + '] value must be integer'
+                        error_message = ': PCH_2 [' + row['PCH_2'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
                         if 'PSH_2' in row:
-                            int(row['PSH_2'])
+                            float(row['PSH_2'])
                     except:
-                        error_message = ': PSH_2 [' + row['PSH_2'] + '] value must be integer'
+                        error_message = ': PSH_2 [' + row['PSH_2'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
                         if 'PCH_3' in row:
-                            int(row['PCH_3'])
+                            float(row['PCH_3'])
                     except:
-                        error_message = ': PCH_3 [' + row['PCH_3'] + '] value must be integer'
+                        error_message = ': PCH_3 [' + row['PCH_3'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
                         if 'PSH_3' in row:
-                            int(row['PSH_3'])
+                            float(row['PSH_3'])
                     except:
-                        error_message = ': PSH_3 [' + row['PSH_3'] + '] value must be integer'
+                        error_message = ': PSH_3 [' + row['PSH_3'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
 
@@ -3974,6 +3974,9 @@ class Otoklim:
                         composition.loadFromTemplate(document, substitution_map)
                         map_item = composition.getComposerItemById('map')
                         map_item.setMapCanvas(canvas)
+                        # Province Polygon As Extent
+                        if self.otoklimdlg.province_extent.isChecked():
+                            map_item.zoomToExtent(canvas.extent())
                         legend_item = composition.getComposerItemById('legend_line')
                         legend_item.updateLegend()
                         composition.refreshItems()
