@@ -1881,56 +1881,80 @@ class Otoklim:
                         raise Exception(errormessage)
                     try:
                         if 'ACH_1' in row:
-                            float(row['ACH_1'])
+                            if row['ACH_1'] == '':
+                                pass
+                            else:
+                                float(row['ACH_1'])
                     except:
                         error_message = ': ACH_1 [' + row['ACH_1'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
                         if 'ASH_1' in row:
-                            float(row['ASH_1'])
+                            if row['ASH_1'] == '':
+                                pass
+                            else:
+                                float(row['ASH_1'])
                     except:
                         error_message = ': ASH_1 [' + row['ASH_1'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
                         if 'PCH_1' in row:
-                            float(row['PCH_1'])
+                            if row['PCH_1'] == '':
+                                pass
+                            else:
+                                float(row['PCH_1'])
                     except:
                         error_message = ': PCH_1 [' + row['PCH_1'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
                         if 'PSH_1' in row:
-                            float(row['PSH_1'])
+                            if row['PSH_1'] == '':
+                                pass
+                            else:
+                                float(row['PSH_1'])
                     except:
                         error_message = ': PSH_1 [' + row['PSH_1'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
                         if 'PCH_2' in row:
-                            float(row['PCH_2'])
+                            if row['PCH_2'] == '':
+                                pass
+                            else:
+                                float(row['PCH_2'])
                     except:
                         error_message = ': PCH_2 [' + row['PCH_2'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
                         if 'PSH_2' in row:
-                            float(row['PSH_2'])
+                            if row['PSH_2'] == '':
+                                pass
+                            else:
+                                float(row['PSH_2'])
                     except:
                         error_message = ': PSH_2 [' + row['PSH_2'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
                         if 'PCH_3' in row:
-                            float(row['PCH_3'])
+                            if row['PCH_3'] == '':
+                                pass
+                            else:
+                                float(row['PCH_3'])
                     except:
                         error_message = ': PCH_3 [' + row['PCH_3'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
                     try:
                         if 'PSH_3' in row:
-                            float(row['PSH_3'])
+                            if row['PSH_3'] == '':
+                                pass
+                            else:
+                                float(row['PSH_3'])
                     except:
                         error_message = ': PSH_3 [' + row['PSH_3'] + '] value must be float'
                         errormessage = 'error at line: ' + str(line) + error_message
