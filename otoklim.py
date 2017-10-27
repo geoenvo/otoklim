@@ -789,6 +789,9 @@ class Otoklim:
             self.otoklimdlg.classificationPanel.show()
             self.otoklimdlg.classifyButton.setEnabled(True)
             self.otoklimdlg.showClassificationFolder.setEnabled(True)
+            self.otoklimdlg.classificationPanel.setEnabled(True)
+            self.otoklimdlg.generatemapPanel.setEnabled(True)
+            self.otoklimdlg.generatecsvPanel.setEnabled(True)
             ach_1 = json['PROCESSING']['CLASSIFICATION']['RASTER_ACH_1']["NAME"]
             if ach_1:
                 self.otoklimdlg.ach_1_class.setEnabled(True)
@@ -862,6 +865,10 @@ class Otoklim:
             self.otoklimdlg.showGenerateCSVFolder.setEnabled(True)
 
         # Region Listing
+        self.otoklimdlg.treeWidget_option_1.clear()
+        self.otoklimdlg.treeWidget_option_2.clear()
+        self.otoklimdlg.treeWidget_selected_1.clear()
+        self.otoklimdlg.treeWidget_selected_2.clear()
         province_id = json['PROCESSING']['IDW_INTERPOLATION']['ID_PROV']
         region_csv = os.path.join(json["LOCATION"]["PRC_FILE_LOC"], str(province_id) +  "_regionlist.csv")
         self.region_listing(province_id, region_csv, save)
@@ -4040,7 +4047,7 @@ class Otoklim:
                         QgsMapLayerRegistry.instance().addMapLayer(layer_districts)
                         exp = "\"ID_KAB\"='{}'".format(str(slc_id))
                         layer_districts.setSubsetString(exp)
-                        raster_cropped = os.path.join(temp_raster, str(slc_name) + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.tif')
+                        raster_cropped = os.path.join(temp_raster, str(slc_name).replace(" ", "_") + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.tif')
                         processing.runalg('saga:clipgridwithpolygon', rasterclassified, layer_districts, raster_cropped)
                         '''
                         processing.runalg(
@@ -4734,17 +4741,24 @@ class Otoklim:
                 # default_csv = self.create_default_csv(prc_list, csv_directory, prcs_directory, slc_id_list)
                 # Update 26092017, New output CSV
                 driver = ogr.GetDriverByName("ESRI Shapefile")
-                kabupaten_csv = os.path.join(csv_directory, '1_kabupaten.csv')
-                kecamatan_csv = os.path.join(csv_directory, '2_kecamatan.csv')
-                desa_csv = os.path.join(csv_directory, '3_desa.csv')
+                kabupaten_csv = os.path.join(csv_directory, 'kabupaten.csv')
+                kecamatan_csv = os.path.join(csv_directory, 'kecamatan.csv')
+                desa_csv = os.path.join(csv_directory, 'desa.csv')
+                kabupaten_json = os.path.join(csv_directory, 'kabupaten.json')
+                kecamatan_json = os.path.join(csv_directory, 'kecamatan.json')
+                desa_json = os.path.join(csv_directory, 'desa.json')
                 output_csv_list = [kabupaten_csv, kecamatan_csv, desa_csv]
+                output_json_list = [kabupaten_json, kecamatan_json, desa_json]
                 region_id_list = [1, 2, 3]
                 shp_list = [
                     self.otoklimdlg.districts.text(), 
                     self.otoklimdlg.subdistricts.text(),
                     self.otoklimdlg.villages.text()
                 ]
-                for shp, output_csv, region_id in zip(shp_list, output_csv_list, region_id_list):
+                json_kabupaten = []
+                json_kecamatan = []
+                json_desa = []
+                for shp, output_csv, output_json, region_id in zip(shp_list, output_csv_list, output_json_list, region_id_list):
                     with open(output_csv, "wb+") as csvfile:
                         # csv_writer = csv.writer(csvfile, delimiter=',')
                         if region_id == 1:
@@ -4799,10 +4813,10 @@ class Otoklim:
                                 param_values = {}
                                 # LOGIC START HERE
                                 for prc in prc_list:
-                                    sbk = []
-                                    sb = []
-                                    sbb = []
-                                    m = []
+                                    sbk = {}
+                                    sb = {}
+                                    sbb = {}
+                                    m = {}
                                     raster_classified = os.path.join(prcs_directory, prc[1])
                                     temp_raster = os.path.join(prcs_directory, 'tmp' + str(prc[1]))
                                     if os.path.exists(temp_raster):
@@ -4851,13 +4865,13 @@ class Otoklim:
                                         percentage = math.ceil((value / float(all_cell)) * 100)
                                         kategori = self.get_category(kat, key)
                                         if percentage > 0 and percentage < 20:
-                                            sbk.append(kategori)
+                                            sbk.update({kategori: percentage})
                                         elif percentage >= 20 and percentage < 50:
-                                            sb.append(kategori)
+                                            sb.update({kategori: percentage})
                                         elif percentage >= 50 and percentage < 99:
-                                            sbb.append(kategori)
+                                            sbb.update({kategori: percentage})
                                         elif percentage == 100:
-                                            m.append(kategori)
+                                            m.update({kategori: percentage})
                                     del read_raster
                                     QgsMapLayerRegistry.instance().removeMapLayer(layer.id())
                                     del layer
@@ -4867,12 +4881,29 @@ class Otoklim:
                                         prc[0].upper() + '_SBB': sbb,
                                         prc[0].upper() + '_M': m
                                     })
-                                    shutil.rmtree(temp_raster) 
+                                    shutil.rmtree(temp_raster)
+                                # JSON Structure
+                                json_values = main_values.copy()
+                                json_values.update({"VALUES": param_values})
+                                if region_id == 1:
+                                    json_kabupaten.append(json_values)
+                                elif region_id == 2:
+                                    json_kecamatan.append(json_values)
+                                else:
+                                    json_desa.append(json_values)
+                                # CSV Structure
                                 main_values.update(param_values)
                                 csv_writer.writerow(main_values)
                                 n += 1
                                 # END HERE
                         dataSource.Destroy()
+                    with open(output_json, 'w') as jsonfile:
+                        if region_id == 1:
+                            jsonfile.write(json.dumps(json_kabupaten, indent=4))
+                        elif region_id == 2:
+                            jsonfile.write(json.dumps(json_kecamatan, indent=4))
+                        else:
+                            jsonfile.write(json.dumps(json_desa, indent=4))  
             self.otoklimdlg.showGenerateCSVFolder.setEnabled(True)
 
             '''
