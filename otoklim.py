@@ -865,10 +865,6 @@ class Otoklim:
             self.otoklimdlg.showGenerateCSVFolder.setEnabled(True)
 
         # Region Listing
-        self.otoklimdlg.treeWidget_option_1.clear()
-        self.otoklimdlg.treeWidget_option_2.clear()
-        self.otoklimdlg.treeWidget_selected_1.clear()
-        self.otoklimdlg.treeWidget_selected_2.clear()
         province_id = json['PROCESSING']['IDW_INTERPOLATION']['ID_PROV']
         region_csv = os.path.join(json["LOCATION"]["PRC_FILE_LOC"], str(province_id) +  "_regionlist.csv")
         self.region_listing(province_id, region_csv, save)
@@ -3477,6 +3473,10 @@ class Otoklim:
 
     def region_listing(self, province_id, region_csv, save):
         """Function to listing region to tree widget"""
+        self.otoklimdlg.treeWidget_option_1.clear()
+        self.otoklimdlg.treeWidget_option_2.clear()
+        self.otoklimdlg.treeWidget_selected_1.clear()
+        self.otoklimdlg.treeWidget_selected_2.clear()
         if province_id:
             all_regions = []
             layer = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
@@ -3761,94 +3761,87 @@ class Otoklim:
         )
         try:
             prc_list = []
+            date_list = []
             if self.otoklimdlg.ach_1_map.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_ach_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ACH_1"]["NAME"]
                     param = os.path.splitext(raster_ach_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ach_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_ACH_1"]["REGION_LIST"] = str(slc_id_list)
-                    month = months[0]
-                    year = years[0]
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ach_1])
+                date_list.append([months[0], years[0]])
             if self.otoklimdlg.ash_1_map.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_ash_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ASH_1"]["NAME"]
                     param = os.path.splitext(raster_ash_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ash_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_ASH_1"]["REGION_LIST"] = str(slc_id_list)
-                    month = months[0]
-                    year = years[0]
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ash_1])
+                date_list.append([months[0], years[0]])
             if self.otoklimdlg.pch_1_map.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_pch_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_1"]["NAME"]
                     param = os.path.splitext(raster_pch_1)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_1"]["REGION_LIST"] = str(slc_id_list)
-                    month = months[1]
-                    year = years[1]
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_1])
+                date_list.append([months[1], years[1]])
             if self.otoklimdlg.psh_1_map.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_psh_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_1"]["NAME"]
                     param = os.path.splitext(raster_psh_1)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_1"]["REGION_LIST"] = str(slc_id_list)
-                    month = months[1]
-                    year = years[1]
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_1])
+                date_list.append([months[1], years[1]])
             if self.otoklimdlg.pch_2_map.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_pch_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_2"]["NAME"]
                     param = os.path.splitext(raster_pch_2)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_2)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_2"]["REGION_LIST"] = str(slc_id_list)
-                    month = months[2]
-                    year = years[2]
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_2"]["REGION_LIST"] = str(slc_id_list) 
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_2])
+                date_list.append([months[2], years[2]])
             if self.otoklimdlg.psh_2_map.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_psh_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_2"]["NAME"]
                     param = os.path.splitext(raster_psh_2)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_2)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_2"]["REGION_LIST"] = str(slc_id_list)
-                    month = months[2]
-                    year = years[2]
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_2])
+                date_list.append([months[2], years[2]])
             if self.otoklimdlg.pch_3_map.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_pch_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_3"]["NAME"]
                     param = os.path.splitext(raster_pch_3)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_3)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_3"]["REGION_LIST"] = str(slc_id_list)
-                    month = months[3]
-                    year = years[3]
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_3])
+                date_list.append([months[3], years[3]])
             if self.otoklimdlg.psh_3_map.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_psh_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_3"]["NAME"]
                     param = os.path.splitext(raster_psh_3)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_3)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_3"]["REGION_LIST"] = str(slc_id_list)
-                    month = months[3]
-                    year = years[3]
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_3])
+                date_list.append([months[3], years[3]])
             # Polygon to Line Conversion
             provinsi_line = os.path.join(prcs_directory, 'provinsi_line.shp')
             if not os.path.exists(provinsi_line):
@@ -3871,10 +3864,12 @@ class Otoklim:
                 linedesa = QgsMapLayerRegistry.instance().mapLayersByName('Lines from polygons')[0]
                 QgsMapLayerRegistry.instance().removeMapLayer(linedesa.id())
             # Start Listing
-            for value in prc_list:
+            for value, date in zip(prc_list, date_list):
                 raster_classified = os.path.join(prcs_directory, value[1])
                 temp_raster = os.path.join(prcs_directory, 'tmp' + str(value[1]))
                 os.mkdir(temp_raster)
+                month = date[0]
+                year = date[1]
                 for slc_id, slc_name in zip(slc_id_list, slc_name_list):
                     if len(str(slc_id)) == 2:
                         projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
@@ -3933,6 +3928,8 @@ class Otoklim:
 
                         # Province Styling
                         layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
+                        exp = "\"ID_PROV\"!='{}'".format(str(slc_id))
+                        layer_provinsi.setSubsetString(exp)
                         symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,0', 'outline_style': 'solid', 'outline_width': '0.5'})
                         layer_provinsi.rendererV2().setSymbol(symbol)
                         layer_provinsi_line = QgsVectorLayer(provinsi_line, 'Batas Provinsi', 'ogr')
@@ -3995,7 +3992,11 @@ class Otoklim:
                             title_type = "CURAH"
                         else:
                             title_type = "SIFAT"
-                        map_title = 'PETA PERKIRAAN ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
+                        if str(value[0])[0:3].upper().startswith('A'):
+                            title_adj = "ANALISIS"
+                        else:
+                            title_adj = "PERKIRAAN"
+                        map_title = 'PETA ' + title_adj + ' ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
                         substitution_map = {'map_title': map_title}
                         canvas = QgsMapCanvas()
                         QgsProject.instance().read(QFileInfo(projectqgs))
@@ -4118,7 +4119,7 @@ class Otoklim:
 
                         # Districts Styling
                         layer_kabupaten = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
-                        exp = "\"ID_PROV\"='{}'".format(str(slc_id)[0:2])
+                        exp = "\"ID_PROV\"='{}' AND \"ID_KAB\"!='{}'".format(str(slc_id)[0:2], str(slc_id))
                         layer_kabupaten.setSubsetString(exp)
                         symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,0', 'outline_style': 'solid', 'outline_width': '0.5'})
                         layer_kabupaten.rendererV2().setSymbol(symbol)
@@ -4186,7 +4187,11 @@ class Otoklim:
                             title_type = "CURAH"
                         else:
                             title_type = "SIFAT"
-                        map_title = 'PETA PERKIRAAN ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
+                        if str(value[0])[0:3].upper().startswith('A'):
+                            title_adj = "ANALISIS"
+                        else:
+                            title_adj = "PERKIRAAN"
+                        map_title = 'PETA ' + title_adj + ' ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
                         substitution_map = {'map_title': map_title}
                         canvas = QgsMapCanvas()
                         QgsProject.instance().read(QFileInfo(projectqgs))
@@ -4321,7 +4326,7 @@ class Otoklim:
 
                         # Sub-Districts Styling
                         layer_kecamatan = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
-                        exp = "\"ID_KAB\"='{}'".format(str(slc_id)[0:4])
+                        exp = "\"ID_KAB\"='{}' AND \"ID_KEC\"!='{}'".format(str(slc_id)[0:4], str(slc_id))
                         layer_kecamatan.setSubsetString(exp)
                         symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,0', 'outline_style': 'solid', 'outline_width': '0.5'})
                         layer_kecamatan.rendererV2().setSymbol(symbol)
@@ -4391,7 +4396,11 @@ class Otoklim:
                             title_type = "CURAH"
                         else:
                             title_type = "SIFAT"
-                        map_title = 'PETA PERKIRAAN ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
+                        if str(value[0])[0:3].upper().startswith('A'):
+                            title_adj = "ANALISIS"
+                        else:
+                            title_adj = "PERKIRAAN"
+                        map_title = 'PETA ' + title_adj + ' ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
                         substitution_map = {'map_title': map_title}
                         canvas = QgsMapCanvas()
                         QgsProject.instance().read(QFileInfo(projectqgs))
@@ -4629,9 +4638,11 @@ class Otoklim:
         prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
         out_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'output')
         csv_directory = os.path.join(out_directory, 'csv')
+        '''
         date = self.select_date_now()
         months = date[0]
         years = date[1]
+        '''
         items = []
         for index in xrange(self.otoklimdlg.treeWidget_selected_2.topLevelItemCount()):
             items.append(self.otoklimdlg.treeWidget_selected_2.topLevelItem(index))
@@ -4654,8 +4665,10 @@ class Otoklim:
                     raster_ach_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ACH_1"]["NAME"]
                     param = os.path.splitext(raster_ach_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ach_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_ACH_1"]["REGION_LIST"] = str(slc_id_list)
+                    '''
                     month = months[0]
                     year = years[0]
+                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ach_1])
@@ -4665,8 +4678,10 @@ class Otoklim:
                     raster_ash_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ASH_1"]["NAME"]
                     param = os.path.splitext(raster_ash_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ash_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_ASH_1"]["REGION_LIST"] = str(slc_id_list)
+                    '''
                     month = months[0]
                     year = years[0]
+                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ash_1])
@@ -4676,8 +4691,10 @@ class Otoklim:
                     raster_pch_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_1"]["NAME"]
                     param = os.path.splitext(raster_pch_1)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PCH_1"]["REGION_LIST"] = str(slc_id_list)
+                    '''
                     month = months[1]
                     year = years[1]
+                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_1])
@@ -4687,8 +4704,10 @@ class Otoklim:
                     raster_psh_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_1"]["NAME"]
                     param = os.path.splitext(raster_psh_1)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PSH_1"]["REGION_LIST"] = str(slc_id_list)
+                    '''
                     month = months[1]
                     year = years[1]
+                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_1])
@@ -4698,8 +4717,10 @@ class Otoklim:
                     raster_pch_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_2"]["NAME"]
                     param = os.path.splitext(raster_pch_2)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_2)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PCH_2"]["REGION_LIST"] = str(slc_id_list)
+                    '''
                     month = months[2]
                     year = years[2]
+                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_2])
@@ -4709,8 +4730,10 @@ class Otoklim:
                     raster_psh_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_2"]["NAME"]
                     param = os.path.splitext(raster_psh_2)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_2)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PSH_2"]["REGION_LIST"] = str(slc_id_list)
+                    '''
                     month = months[2]
                     year = years[2]
+                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_2])
@@ -4720,8 +4743,10 @@ class Otoklim:
                     raster_pch_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_3"]["NAME"]
                     param = os.path.splitext(raster_pch_3)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_3)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PCH_3"]["REGION_LIST"] = str(slc_id_list)
+                    '''
                     month = months[3]
                     year = years[3]
+                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_3])
@@ -4731,8 +4756,10 @@ class Otoklim:
                     raster_psh_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_3"]["NAME"]
                     param = os.path.splitext(raster_psh_3)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_3)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PSH_3"]["REGION_LIST"] = str(slc_id_list)
+                    '''
                     month = months[3]
                     year = years[3]
+                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_3])
@@ -4883,8 +4910,9 @@ class Otoklim:
                                     })
                                     shutil.rmtree(temp_raster)
                                 # JSON Structure
-                                json_values = main_values.copy()
+                                json_values = {}
                                 json_values.update({"VALUES": param_values})
+                                json_values.update(main_values)
                                 if region_id == 1:
                                     json_kabupaten.append(json_values)
                                 elif region_id == 2:
