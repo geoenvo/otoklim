@@ -20,7 +20,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt4.QtCore import Qt, QSettings, QTranslator, qVersion, QCoreApplication, QFileInfo, QSize
+from PyQt4.QtCore import Qt, QSettings, QTranslator, qVersion, QCoreApplication, QFileInfo, QSize, QVariant
 from PyQt4.QtGui import QAction, QIcon, QFileDialog, QListWidgetItem, QTreeWidgetItem, QCloseEvent, QColor, QPainter, QImage
 from PyQt4.QtXml import QDomDocument
 # Initialize Qt resources from file resources.py
@@ -53,7 +53,10 @@ from qgis.core import (
     QgsLineSymbolV2,
     QgsPalLayerSettings,
     QgsProject,
-    QgsComposition
+    QgsComposition,
+    QgsField,
+    QgsRendererCategoryV2,
+    QgsCategorizedSymbolRendererV2
 )
 from qgis.gui import QgsMapCanvas, QgsLayerTreeMapCanvasBridge
 from qgis.analysis import QgsZonalStatistics
@@ -3449,6 +3452,84 @@ class Otoklim:
                     processing.runalg('grass7:r.recode', rasterinterpolated, output_rainfall, False, "%f,%f,%f,%f" % (extent.xMinimum(), extent.xMaximum(), extent.yMinimum(), extent.yMaximum()), 0.001, raster_classified)
                 else:
                     processing.runalg('grass7:r.recode', rasterinterpolated, output_normalrain, False, "%f,%f,%f,%f" % (extent.xMinimum(), extent.xMaximum(), extent.yMinimum(), extent.yMaximum()), 0.001, raster_classified)
+
+                # Raster to Vector Conversion (Special Case)
+                if self.otoklimdlg.shapefile_conversion.isChecked():
+                    vector_classified = os.path.join(prcs_directory, 'classified_' + str(value[0]) + '.shp')
+                    if os.path.exists(vector_classified):
+                        QgsVectorFileWriter.deleteShapeFile(vector_classified)
+                        try:
+                            os.remove(os.path.splitext(vector_classified)[0] +  '.cpg')
+                        except OSError:
+                            pass
+                    # Polygonize
+                    processing.runalg("gdalogr:polygonize", raster_classified, "DN", vector_classified)
+                    # Add Attribute
+                    layer_vector_classified = QgsVectorLayer(vector_classified, 'vector_classified', 'ogr')
+                    res = layer_vector_classified.dataProvider().addAttributes([QgsField(str(value[0])[0:3].upper(), QVariant.String)])
+                    layer_vector_classified.updateFields()
+                    # Record Label, Value and Color
+                    label_value = {}
+                    if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                        color = []
+                        label = []
+                        list_value = []
+                        with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
+                            spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                            for row in spamreader:
+                                if str(row['lower_limit']) == '*':
+                                    label_str = '< ' + str(row['upper_limit'])
+                                    label.append(label_str)
+                                elif str(row['upper_limit']) == '*':
+                                    label_str = '> ' + str(row['lower_limit'])
+                                    label.append(label_str)
+                                else:
+                                    label_str = str(row['lower_limit']) + ' - ' + str(row['upper_limit'])
+                                    label.append(label_str)
+                                color.append(row['color'])
+                                list_value.append(row['new_value'])
+                                label_value.update({row['new_value']: (label_str, row['color'])})
+                    else:
+                        color = []
+                        label = []
+                        list_value = []
+                        with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
+                            spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                            for row in spamreader:
+                                if str(row['lower_limit']) == '*':
+                                    label_str = '< ' + str(row['upper_limit'])
+                                    label.append(label_str)
+                                elif str(row['upper_limit']) == '*':
+                                    label_str = '> ' + str(row['lower_limit'])
+                                    label.append(label_str)
+                                else:
+                                    label_str = str(row['lower_limit']) + ' - ' + str(row['upper_limit'])
+                                    label.append(label_str)
+                                color.append(row['color'])
+                                list_value.append(row['new_value'])
+                                label_value.update({row['new_value']: (label_str, row['color'])})
+                    # Set Attribute
+                    features = layer_vector_classified.getFeatures()
+                    layer_vector_classified.startEditing()
+                    for i in features:
+                        layer_vector_classified.changeAttributeValue(
+                            i.id(),
+                            layer_vector_classified.fieldNameIndex(str(value[0])[0:3].upper()), 
+                            str(label_value[str(i['DN'])][0])
+                        )
+                    layer_vector_classified.commitChanges()
+                    # Render Vector Style
+                    style_file = os.path.join(prcs_directory, 'classified_' + str(value[0]) + '.qml')
+                    categories = []
+                    for dn, (label, color) in label_value.items():
+                        symbol = QgsFillSymbolV2.createSimple({'color': color, 'outline_color': '0,0,0,0', 'outline_width': '0'})
+                        category = QgsRendererCategoryV2(dn, symbol, label)
+                        categories.append(category)
+                    expression = 'DN'
+                    renderer = QgsCategorizedSymbolRendererV2(expression, categories)
+                    layer_vector_classified.setRendererV2(renderer)
+                    layer_vector_classified.saveNamedStyle(style_file)
+
             with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     otoklim_project["PROCESSING"]["CLASSIFICATION"]["PROCESSED"] = 1
