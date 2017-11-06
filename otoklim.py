@@ -40,6 +40,7 @@ from otoklim_dialog import (
     ReplaceConfrimDialog
 )
 from qgis.core import (
+    QGis,
     QgsVectorLayer,
     QgsRasterLayer,
     QgsMapLayerRegistry,
@@ -56,7 +57,8 @@ from qgis.core import (
     QgsComposition,
     QgsField,
     QgsRendererCategoryV2,
-    QgsCategorizedSymbolRendererV2
+    QgsCategorizedSymbolRendererV2,
+    QgsDistanceArea,
 )
 from qgis.gui import QgsMapCanvas, QgsLayerTreeMapCanvasBridge
 from qgis.analysis import QgsZonalStatistics
@@ -71,8 +73,9 @@ import subprocess
 import datetime
 import processing
 import csv
-import numpy as np
-import math
+import logging
+# import numpy as np
+# import math
 
 
 class Otoklim:
@@ -1434,53 +1437,53 @@ class Otoklim:
         layer = QgsRasterLayer(raster, 'psh3')
         QgsMapLayerRegistry.instance().addMapLayer(layer)
 
-    # Add Raster Classified To Canvas
+    # Add vECTOR Classified To Canvas
     def add_ach_1_class(self):
         """Add ACH 1 Classified"""
-        raster = self.otoklimdlg.addach_1_class.whatsThis()
-        layer = QgsRasterLayer(raster, 'ach1')
+        vector = self.otoklimdlg.addach_1_class.whatsThis()
+        layer = QgsVectorLayer(vector, 'ach1', 'ogr')
         QgsMapLayerRegistry.instance().addMapLayer(layer)
 
     def add_ash_1_class(self):
         """Add ASH 1 Classified"""
-        raster = self.otoklimdlg.addash_1_class.whatsThis()
-        layer = QgsRasterLayer(raster, 'ash1')
+        vector = self.otoklimdlg.addash_1_class.whatsThis()
+        layer = QgsVectorLayer(vector, 'ash1', 'ogr')
         QgsMapLayerRegistry.instance().addMapLayer(layer)
 
     def add_pch_1_class(self):
         """Add PCH 1 Classified"""
-        raster = self.otoklimdlg.addpch_1_class.whatsThis()
-        layer = QgsRasterLayer(raster, 'pch1')
+        vector = self.otoklimdlg.addpch_1_class.whatsThis()
+        layer = QgsVectorLayer(vector, 'pch1', 'ogr')
         QgsMapLayerRegistry.instance().addMapLayer(layer)
 
     def add_psh_1_class(self):
         """Add PSH 1 Classified"""
-        raster = self.otoklimdlg.addpsh_1_class.whatsThis()
-        layer = QgsRasterLayer(raster, 'psh1')
+        vector = self.otoklimdlg.addpsh_1_class.whatsThis()
+        layer = QgsVectorLayer(vector, 'psh1', 'ogr')
         QgsMapLayerRegistry.instance().addMapLayer(layer)
 
     def add_pch_2_class(self):
         """Add PCH 2 Classified"""
-        raster = self.otoklimdlg.addpch_2_class.whatsThis()
-        layer = QgsRasterLayer(raster, 'pch2')
+        vector = self.otoklimdlg.addpch_2_class.whatsThis()
+        layer = QgsVectorLayer(vector, 'pch2', 'ogr')
         QgsMapLayerRegistry.instance().addMapLayer(layer)
 
     def add_psh_2_class(self):
         """Add PSH 2 Classified"""
-        raster = self.otoklimdlg.addpsh_2_class.whatsThis()
-        layer = QgsRasterLayer(raster, 'psh2')
+        vector = self.otoklimdlg.addpsh_2_class.whatsThis()
+        layer = QgsVectorLayer(vector, 'psh2', 'ogr')
         QgsMapLayerRegistry.instance().addMapLayer(layer)
 
     def add_pch_3_class(self):
         """Add PCH 3 Classified"""
-        raster = self.otoklimdlg.addpch_3_class.whatsThis()
-        layer = QgsRasterLayer(raster, 'pch3')
+        vector = self.otoklimdlg.addpch_3_class.whatsThis()
+        layer = QgsRasterLayer(vector, 'pch3')
         QgsMapLayerRegistry.instance().addMapLayer(layer)
 
     def add_psh_3_class(self):
         """Add PSH 3 Classified"""
-        raster = self.otoklimdlg.addpsh_3_class.whatsThis()
-        layer = QgsRasterLayer(raster, 'psh3')
+        vector = self.otoklimdlg.addpsh_3_class.whatsThis()
+        layer = QgsRasterLayer(vector, 'psh3')
         QgsMapLayerRegistry.instance().addMapLayer(layer)
 
     # Browse Project Workspace from Save As New Mode
@@ -2052,7 +2055,7 @@ class Otoklim:
         )
         with open(project, 'r') as jsonfile:
             otoklim_project = json.load(jsonfile)
-            interpolate_workspace = otoklim_project["LOCATION"]["PRC_FILE_LOC"]
+            interpolate_workspace = otoklim_project["LOCATION"]["INTER_FILE_LOC"]
         process_var = 'explorer ' + interpolate_workspace
         subprocess.Popen(process_var)
 
@@ -2064,7 +2067,7 @@ class Otoklim:
         )
         with open(project, 'r') as jsonfile:
             otoklim_project = json.load(jsonfile)
-            interpolate_workspace = otoklim_project["LOCATION"]["PRC_FILE_LOC"]
+            interpolate_workspace = otoklim_project["LOCATION"]["CLASS_FILE_LOC"]
         process_var = 'explorer ' + interpolate_workspace
         subprocess.Popen(process_var)
 
@@ -2403,6 +2406,11 @@ class Otoklim:
                 # Processing Folder
                 processing_directory = os.path.join(project_directory, 'processing')
                 replace_confirm(processing_directory)
+                # Interpolated & Classified Folder
+                interpolated_directory = os.path.join(processing_directory, 'interpolated')
+                replace_confirm(interpolated_directory)
+                classified_directory = os.path.join(processing_directory, 'classified')
+                replace_confirm(classified_directory)
                 # Boundary Folder
                 boundary_directory = os.path.join(project_directory, 'boundary')
                 replace_confirm(boundary_directory)
@@ -2542,6 +2550,8 @@ class Otoklim:
                         "MAP_FILE_LOC": map_directory,
                         "CSV_FILE_LOC": csv_directory,
                         "PRC_FILE_LOC": processing_directory,
+                        "INTER_FILE_LOC": interpolated_directory,
+                        "CLASS_FILE_LOC": classified_directory,
                     },
                     "FILE": {
                         "CSV_DELIMITER": delimiter,
@@ -2619,42 +2629,42 @@ class Otoklim:
                             "THIS_YEAR": str(datetime.datetime.now().year),
                             "RASTER_ACH_1": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "INTER_FILE_LOC",
                                 "FORMAT": "TIF"
                             },
                             "RASTER_ASH_1": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "INTER_FILE_LOC",
                                 "FORMAT": "TIF"
                             },
                             "RASTER_PCH_1": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "INTER_FILE_LOC",
                                 "FORMAT": "TIF"
                             },
                             "RASTER_PSH_1": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "INTER_FILE_LOC",
                                 "FORMAT": "TIF"
                             },
                             "RASTER_PCH_2": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "INTER_FILE_LOC",
                                 "FORMAT": "TIF"
                             },
                             "RASTER_PSH_2": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "INTER_FILE_LOC",
                                 "FORMAT": "TIF"
                             },
                             "RASTER_PCH_3": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "INTER_FILE_LOC",
                                 "FORMAT": "TIF"
                             },
                             "RASTER_PSH_3": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "INTER_FILE_LOC",
                                 "FORMAT": "TIF"
                             }
                         },
@@ -2662,42 +2672,42 @@ class Otoklim:
                             "PROCESSED": 0,
                             "RASTER_ACH_1": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "CLASS_FILE_LOC",
                                 "FORMAT": "TIF"
                             },
                             "RASTER_ASH_1": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "CLASS_FILE_LOC",
                                 "FORMAT": "TIF"
                             },
                             "RASTER_PCH_1": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "CLASS_FILE_LOC",
                                 "FORMAT": "TIF"
                             },
                             "RASTER_PSH_1": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "CLASS_FILE_LOC",
                                 "FORMAT": "TIF"
                             },
                             "RASTER_PCH_2": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "CLASS_FILE_LOC",
                                 "FORMAT": "TIF"
                             },
                             "RASTER_PSH_2": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "CLASS_FILE_LOC",
                                 "FORMAT": "TIF"
                             },
                             "RASTER_PCH_3": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "CLASS_FILE_LOC",
                                 "FORMAT": "TIF"
                             },
                             "RASTER_PSH_3": {
                                 "NAME": "",
-                                "LOCATION": "PRC_FILE_LOC",
+                                "LOCATION": "CLASS_FILE_LOC",
                                 "FORMAT": "TIF"
                             },
                         },
@@ -2917,6 +2927,7 @@ class Otoklim:
     def interpolate_idw(self):
         """Function To Run IDW Interpolation"""
         prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
+        interpolated_directory = os.path.join(prcs_directory, 'interpolated')
         provinsi_polygon_file = os.path.join(prcs_directory, 'provinsi_polygon.shp')
         layer_provinsi = QgsVectorLayer(provinsi_polygon_file, 'layer', 'ogr')
         temp = os.path.join(prcs_directory, 'tmp_' + '{:%Y%m%d_%H%M%S}'.format(datetime.datetime.now()))
@@ -2936,7 +2947,7 @@ class Otoklim:
                 prc_list.append(idw_params[0])
                 self.otoklimdlg.addach_1.setEnabled(True)
                 self.otoklimdlg.addach_1.setWhatsThis(
-                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[0]).lower() + '.tif')
+                    os.path.join(interpolated_directory, 'interpolated_' + str(idw_params[0]).lower() + '.tif')
                 )
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -2947,7 +2958,7 @@ class Otoklim:
                 prc_list.append(idw_params[1])
                 self.otoklimdlg.addash_1.setEnabled(True)
                 self.otoklimdlg.addash_1.setWhatsThis(
-                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[1]).lower() + '.tif')
+                    os.path.join(interpolated_directory, 'interpolated_' + str(idw_params[1]).lower() + '.tif')
                 )
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -2958,7 +2969,7 @@ class Otoklim:
                 prc_list.append(idw_params[2])
                 self.otoklimdlg.addpch_1.setEnabled(True)
                 self.otoklimdlg.addpch_1.setWhatsThis(
-                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[2]).lower() + '.tif')
+                    os.path.join(interpolated_directory, 'interpolated_' + str(idw_params[2]).lower() + '.tif')
                 )
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -2969,7 +2980,7 @@ class Otoklim:
                 prc_list.append(idw_params[3])
                 self.otoklimdlg.addpsh_1.setEnabled(True)
                 self.otoklimdlg.addpsh_1.setWhatsThis(
-                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[3]).lower() + '.tif')
+                    os.path.join(interpolated_directory, 'interpolated_' + str(idw_params[3]).lower() + '.tif')
                 )
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -2980,7 +2991,7 @@ class Otoklim:
                 prc_list.append(idw_params[4])
                 self.otoklimdlg.addpch_2.setEnabled(True)
                 self.otoklimdlg.addpch_2.setWhatsThis(
-                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[4]).lower() + '.tif')
+                    os.path.join(interpolated_directory, 'interpolated_' + str(idw_params[4]).lower() + '.tif')
                 )
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -2991,7 +3002,7 @@ class Otoklim:
                 prc_list.append(idw_params[5])
                 self.otoklimdlg.addpsh_2.setEnabled(True)
                 self.otoklimdlg.addpsh_2.setWhatsThis(
-                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[5]).lower() + '.tif')
+                    os.path.join(interpolated_directory, 'interpolated_' + str(idw_params[5]).lower() + '.tif')
                 )
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -3002,7 +3013,7 @@ class Otoklim:
                 prc_list.append(idw_params[6])
                 self.otoklimdlg.addpch_3.setEnabled(True)
                 self.otoklimdlg.addpch_3.setWhatsThis(
-                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[6]).lower() + '.tif')
+                    os.path.join(interpolated_directory, 'interpolated_' + str(idw_params[6]).lower() + '.tif')
                 )
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -3013,7 +3024,7 @@ class Otoklim:
                 prc_list.append(idw_params[7])
                 self.otoklimdlg.addpsh_3.setEnabled(True)
                 self.otoklimdlg.addpsh_3.setWhatsThis(
-                    os.path.join(prcs_directory, 'interpolated_' + str(idw_params[7]).lower() + '.tif')
+                    os.path.join(interpolated_directory, 'interpolated_' + str(idw_params[7]).lower() + '.tif')
                 )
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -3029,7 +3040,7 @@ class Otoklim:
                 fields = layer.pendingFields()
                 field_names = [field.name() for field in fields]
                 raster_interpolated = os.path.join(temp, param + '_raster_idw.tif')
-                raster_cropped = os.path.join(prcs_directory, 'interpolated_' + str(param).lower() + '.tif')
+                raster_cropped = os.path.join(interpolated_directory, 'interpolated_' + str(param).lower() + '.tif')
                 if os.path.exists(raster_cropped):
                     self.replaceconfirmdlg.var.setText(raster_cropped)
                     result = self.replaceconfirmdlg.exec_()
@@ -3298,6 +3309,8 @@ class Otoklim:
     def raster_classify(self):
         """Function To Classify Raster Interpolated"""
         prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
+        classified_directory = os.path.join(prcs_directory, 'classified')
+        interpolated_directory = os.path.join(prcs_directory, 'interpolated')
         provinsi_polygon_file = os.path.join(prcs_directory, 'provinsi_polygon.shp')
         layer_provinsi = QgsVectorLayer(provinsi_polygon_file, 'layer', 'ogr')
         filename_rainfall = self.otoklimdlg.rainfallfile.text()
@@ -3337,109 +3350,109 @@ class Otoklim:
                     otoklim_project = json.load(jsonfile)
                     raster_ach_1 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_ACH_1"]["NAME"]
                     param = os.path.splitext(raster_ach_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ach_1)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ACH_1"]["NAME"] = 'classified_' + str(param) + '.tif'
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ACH_1"]["NAME"] = 'classified_' + str(param) + '.shp'
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ach_1])
                 self.otoklimdlg.addach_1_class.setEnabled(True)
                 self.otoklimdlg.addach_1_class.setWhatsThis(
-                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                    os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
             if self.otoklimdlg.ash_1_class.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_ash_1 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_ASH_1"]["NAME"]
                     param = os.path.splitext(raster_ash_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ash_1)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ASH_1"]["NAME"] = 'classified_' + str(param) + '.tif'
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ASH_1"]["NAME"] = 'classified_' + str(param) + '.shp'
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ash_1])
                 self.otoklimdlg.addash_1_class.setEnabled(True)
                 self.otoklimdlg.addash_1_class.setWhatsThis(
-                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                    os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
             if self.otoklimdlg.pch_1_class.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_pch_1 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_1"]["NAME"]
                     param = os.path.splitext(raster_pch_1)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_1)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_1"]["NAME"] = 'classified_' + str(param) + '.tif'
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_1"]["NAME"] = 'classified_' + str(param) + '.shp'
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_1])
                 self.otoklimdlg.addpch_1_class.setEnabled(True)
                 self.otoklimdlg.addpch_1_class.setWhatsThis(
-                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                    os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
             if self.otoklimdlg.psh_1_class.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_psh_1 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PSH_1"]["NAME"]
                     param = os.path.splitext(raster_psh_1)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_1)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_1"]["NAME"] = 'classified_' + str(param) + '.tif'
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_1"]["NAME"] = 'classified_' + str(param) + '.shp'
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_1])
                 self.otoklimdlg.addpsh_1_class.setEnabled(True)
                 self.otoklimdlg.addpsh_1_class.setWhatsThis(
-                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                    os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
             if self.otoklimdlg.pch_2_class.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_pch_2 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_2"]["NAME"]
                     param = os.path.splitext(raster_pch_2)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_2)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_2"]["NAME"] = 'classified_' + str(param) + '.tif'
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_2"]["NAME"] = 'classified_' + str(param) + '.shp'
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_2])
                 self.otoklimdlg.addpch_2_class.setEnabled(True)
                 self.otoklimdlg.addpch_2_class.setWhatsThis(
-                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                    os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
             if self.otoklimdlg.psh_2_class.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_psh_2 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PSH_2"]["NAME"]
                     param = os.path.splitext(raster_psh_2)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_2)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_2"]["NAME"] = 'classified_' + str(param) + '.tif'
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_2"]["NAME"] = 'classified_' + str(param) + '.shp'
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_2])
                 self.otoklimdlg.addpsh_2_class.setEnabled(True)
                 self.otoklimdlg.addpsh_2_class.setWhatsThis(
-                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                    os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
             if self.otoklimdlg.pch_3_class.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_pch_3 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PCH_3"]["NAME"]
                     param = os.path.splitext(raster_pch_3)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_3)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_3"]["NAME"] = 'classified_' + str(param) + '.tif'
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_3"]["NAME"] = 'classified_' + str(param) + '.shp'
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_3])
                 self.otoklimdlg.addpch_3_class.setEnabled(True)
                 self.otoklimdlg.addpch_3_class.setWhatsThis(
-                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                    os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
             if self.otoklimdlg.psh_3_class.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_psh_3 = otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["RASTER_PSH_3"]["NAME"]
                     param = os.path.splitext(raster_psh_3)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_3)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_3"]["NAME"] = 'classified_' + str(param) + '.tif'
+                    otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_3"]["NAME"] = 'classified_' + str(param) + '.shp'
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_3])
                 self.otoklimdlg.addpsh_3_class.setEnabled(True)
                 self.otoklimdlg.addpsh_3_class.setWhatsThis(
-                    os.path.join(prcs_directory, 'classified_' + str(param) + '.tif')
+                    os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
 
             for value in prc_list:
-                raster_classified = os.path.join(prcs_directory, 'classified_' + str(value[0]) + '.tif')
-                rasterinterpolated = os.path.join(prcs_directory, value[1])
+                raster_classified = os.path.join(classified_directory, 'classified_' + str(value[0]) + '.tif')
+                rasterinterpolated = os.path.join(interpolated_directory, value[1])
                 if os.path.exists(raster_classified):
                     self.replaceconfirmdlg.var.setText(raster_classified)
                     result = self.replaceconfirmdlg.exec_()
@@ -3449,86 +3462,124 @@ class Otoklim:
                         raise Exception('Skip ' + raster_classified)
                 extent = layer_provinsi.extent()
                 if value[0][0:3] == 'ach' or value[0][0:3] == 'pch':
-                    processing.runalg('grass7:r.recode', rasterinterpolated, output_rainfall, False, "%f,%f,%f,%f" % (extent.xMinimum(), extent.xMaximum(), extent.yMinimum(), extent.yMaximum()), 0.001, raster_classified)
+                    processing.runalg(
+                        'grass7:r.recode',
+                        rasterinterpolated,
+                        output_rainfall,
+                        False,
+                        "%f,%f,%f,%f" % (extent.xMinimum(), extent.xMaximum(), extent.yMinimum(), extent.yMaximum()),
+                        0.001,
+                        raster_classified
+                    )
                 else:
-                    processing.runalg('grass7:r.recode', rasterinterpolated, output_normalrain, False, "%f,%f,%f,%f" % (extent.xMinimum(), extent.xMaximum(), extent.yMinimum(), extent.yMaximum()), 0.001, raster_classified)
+                    processing.runalg(
+                        'grass7:r.recode',
+                        rasterinterpolated,
+                        output_normalrain,
+                        False,
+                        "%f,%f,%f,%f" % (extent.xMinimum(), extent.xMaximum(), extent.yMinimum(), extent.yMaximum()),
+                        0.001,
+                        raster_classified
+                    )
 
                 # Raster to Vector Conversion (Special Case)
-                if self.otoklimdlg.shapefile_conversion.isChecked():
-                    vector_classified = os.path.join(prcs_directory, 'classified_' + str(value[0]) + '.shp')
-                    if os.path.exists(vector_classified):
-                        QgsVectorFileWriter.deleteShapeFile(vector_classified)
-                        try:
-                            os.remove(os.path.splitext(vector_classified)[0] +  '.cpg')
-                        except OSError:
-                            pass
-                    # Polygonize
-                    processing.runalg("gdalogr:polygonize", raster_classified, "DN", vector_classified)
-                    # Add Attribute
-                    layer_vector_classified = QgsVectorLayer(vector_classified, 'vector_classified', 'ogr')
-                    res = layer_vector_classified.dataProvider().addAttributes([QgsField(str(value[0])[0:3].upper(), QVariant.String)])
-                    layer_vector_classified.updateFields()
-                    # Record Label, Value and Color
-                    label_value = {}
-                    if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
-                        color = []
-                        label = []
-                        list_value = []
-                        with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
-                            spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
-                            for row in spamreader:
-                                if str(row['lower_limit']) == '*':
-                                    label_str = '< ' + str(row['upper_limit'])
-                                    label.append(label_str)
-                                elif str(row['upper_limit']) == '*':
-                                    label_str = '> ' + str(row['lower_limit'])
-                                    label.append(label_str)
-                                else:
-                                    label_str = str(row['lower_limit']) + ' - ' + str(row['upper_limit'])
-                                    label.append(label_str)
-                                color.append(row['color'])
-                                list_value.append(row['new_value'])
-                                label_value.update({row['new_value']: (label_str, row['color'])})
-                    else:
-                        color = []
-                        label = []
-                        list_value = []
-                        with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
-                            spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
-                            for row in spamreader:
-                                if str(row['lower_limit']) == '*':
-                                    label_str = '< ' + str(row['upper_limit'])
-                                    label.append(label_str)
-                                elif str(row['upper_limit']) == '*':
-                                    label_str = '> ' + str(row['lower_limit'])
-                                    label.append(label_str)
-                                else:
-                                    label_str = str(row['lower_limit']) + ' - ' + str(row['upper_limit'])
-                                    label.append(label_str)
-                                color.append(row['color'])
-                                list_value.append(row['new_value'])
-                                label_value.update({row['new_value']: (label_str, row['color'])})
-                    # Set Attribute
-                    features = layer_vector_classified.getFeatures()
-                    layer_vector_classified.startEditing()
-                    for i in features:
-                        layer_vector_classified.changeAttributeValue(
-                            i.id(),
-                            layer_vector_classified.fieldNameIndex(str(value[0])[0:3].upper()), 
-                            str(label_value[str(i['DN'])][0])
-                        )
-                    layer_vector_classified.commitChanges()
-                    # Render Vector Style
-                    style_file = os.path.join(prcs_directory, 'classified_' + str(value[0]) + '.qml')
-                    categories = []
-                    for dn, (label, color) in label_value.items():
-                        symbol = QgsFillSymbolV2.createSimple({'color': color, 'outline_color': '0,0,0,0', 'outline_width': '0'})
-                        category = QgsRendererCategoryV2(dn, symbol, label)
-                        categories.append(category)
-                    expression = 'DN'
-                    renderer = QgsCategorizedSymbolRendererV2(expression, categories)
-                    layer_vector_classified.setRendererV2(renderer)
-                    layer_vector_classified.saveNamedStyle(style_file)
+                vector_classified = os.path.join(classified_directory, 'classified_' + str(value[0]) + '.shp')
+                if os.path.exists(vector_classified):
+                    QgsVectorFileWriter.deleteShapeFile(vector_classified)
+                    try:
+                        os.remove(os.path.splitext(vector_classified)[0] +  '.cpg')
+                    except OSError:
+                        pass
+                # Polygonize
+                processing.runalg("gdalogr:polygonize", raster_classified, "DN", vector_classified)
+                # Add Attribute
+                layer_vector_classified = QgsVectorLayer(vector_classified, 'vector_classified', 'ogr')
+                res = layer_vector_classified.dataProvider().addAttributes(
+                    [
+                        QgsField(str(value[0])[0:3].upper(), QVariant.String),
+                        QgsField('Area', QVariant.Double),
+                        QgsField('Percent', QVariant.Double),
+                    ]
+                )
+                layer_vector_classified.updateFields()
+                # Record Label, Value and Color
+                label_value = {}
+                if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                    color = []
+                    label = []
+                    list_value = []
+                    with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
+                        spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                        for row in spamreader:
+                            if str(row['lower_limit']) == '*':
+                                label_str = '< ' + str(row['upper_limit'])
+                                label.append(label_str)
+                            elif str(row['upper_limit']) == '*':
+                                label_str = '> ' + str(row['lower_limit'])
+                                label.append(label_str)
+                            else:
+                                label_str = str(row['lower_limit']) + ' - ' + str(row['upper_limit'])
+                                label.append(label_str)
+                            color.append(row['color'])
+                            list_value.append(row['new_value'])
+                            label_value.update({row['new_value']: (label_str, row['color'])})
+                else:
+                    color = []
+                    label = []
+                    list_value = []
+                    with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
+                        spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                        for row in spamreader:
+                            if str(row['lower_limit']) == '*':
+                                label_str = '< ' + str(row['upper_limit'])
+                                label.append(label_str)
+                            elif str(row['upper_limit']) == '*':
+                                label_str = '> ' + str(row['lower_limit'])
+                                label.append(label_str)
+                            else:
+                                label_str = str(row['lower_limit']) + ' - ' + str(row['upper_limit'])
+                                label.append(label_str)
+                            color.append(row['color'])
+                            list_value.append(row['new_value'])
+                            label_value.update({row['new_value']: (label_str, row['color'])})
+                # Set Attribute
+                expression = QgsExpression("area(transform($geometry, 'EPSG:4326','EPSG:3857'))")
+                index = layer_vector_classified.fieldNameIndex("Area")
+                expression.prepare(layer_vector_classified.pendingFields())
+                area_all = 0
+                features = layer_vector_classified.getFeatures()
+                for i in features:
+                    area_all += expression.evaluate(i)
+                layer_vector_classified.startEditing()
+                features = layer_vector_classified.getFeatures()
+                for i in features:
+                    layer_vector_classified.changeAttributeValue(
+                        i.id(),
+                        layer_vector_classified.fieldNameIndex(str(value[0])[0:3].upper()), 
+                        str(label_value[str(i['DN'])][0])
+                    )
+                    layer_vector_classified.changeAttributeValue(
+                        i.id(),
+                        layer_vector_classified.fieldNameIndex('Area'), 
+                        expression.evaluate(i)
+                    )
+                    layer_vector_classified.changeAttributeValue(
+                        i.id(),
+                        layer_vector_classified.fieldNameIndex('Percent'), 
+                        (expression.evaluate(i) / float(area_all)) * 100
+                    )
+                layer_vector_classified.commitChanges()
+                # Render Vector Style
+                style_file = os.path.join(classified_directory, 'classified_' + str(value[0]) + '.qml')
+                categories = []
+                for dn, (label, color) in label_value.items():
+                    symbol = QgsFillSymbolV2.createSimple({'color': color, 'outline_color': '0,0,0,0', 'outline_width': '0'})
+                    category = QgsRendererCategoryV2(dn, symbol, label)
+                    categories.append(category)
+                expression = 'DN'
+                renderer = QgsCategorizedSymbolRendererV2(expression, categories)
+                layer_vector_classified.setRendererV2(renderer)
+                layer_vector_classified.saveNamedStyle(style_file)
 
             with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -3824,6 +3875,7 @@ class Otoklim:
         prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
         out_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'output')
         map_directory = os.path.join(out_directory, 'map')
+        classified_directory = os.path.join(prcs_directory, 'classified')
         date = self.select_date_now()
         months = date[0]
         years = date[1]
@@ -3946,7 +3998,9 @@ class Otoklim:
                 QgsMapLayerRegistry.instance().removeMapLayer(linedesa.id())
             # Start Listing
             for value, date in zip(prc_list, date_list):
-                raster_classified = os.path.join(prcs_directory, value[1])
+                vector_classified = os.path.join(classified_directory, value[1])
+                style_file = os.path.join(classified_directory, os.path.splitext(value[1])[0] + '.qml')
+                print style_file
                 temp_raster = os.path.join(prcs_directory, 'tmp' + str(value[1]))
                 os.mkdir(temp_raster)
                 month = date[0]
@@ -3956,7 +4010,10 @@ class Otoklim:
                         projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
                         # output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
                         output_jpg = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
-                        # Raster Value Styling
+                        # Classified Value Styling
+                        layer_vector = QgsVectorLayer(vector_classified, '', 'ogr')
+                        layer_vector.loadNamedStyle(style_file)
+                        '''
                         layer_raster = QgsRasterLayer(raster_classified, '')
                         s = QgsRasterShader()
                         c = QgsColorRampShader()
@@ -4006,6 +4063,7 @@ class Otoklim:
                         s.setRasterShaderFunction(c)
                         ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
                         layer_raster.setRenderer(ps)
+                        '''
 
                         # Province Styling
                         layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
@@ -4051,7 +4109,7 @@ class Otoklim:
                         canvas = qgis.utils.iface.mapCanvas()
                         QgsMapLayerRegistry.instance().addMapLayer(layer_bath)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_raster)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten_line)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi_line)
@@ -4110,27 +4168,28 @@ class Otoklim:
                         imagePainter.end()
                         image.save(output_jpg, "jpg")
                         # Remove unuse file
-                        raster = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
+                        vector = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
                         kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
                         provinsi = QgsMapLayerRegistry.instance().mapLayersByName('Provinsi')[0]
                         bathymetry = QgsMapLayerRegistry.instance().mapLayersByName('Bathymetry')[0]
                         provinsiline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Provinsi')[0]
                         kabupatenline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kabupaten')[0]
-                        all_layer = [raster.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), provinsiline.id(), kabupatenline.id()]
+                        all_layer = [vector.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), provinsiline.id(), kabupatenline.id()]
                         QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
                     elif len(str(slc_id)) == 4:
                         projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
                         # output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
                         output_jpg = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
-                        # Raster Value Styling
-                        rasterclassified = QgsRasterLayer(raster_classified, '')
+                        # Classified Value Styling
+                        layer_vector_unclip = QgsVectorLayer(vector_classified, '', 'ogr')
                         # Special Case For Districts (clipping)
                         layer_districts = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
                         QgsMapLayerRegistry.instance().addMapLayer(layer_districts)
                         exp = "\"ID_KAB\"='{}'".format(str(slc_id))
                         layer_districts.setSubsetString(exp)
-                        raster_cropped = os.path.join(temp_raster, str(slc_name).replace(" ", "_") + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.tif')
-                        processing.runalg('saga:clipgridwithpolygon', rasterclassified, layer_districts, raster_cropped)
+                        vector_cropped = os.path.join(temp_raster, str(slc_name).replace(" ", "_") + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.shp')
+                        # processing.runalg('saga:clipgridwithpolygon', rasterclassified, layer_districts, raster_cropped)
+                        processing.runalg("qgis:clip", layer_vector_unclip, layer_districts, vector_cropped)
                         '''
                         processing.runalg(
                             "gdalogr:cliprasterbymasklayer", 
@@ -4141,8 +4200,9 @@ class Otoklim:
                         )
                         '''
                         QgsMapLayerRegistry.instance().removeMapLayer(layer_districts.id())
-                        layer_raster = QgsRasterLayer(raster_cropped, '')
-
+                        layer_vector = QgsVectorLayer(vector_cropped, '', 'ogr')
+                        layer_vector.loadNamedStyle(style_file)
+                        '''
                         s = QgsRasterShader()
                         c = QgsColorRampShader()
                         c.setColorRampType(QgsColorRampShader.EXACT)
@@ -4191,6 +4251,7 @@ class Otoklim:
                         s.setRasterShaderFunction(c)
                         ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
                         layer_raster.setRenderer(ps)
+                        '''
 
                         # Province Styling
                         layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
@@ -4244,7 +4305,7 @@ class Otoklim:
                         QgsMapLayerRegistry.instance().addMapLayer(layer_bath)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_raster)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan_line)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten_line)
@@ -4256,8 +4317,8 @@ class Otoklim:
                         p = QgsProject.instance()
                         p.write(f)
                         QgsProject.instance().clear()
-                        QgsMapLayerRegistry.instance().removeMapLayer(layer_raster.id())
-                        del layer_raster
+                        QgsMapLayerRegistry.instance().removeMapLayer(layer_vector.id())
+                        del layer_vector
                         # Read Map
                         template_file = open(self.otoklimdlg.maptemplate2.text())
                         template_content = template_file.read()
@@ -4301,35 +4362,36 @@ class Otoklim:
                         imagePainter.end()
                         image.save(output_jpg, "jpg")
                         # Remove unuse file
-                        raster = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
+                        vector = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
                         kecamatan = QgsMapLayerRegistry.instance().mapLayersByName('Kecamatan')[0]
                         kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
                         provinsi = QgsMapLayerRegistry.instance().mapLayersByName('Provinsi')[0]
                         bathymetry = QgsMapLayerRegistry.instance().mapLayersByName('Bathymetry')[0]
                         kabupatenline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kabupaten')[0]
                         kecamatanline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kecamatan')[0]
-                        all_layer = [raster.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), kecamatan.id(), kabupatenline.id(), kecamatanline.id()]
+                        all_layer = [vector.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), kecamatan.id(), kabupatenline.id(), kecamatanline.id()]
                         QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
-                        del raster
+                        del vector
                         os.remove(projectqgs)
-                        # Remove Raster
-                        layer_raster = QgsRasterLayer(raster_cropped, '')
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_raster)
-                        QgsMapLayerRegistry.instance().removeMapLayer(layer_raster.id())
-                        del layer_raster
-                        os.remove(raster_cropped)
+                        # Remove Vector
+                        layer_vector = QgsVectorLayer(vector_cropped, '', 'ogr')
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
+                        QgsMapLayerRegistry.instance().removeMapLayer(layer_vector.id())
+                        del layer_vector
+                        os.remove(vector_cropped)
                     else:
                         projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
                         output_jpg = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
-                        # Raster Value Styling
-                        rasterclassified = QgsRasterLayer(raster_classified, '')
+                        # Classified Value Styling
+                        layer_vector_unclip = QgsVectorLayer(vector_classified, '', 'ogr')
                         # Special Case For Sub-Districts (clipping)
                         layer_subdistricts = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
                         QgsMapLayerRegistry.instance().addMapLayer(layer_subdistricts)
                         exp = "\"ID_KEC\"='{}'".format(str(slc_id))
                         layer_subdistricts.setSubsetString(exp)
-                        raster_cropped = os.path.join(temp_raster, str(slc_name) + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.tif')
-                        processing.runalg('saga:clipgridwithpolygon', rasterclassified, layer_subdistricts, raster_cropped)
+                        vector_cropped = os.path.join(temp_raster, str(slc_name).replace(" ", "_") + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.shp')
+                        # processing.runalg('saga:clipgridwithpolygon', rasterclassified, layer_subdistricts, raster_cropped)
+                        processing.runalg("qgis:clip", layer_vector_unclip, layer_subdistricts, vector_cropped)
                         '''
                         processing.runalg(
                             "gdalogr:cliprasterbymasklayer", 
@@ -4340,8 +4402,9 @@ class Otoklim:
                         )
                         '''
                         QgsMapLayerRegistry.instance().removeMapLayer(layer_subdistricts.id())
-                        layer_raster = QgsRasterLayer(raster_cropped, '')
-
+                        layer_vector = QgsVectorLayer(vector_cropped, '', 'ogr')
+                        layer_vector.loadNamedStyle(style_file)
+                        '''
                         s = QgsRasterShader()
                         c = QgsColorRampShader()
                         c.setColorRampType(QgsColorRampShader.EXACT)
@@ -4390,6 +4453,7 @@ class Otoklim:
                         s.setRasterShaderFunction(c)
                         ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
                         layer_raster.setRenderer(ps)
+                        '''
 
                         # Province Styling
                         layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
@@ -4453,7 +4517,7 @@ class Otoklim:
                         QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_raster)
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_desa)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_desa_line)
                         QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan_line)
@@ -4465,8 +4529,8 @@ class Otoklim:
                         p = QgsProject.instance()
                         p.write(f)
                         QgsProject.instance().clear()
-                        QgsMapLayerRegistry.instance().removeMapLayer(layer_raster.id())
-                        del layer_raster
+                        QgsMapLayerRegistry.instance().removeMapLayer(layer_vector.id())
+                        del layer_vector
                         # Read Map
                         template_file = open(self.otoklimdlg.maptemplate3.text())
                         template_content = template_file.read()
@@ -4510,7 +4574,7 @@ class Otoklim:
                         imagePainter.end()
                         image.save(output_jpg, "jpg")
                         # Remove unuse file
-                        raster = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
+                        vector = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
                         desa = QgsMapLayerRegistry.instance().mapLayersByName('Desa')[0]
                         kecamatan = QgsMapLayerRegistry.instance().mapLayersByName('Kecamatan')[0]
                         kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
@@ -4518,22 +4582,23 @@ class Otoklim:
                         bathymetry = QgsMapLayerRegistry.instance().mapLayersByName('Bathymetry')[0]
                         kecamatanline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kecamatan')[0]
                         desaline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Desa')[0]
-                        all_layer = [raster.id(), desa.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), kecamatan.id(), kecamatanline.id(), desaline.id()]
+                        all_layer = [vector.id(), desa.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), kecamatan.id(), kecamatanline.id(), desaline.id()]
                         QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
-                        del raster
+                        del vector
                         os.remove(projectqgs)
-                        # Remove Raster
-                        layer_raster = QgsRasterLayer(raster_cropped, '')
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_raster)
-                        QgsMapLayerRegistry.instance().removeMapLayer(layer_raster.id())
-                        del layer_raster
-                        os.remove(raster_cropped)
+                        # Remove Vector
+                        layer_vector = QgsVectorLayer(vector_cropped, '', 'ogr')
+                        QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
+                        QgsMapLayerRegistry.instance().removeMapLayer(layer_vector.id())
+                        del layer_vector
+                        os.remove(vector_cropped)
                 shutil.rmtree(temp_raster)
                 self.otoklimdlg.showGenerateMapFolder.setEnabled(True)
         except Exception as e:
             self.errormessagedlg.ErrorMessage.setText(str(e))
             self.errormessagedlg.exec_()
-    
+
+    '''
     def get_category(self, title, value):
         """Get Category"""
         # CATEGORY NOT FIX -> MAKE DYNAMICALLY BASED ON CLASSIFICATION CSV FILE
@@ -4576,6 +4641,7 @@ class Otoklim:
             else:
                 val = str(value) + '_error'
         return val
+    '''
 
     '''
     def create_default_csv(self, prc_list, csv_directory, prcs_directory, slc_id_list):
@@ -4717,8 +4783,26 @@ class Otoklim:
     def generate_csv(self):
         """Function to generate CSV"""
         prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
+        classified_directory = os.path.join(prcs_directory, 'classified')
         out_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'output')
         csv_directory = os.path.join(out_directory, 'csv')
+        # Logging
+        logger = logging.getLogger(__name__)
+        log_filename = os.path.join(prcs_directory, 'otoklim_' + '{:%Y%m%d_%H%M%S}'.format(datetime.datetime.now()) + '.log')
+        try:
+            os.remove(log_filename)
+        except OSError:
+            pass
+        logger.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG)
+        fh = logging.FileHandler(log_filename)
+        formatter = logging.Formatter("%(asctime)s - [%(levelname)s] %(message)s")
+        ch.setFormatter(formatter)
+        fh.setFormatter(formatter)
+        logger.addHandler(ch)
+        logger.addHandler(fh)
+        logger.info('Running start at ' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
         '''
         date = self.select_date_now()
         months = date[0]
@@ -4925,7 +5009,115 @@ class Otoklim:
                                     sb = {}
                                     sbb = {}
                                     m = {}
-                                    raster_classified = os.path.join(prcs_directory, prc[1])
+                                    vector_classified = os.path.join(classified_directory, prc[1])
+                                    temp_raster = os.path.join(prcs_directory, 'tmp' + str(prc[1]))
+                                    if os.path.exists(temp_raster):
+                                        pass
+                                    else:
+                                        os.mkdir(temp_raster)
+                                    if region_id == 1:
+                                        layer = QgsVectorLayer(shp, str(feature.GetField("KABUPATEN")), "ogr")
+                                        QgsMapLayerRegistry.instance().addMapLayer(layer)
+                                        exp = "\"ID_KAB\"='{}'".format(str(feature.GetField("ID_KAB")))
+                                        layer.setSubsetString(exp)
+                                        cliped = os.path.join(temp_raster, str(feature.GetField("ID_KAB")) + '_' + str(prc[0]) + '_clp.shp')
+                                        # processing.runalg("gdalogr:cliprasterbymasklayer", raster_classified, layer, -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", cliped)
+                                    elif region_id == 2:
+                                        layer = QgsVectorLayer(shp, str(feature.GetField("KECAMATAN")), "ogr")
+                                        QgsMapLayerRegistry.instance().addMapLayer(layer)
+                                        exp = "\"ID_KEC\"='{}'".format(str(feature.GetField("ID_KEC")))
+                                        layer.setSubsetString(exp)
+                                        cliped = os.path.join(temp_raster, str(feature.GetField("ID_KEC")) + '_' + str(prc[0]) + '_clp.shp')
+                                    else:
+                                        layer = QgsVectorLayer(shp, str(feature.GetField("DESA")), "ogr")
+                                        QgsMapLayerRegistry.instance().addMapLayer(layer)
+                                        exp = "\"ID_DES\"='{}'".format(str(feature.GetField("ID_DES")))
+                                        layer.setSubsetString(exp)
+                                        cliped = os.path.join(temp_raster, str(feature.GetField("ID_DES")) + '_' + str(prc[0]) + '_clp.shp')
+                                    # processing.runalg('saga:clipgridwithpolygon', raster_classified, layer, cliped)
+                                    processing.runalg("qgis:clip", vector_classified, layer, cliped)
+                                    '''
+                                    read_raster = gdal.Open(cliped, GA_ReadOnly)
+                                    raster_value = np.array(read_raster.GetRasterBand(1).ReadAsArray(), dtype ="int")
+                                    unique, counts = np.unique(raster_value, return_counts=True)
+                                    unique_counts = dict(zip(unique, counts))
+                                    print unique_counts
+                                    unique_counts.pop(255, None)
+                                    unique_counts.pop(-1, None)
+                                    all_cell = sum(unique_counts.values())
+                                    '''
+                                    # Calculate Area
+                                    unique_counts = {}
+                                    expression = QgsExpression("area(transform($geometry, 'EPSG:4326','EPSG:3857'))")
+                                    layer_cliped = QgsVectorLayer(cliped, 'cliped', 'ogr')
+                                    index = layer_cliped.fieldNameIndex("Area")
+                                    expression.prepare(layer_cliped.pendingFields())
+                                    area_all = 0
+                                    features = layer_cliped.getFeatures()
+                                    for i in features:
+                                        area_all += expression.evaluate(i)
+                                    layer_cliped.startEditing()
+                                    features = layer_cliped.getFeatures()
+                                    for i in features:
+                                        layer_cliped.changeAttributeValue(
+                                            i.id(),
+                                            layer_cliped.fieldNameIndex('Area'), 
+                                            expression.evaluate(i)
+                                        )
+                                        layer_cliped.changeAttributeValue(
+                                            i.id(),
+                                            layer_cliped.fieldNameIndex('Percent'), 
+                                            (expression.evaluate(i) / float(area_all)) * 100
+                                        )
+                                        if i[prc[0].upper().split('_')[0]] not in unique_counts:
+                                            unique_counts[i[prc[0].upper().split('_')[0]]] = (expression.evaluate(i) / float(area_all)) * 100
+                                        else:
+                                            unique_counts[i[prc[0].upper().split('_')[0]]] += (expression.evaluate(i) / float(area_all)) * 100
+                                    layer_cliped.commitChanges()
+
+                                    for key, value in zip(unique_counts.keys(), unique_counts.values()):
+                                        if value > 0 and value < 20:
+                                            sbk.update({key: value})
+                                        elif value >= 20 and value < 50:
+                                            sb.update({key: value})
+                                        elif value >= 50 and value < 99:
+                                            sbb.update({key: value})
+                                        elif value == 100:
+                                            m.update({key: value})
+                                    QgsMapLayerRegistry.instance().removeMapLayers([layer.id(), layer_cliped.id()])
+                                    del layer
+                                    del layer_cliped
+                                    param_values.update({
+                                        prc[0].upper() + '_SBK': sbk,
+                                        prc[0].upper() + '_SB': sb,
+                                        prc[0].upper() + '_SBB': sbb,
+                                        prc[0].upper() + '_M': m
+                                    })
+                                    shutil.rmtree(temp_raster)
+                                # JSON Structure
+                                json_values = {}
+                                json_values.update({"VALUES": param_values})
+                                json_values.update(main_values)
+                                if region_id == 1:
+                                    json_kabupaten.append(json_values)
+                                elif region_id == 2:
+                                    json_kecamatan.append(json_values)
+                                else:
+                                    json_desa.append(json_values)
+                                # CSV Structure
+                                main_values.update(param_values)
+                                csv_writer.writerow(main_values)
+                                n += 1
+                                # END HERE
+
+                                '''
+                                # LOGIC START HERE
+                                for prc in prc_list:
+                                    sbk = {}
+                                    sb = {}
+                                    sbb = {}
+                                    m = {}
+                                    raster_classified = os.path.join(classified_directory, os.path.splitext(prc[1])[0] + '.tif')
                                     temp_raster = os.path.join(prcs_directory, 'tmp' + str(prc[1]))
                                     if os.path.exists(temp_raster):
                                         pass
@@ -4956,6 +5148,7 @@ class Otoklim:
                                     raster_value = np.array(read_raster.GetRasterBand(1).ReadAsArray(), dtype ="int")
                                     unique, counts = np.unique(raster_value, return_counts=True)
                                     unique_counts = dict(zip(unique, counts))
+                                    print unique_counts
                                     unique_counts.pop(255, None)
                                     unique_counts.pop(-1, None)
                                     all_cell = sum(unique_counts.values())
@@ -5005,6 +5198,7 @@ class Otoklim:
                                 csv_writer.writerow(main_values)
                                 n += 1
                                 # END HERE
+                                '''
                         dataSource.Destroy()
                     with open(output_json, 'w') as jsonfile:
                         if region_id == 1:

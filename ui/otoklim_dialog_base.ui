@@ -48,7 +48,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-704</y>
+         <y>-591</y>
          <width>870</width>
          <height>1787</height>
         </rect>
@@ -2005,16 +2005,6 @@
                 </property>
                 <property name="text">
                  <string>PCH +2</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="6">
-               <widget class="QCheckBox" name="shapefile_conversion">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="text">
-                 <string>Shapefile Conversion</string>
                 </property>
                </widget>
               </item>
