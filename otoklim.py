@@ -74,6 +74,7 @@ import datetime
 import processing
 import csv
 import logging
+import xml.etree.cElementTree as ET
 # import numpy as np
 # import math
 
@@ -512,6 +513,14 @@ class Otoklim:
         )
         self.otoklimdlg.search_option2.textChanged.connect(
             self.search_option_2
+        )
+
+        # Add Expand Region Listing Logic
+        self.otoklimdlg.expand_1.clicked.connect(
+            self.expand_option_1
+        )
+        self.otoklimdlg.expand_2.clicked.connect(
+            self.expand_option_2
         )
 
         # Add Move Selected Region Button Logic
@@ -2406,6 +2415,9 @@ class Otoklim:
                 # Processing Folder
                 processing_directory = os.path.join(project_directory, 'processing')
                 replace_confirm(processing_directory)
+                # Log Folder
+                log_directory = os.path.join(processing_directory, 'log')
+                replace_confirm(log_directory)
                 # Interpolated & Classified Folder
                 interpolated_directory = os.path.join(processing_directory, 'interpolated')
                 replace_confirm(interpolated_directory)
@@ -2883,29 +2895,29 @@ class Otoklim:
             mth = 12
 
         month_dict = {
-            0: ['DES', 'DESEMBER'],
-            1: ['JAN', 'JANUARI'],
-            2: ['FEB', 'FEBRUARI'],
-            3: ['MAR', 'MARET'],
-            4: ['APR', 'APRIL'],
-            5: ['MEI', 'MEI'],
-            6: ['JUN', 'JUNI'],
-            7: ['JUL', 'JULI'],
-            8: ['AGT', 'AGUSTUS'],
-            9: ['SEP', 'SEPTEMBER'],
-            10: ['OKT', 'OKTOBER'],
-            11: ['NOV', 'NOVEMBER'],
-            12: ['DES', 'DESEMBER'],
-            13: ['JAN', 'JANUARI'],
-            14: ['FEB', 'FEBRUARI'],
-            15: ['MAR', 'MARET'],
-            16: ['APR', 'APRIL']
+            0: ['DES', 'DESEMBER', '12'],
+            1: ['JAN', 'JANUARI', '01'],
+            2: ['FEB', 'FEBRUARI', '02'],
+            3: ['MAR', 'MARET', '03'],
+            4: ['APR', 'APRIL', '04'],
+            5: ['MEI', 'MEI', '05'],
+            6: ['JUN', 'JUNI', '06'],
+            7: ['JUL', 'JULI', '07'],
+            8: ['AGT', 'AGUSTUS', '08'],
+            9: ['SEP', 'SEPTEMBER', '09'],
+            10: ['OKT', 'OKTOBER', '10'],
+            11: ['NOV', 'NOVEMBER', '11'],
+            12: ['DES', 'DESEMBER', '12'],
+            13: ['JAN', 'JANUARI', '01'],
+            14: ['FEB', 'FEBRUARI', '02'],
+            15: ['MAR', 'MARET', '03'],
+            16: ['APR', 'APRIL', '04']
         }
         amth = month_dict[mth-1]
         pmth_1 = month_dict[mth+1]
         pmth_2 = month_dict[mth+2]
         pmth_3 = month_dict[mth+3]
-        month_header = [amth, pmth_1, pmth_2, pmth_3]
+        month_header = [amth, pmth_1, pmth_2, pmth_3, mth]
 
         yrs = int(self.otoklimdlg.Select_Year.text())
         ayrs = yrs
@@ -2921,18 +2933,43 @@ class Otoklim:
             pyrs_3 = yrs + 1
         elif mth == 1:
             ayrs = yrs - 1
-        years_header = [ayrs, pyrs_1, pyrs_2, pyrs_3]
+        years_header = [ayrs, pyrs_1, pyrs_2, pyrs_3, yrs]
         return month_header, years_header
+
+    def logger(self, prc_dir):
+        """Function to trigger python logging"""
+        log_dir = os.path.join(prc_dir, 'log')
+        log_filename = os.path.join(log_dir, 'otoklim_' + '{:%Y%m%d_%H%M%S}'.format(datetime.datetime.now()) + '.log')
+        try:
+            os.remove(log_filename)
+        except OSError:
+            pass
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG)
+        fh = logging.FileHandler(log_filename)
+        formatter = logging.Formatter("%(asctime)s - [%(levelname)s] %(message)s")
+        ch.setFormatter(formatter)
+        fh.setFormatter(formatter)
+        logger.addHandler(ch)
+        logger.addHandler(fh)
+        logger.info('Running start at ' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
+        return logger
     
     def interpolate_idw(self):
         """Function To Run IDW Interpolation"""
         prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
+        logger = self.logger(prcs_directory)
+        logger.info('Interpolate Stasiun Point By Using IDW Method..')
+        self.iface.mainWindow().statusBar().showMessage('Interpolate Stasiun Point By Using IDW Method..')
         interpolated_directory = os.path.join(prcs_directory, 'interpolated')
         provinsi_polygon_file = os.path.join(prcs_directory, 'provinsi_polygon.shp')
         layer_provinsi = QgsVectorLayer(provinsi_polygon_file, 'layer', 'ogr')
         temp = os.path.join(prcs_directory, 'tmp_' + '{:%Y%m%d_%H%M%S}'.format(datetime.datetime.now()))
         os.mkdir(temp)
         combine_file = os.path.join(prcs_directory, 'combine.csv')
+        logger.debug('- Read stasiun point data')
         with open(combine_file, "r") as csvfile:
             reader = csv.reader(csvfile)
             headers = next(reader)
@@ -2942,8 +2979,10 @@ class Otoklim:
             self.otoklimdlg.projectfilename.text()
         )
         try:
+            logger.debug('- Listing selected parameter to be processed')
             prc_list = []
             if self.otoklimdlg.ach_1.isChecked():
+                logger.debug(str(idw_params[0]) + ' is checked')
                 prc_list.append(idw_params[0])
                 self.otoklimdlg.addach_1.setEnabled(True)
                 self.otoklimdlg.addach_1.setWhatsThis(
@@ -2955,6 +2994,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.ash_1.isChecked():
+                logger.debug(str(idw_params[1]) + ' is checked')
                 prc_list.append(idw_params[1])
                 self.otoklimdlg.addash_1.setEnabled(True)
                 self.otoklimdlg.addash_1.setWhatsThis(
@@ -2966,6 +3006,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.pch_1.isChecked():
+                logger.debug(str(idw_params[2]) + ' is checked')
                 prc_list.append(idw_params[2])
                 self.otoklimdlg.addpch_1.setEnabled(True)
                 self.otoklimdlg.addpch_1.setWhatsThis(
@@ -2977,6 +3018,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.psh_1.isChecked():
+                logger.debug(str(idw_params[3]) + ' is checked')
                 prc_list.append(idw_params[3])
                 self.otoklimdlg.addpsh_1.setEnabled(True)
                 self.otoklimdlg.addpsh_1.setWhatsThis(
@@ -2988,6 +3030,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.pch_2.isChecked():
+                logger.debug(str(idw_params[4]) + ' is checked')
                 prc_list.append(idw_params[4])
                 self.otoklimdlg.addpch_2.setEnabled(True)
                 self.otoklimdlg.addpch_2.setWhatsThis(
@@ -2999,6 +3042,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.psh_2.isChecked():
+                logger.debug(str(idw_params[5]) + ' is checked')
                 prc_list.append(idw_params[5])
                 self.otoklimdlg.addpsh_2.setEnabled(True)
                 self.otoklimdlg.addpsh_2.setWhatsThis(
@@ -3010,6 +3054,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.pch_3.isChecked():
+                logger.debug(str(idw_params[6]) + ' is checked')
                 prc_list.append(idw_params[6])
                 self.otoklimdlg.addpch_3.setEnabled(True)
                 self.otoklimdlg.addpch_3.setWhatsThis(
@@ -3021,6 +3066,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.psh_3.isChecked():
+                logger.debug(str(idw_params[7]) + ' is checked')
                 prc_list.append(idw_params[7])
                 self.otoklimdlg.addpsh_3.setEnabled(True)
                 self.otoklimdlg.addpsh_3.setWhatsThis(
@@ -3032,7 +3078,10 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
 
+            logger.info('- Selected parameter :' + str(prc_list))
             for param in prc_list:
+                logger.info('-- Field (Parameter) : ' + param)
+                logger.debug('-- Interpolating in progress...')
                 filename_shp = os.path.join(prcs_directory, 'rainpost_point_' + str(param) + '.shp')
                 self.copy_file(filename_shp, temp, True)
                 filename_shp_tmp = os.path.join(temp, 'rainpost_point_' + str(param) + '.shp')
@@ -3050,12 +3099,14 @@ class Otoklim:
                         raise Exception('Skip ' + raster_cropped)
 
                 extent = layer_provinsi.extent()
+                logger.info('-- runalg v.surf.idw')
                 processing.runalg(
                     'grass7:v.surf.idw',
                     layer, 8.0, 5.0, param, False,
                     "%f,%f,%f,%f" % (extent.xMinimum(), extent.xMaximum(), extent.yMinimum(), extent.yMaximum()), 0.001, -1.0, 0.0001,
                     raster_interpolated
                 )
+                logger.info('-- runalg saga:clipgridwithpolygon')
                 processing.runalg('saga:clipgridwithpolygon', raster_interpolated, provinsi_polygon_file, raster_cropped)
                 '''
                 processing.runalg(
@@ -3066,6 +3117,7 @@ class Otoklim:
                     raster_cropped
                 )
                 '''
+                logger.info('-- Interpolating success.. Raster data has been stored on ' + str(raster_cropped))
             with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]["PROCESSED"] = 1
@@ -3078,6 +3130,7 @@ class Otoklim:
             self.otoklimdlg.classificationPanel.show()
         except Exception as e:
             self.errormessagedlg.ErrorMessage.setText(str(e))
+            logger.error(str(e))
             self.errormessagedlg.exec_()
 
     def pra_interpolate(self):
@@ -3109,7 +3162,10 @@ class Otoklim:
                             dict_input.update({int(row[0]): row[1:]})
                         else:
                             idw_params = row[1:]
+                            mo = 0
                             for month in months:
+                                if mo == 4:
+                                    break
                                 try:
                                     idw_params[n] = idw_params[n].split('_')[0] + '_' + str(month[0])
                                 except IndexError:
@@ -3119,6 +3175,7 @@ class Otoklim:
                                 except IndexError:
                                     pass
                                 n += 2
+                                mo += 1
                             header_input = idw_params
                         n += 1
                 with open(rainpost_file, 'rb') as csvfile:
@@ -3678,7 +3735,13 @@ class Otoklim:
                 self.otoklimdlg.listWidget_option_2.addItem(item2)
             '''
 
-    def search_option_1(self):
+    def expand_option_1(self):
+        self.search_option_1(expand=True)
+
+    def expand_option_2(self):
+        self.search_option_2(expand=True)
+
+    def search_option_1(self, expand=False):
         """Function to search region"""
         key = self.otoklimdlg.search_option1.text()
         project = os.path.join(
@@ -3711,7 +3774,10 @@ class Otoklim:
                     elif len(str(int(float(region[2])))) > 4 and str(region[2][:2]) == parent_code:
                         child.addChild(item)
                 if default:
-                    self.otoklimdlg.treeWidget_option_1.expandToDepth(0)
+                    if expand:
+                        self.otoklimdlg.treeWidget_option_1.expandToDepth(1)
+                    else:
+                        self.otoklimdlg.treeWidget_option_1.expandToDepth(0)
                     break
             elif len(str(int(float(region[2])))) == 4:
                 parent = item
@@ -3733,7 +3799,7 @@ class Otoklim:
             self.otoklimdlg.listWidget_option_1.addItem(item)
         '''
     
-    def search_option_2(self):
+    def search_option_2(self, expand=False):
         """Function to search region"""
         key = self.otoklimdlg.search_option2.text()
         project = os.path.join(
@@ -3766,7 +3832,10 @@ class Otoklim:
                     elif len(str(int(float(region[2])))) > 4 and str(region[2][:2]) == parent_code:
                         child.addChild(item)
                 if default:
-                    self.otoklimdlg.treeWidget_option_2.expandToDepth(0)
+                    if expand:
+                        self.otoklimdlg.treeWidget_option_2.expandToDepth(1)
+                    else:
+                        self.otoklimdlg.treeWidget_option_2.expandToDepth(0)
                     break
             elif len(str(int(float(region[2])))) == 4:
                 parent = item
@@ -3875,6 +3944,7 @@ class Otoklim:
         prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
         out_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'output')
         map_directory = os.path.join(out_directory, 'map')
+        filename_xml = os.path.join(map_directory, 'phb.xml')
         classified_directory = os.path.join(prcs_directory, 'classified')
         date = self.select_date_now()
         months = date[0]
@@ -3895,86 +3965,129 @@ class Otoklim:
         try:
             prc_list = []
             date_list = []
+            curah_hujan = ET.Element("curah_hujan")
+            forecast = ET.SubElement(curah_hujan, "forecast")
+            params = ET.SubElement(curah_hujan, "params")
+            # set forecast
+            issue = ET.SubElement(forecast, "issue")
+            ET.SubElement(issue, "timestamp").text = '{:%Y%m%d%H%M%S}'.format(datetime.datetime.now())
+            ET.SubElement(issue, "year").text = str(months[4])
+            ET.SubElement(issue, "month").text = str(years[4])
+            # set params
             if self.otoklimdlg.ach_1_map.isChecked():
+                data = ET.SubElement(params, "data")
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_ach_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ACH_1"]["NAME"]
                     param = os.path.splitext(raster_ach_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ach_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_ACH_1"]["REGION_LIST"] = str(slc_id_list)
+                    ET.SubElement(data, "param").text = str(param.split('_')[0])
+                    ET.SubElement(data, "month").text = str(months[0][2])
+                    ET.SubElement(data, "year").text = str(years[0])
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ach_1])
                 date_list.append([months[0], years[0]])
             if self.otoklimdlg.ash_1_map.isChecked():
+                data = ET.SubElement(params, "data")
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_ash_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ASH_1"]["NAME"]
                     param = os.path.splitext(raster_ash_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ash_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_ASH_1"]["REGION_LIST"] = str(slc_id_list)
+                    ET.SubElement(data, "param").text = str(param.split('_')[0])
+                    ET.SubElement(data, "month").text = str(months[0][2])
+                    ET.SubElement(data, "year").text = str(years[0])
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ash_1])
                 date_list.append([months[0], years[0]])
             if self.otoklimdlg.pch_1_map.isChecked():
+                data = ET.SubElement(params, "data")
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_pch_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_1"]["NAME"]
                     param = os.path.splitext(raster_pch_1)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_1"]["REGION_LIST"] = str(slc_id_list)
+                    ET.SubElement(data, "param").text = str(param.split('_')[0])
+                    ET.SubElement(data, "month").text = str(months[1][2])
+                    ET.SubElement(data, "year").text = str(years[1])
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_1])
                 date_list.append([months[1], years[1]])
             if self.otoklimdlg.psh_1_map.isChecked():
+                data = ET.SubElement(params, "data")
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_psh_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_1"]["NAME"]
                     param = os.path.splitext(raster_psh_1)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_1"]["REGION_LIST"] = str(slc_id_list)
+                    ET.SubElement(data, "param").text = str(param.split('_')[0])
+                    ET.SubElement(data, "month").text = str(months[1][2])
+                    ET.SubElement(data, "year").text = str(years[1])
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_1])
                 date_list.append([months[1], years[1]])
             if self.otoklimdlg.pch_2_map.isChecked():
+                data = ET.SubElement(params, "data")
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_pch_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_2"]["NAME"]
                     param = os.path.splitext(raster_pch_2)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_2)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_2"]["REGION_LIST"] = str(slc_id_list) 
+                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_2"]["REGION_LIST"] = str(slc_id_list)
+                    ET.SubElement(data, "param").text = str(param.split('_')[0])
+                    ET.SubElement(data, "month").text = str(months[2][2])
+                    ET.SubElement(data, "year").text = str(years[2])
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_2])
                 date_list.append([months[2], years[2]])
             if self.otoklimdlg.psh_2_map.isChecked():
+                data = ET.SubElement(params, "data")
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_psh_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_2"]["NAME"]
                     param = os.path.splitext(raster_psh_2)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_2)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_2"]["REGION_LIST"] = str(slc_id_list)
+                    ET.SubElement(data, "param").text = str(param.split('_')[0])
+                    ET.SubElement(data, "month").text = str(months[2][2])
+                    ET.SubElement(data, "year").text = str(years[2])
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_2])
                 date_list.append([months[2], years[2]])
             if self.otoklimdlg.pch_3_map.isChecked():
+                data = ET.SubElement(params, "data")
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_pch_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_3"]["NAME"]
                     param = os.path.splitext(raster_pch_3)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_3)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_3"]["REGION_LIST"] = str(slc_id_list)
+                    ET.SubElement(data, "param").text = str(param.split('_')[0])
+                    ET.SubElement(data, "month").text = str(months[3][2])
+                    ET.SubElement(data, "year").text = str(years[3])
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_3])
                 date_list.append([months[3], years[3]])
             if self.otoklimdlg.psh_3_map.isChecked():
+                data = ET.SubElement(params, "data")
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
                     raster_psh_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_3"]["NAME"]
                     param = os.path.splitext(raster_psh_3)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_3)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_3"]["REGION_LIST"] = str(slc_id_list)
+                    ET.SubElement(data, "param").text = str(param.split('_')[0])
+                    ET.SubElement(data, "month").text = str(months[3][2])
+                    ET.SubElement(data, "year").text = str(years[3])
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_3])
                 date_list.append([months[3], years[3]])
+            tree = ET.ElementTree(curah_hujan)
+            tree.write(filename_xml, encoding='utf-8', xml_declaration=True)
             # Polygon to Line Conversion
             provinsi_line = os.path.join(prcs_directory, 'provinsi_line.shp')
             if not os.path.exists(provinsi_line):
@@ -4000,598 +4113,604 @@ class Otoklim:
             for value, date in zip(prc_list, date_list):
                 vector_classified = os.path.join(classified_directory, value[1])
                 style_file = os.path.join(classified_directory, os.path.splitext(value[1])[0] + '.qml')
-                print style_file
                 temp_raster = os.path.join(prcs_directory, 'tmp' + str(value[1]))
                 os.mkdir(temp_raster)
                 month = date[0]
                 year = date[1]
                 for slc_id, slc_name in zip(slc_id_list, slc_name_list):
-                    if len(str(slc_id)) == 2:
-                        projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
-                        # output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
-                        output_jpg = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
-                        # Classified Value Styling
-                        layer_vector = QgsVectorLayer(vector_classified, '', 'ogr')
-                        layer_vector.loadNamedStyle(style_file)
-                        '''
-                        layer_raster = QgsRasterLayer(raster_classified, '')
-                        s = QgsRasterShader()
-                        c = QgsColorRampShader()
-                        c.setColorRampType(QgsColorRampShader.EXACT)
-                        i = []
-                        if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
-                            color = []
-                            label = []
-                            lng = 1
-                            list_value = []
-                            with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
-                                spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
-                                for row in spamreader:
-                                    if str(row['lower_limit']) == '*':
-                                        label.append('< ' + str(row['upper_limit']))
-                                    elif str(row['upper_limit']) == '*':
-                                        label.append('> ' + str(row['lower_limit']))
-                                    else:
-                                        label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
-                                    color.append(row['color'])
-                                    # LABEL NOT FIX
-                                    #label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
-                                    list_value.append(row['new_value'])
-                                    lng += 1
-                        else:
-                            color = []
-                            label = []
-                            lng = 1
-                            list_value = []
-                            with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
-                                spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
-                                for row in spamreader:
-                                    if str(row['lower_limit']) == '*':
-                                        label.append('< ' + str(row['upper_limit']))
-                                    elif str(row['upper_limit']) == '*':
-                                        label.append('> ' + str(row['lower_limit']))
-                                    else:
-                                        label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
-                                    color.append(row['color'])
-                                    # LABEL NOT FIX
-                                    #label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
-                                    list_value.append(row['new_value'])
-                                    lng += 1
-                        for n in range(1, lng):
-                            i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1]), label[n-1]))
-                        c.setColorRampItemList(i)
-                        s.setRasterShaderFunction(c)
-                        ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
-                        layer_raster.setRenderer(ps)
-                        '''
+                    projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
+                    output_jpg = os.path.join(map_directory, str(slc_id) + '_map_' + str(slc_name) + '_' + str(value[0]) + '.jpg')
+                    #print os.path.basename(os.path.join(map_directory, str(slc_id) + '_' + str(year) + str(month[2]) + '_' + str(value[0]).split('_')[0] + '_' + str(slc_name) + '.jpg'))
+                    if os.path.basename(output_jpg) not in os.listdir(map_directory):
+                        if len(str(slc_id)) == 2:
+                            # projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
+                            # output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
+                            # output_jpg = os.path.join(map_directory, str(slc_id) + '_map_' + str(slc_name) + '_' + str(value[0]) + '.jpg')
+                            # Classified Value Styling
+                            layer_vector = QgsVectorLayer(vector_classified, '', 'ogr')
+                            layer_vector.loadNamedStyle(style_file)
+                            '''
+                            layer_raster = QgsRasterLayer(raster_classified, '')
+                            s = QgsRasterShader()
+                            c = QgsColorRampShader()
+                            c.setColorRampType(QgsColorRampShader.EXACT)
+                            i = []
+                            if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                                color = []
+                                label = []
+                                lng = 1
+                                list_value = []
+                                with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
+                                    spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                                    for row in spamreader:
+                                        if str(row['lower_limit']) == '*':
+                                            label.append('< ' + str(row['upper_limit']))
+                                        elif str(row['upper_limit']) == '*':
+                                            label.append('> ' + str(row['lower_limit']))
+                                        else:
+                                            label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
+                                        color.append(row['color'])
+                                        # LABEL NOT FIX
+                                        #label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
+                                        list_value.append(row['new_value'])
+                                        lng += 1
+                            else:
+                                color = []
+                                label = []
+                                lng = 1
+                                list_value = []
+                                with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
+                                    spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                                    for row in spamreader:
+                                        if str(row['lower_limit']) == '*':
+                                            label.append('< ' + str(row['upper_limit']))
+                                        elif str(row['upper_limit']) == '*':
+                                            label.append('> ' + str(row['lower_limit']))
+                                        else:
+                                            label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
+                                        color.append(row['color'])
+                                        # LABEL NOT FIX
+                                        #label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
+                                        list_value.append(row['new_value'])
+                                        lng += 1
+                            for n in range(1, lng):
+                                i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1]), label[n-1]))
+                            c.setColorRampItemList(i)
+                            s.setRasterShaderFunction(c)
+                            ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
+                            layer_raster.setRenderer(ps)
+                            '''
 
-                        # Province Styling
-                        layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
-                        exp = "\"ID_PROV\"!='{}'".format(str(slc_id))
-                        layer_provinsi.setSubsetString(exp)
-                        symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,0', 'outline_style': 'solid', 'outline_width': '0.5'})
-                        layer_provinsi.rendererV2().setSymbol(symbol)
-                        layer_provinsi_line = QgsVectorLayer(provinsi_line, 'Batas Provinsi', 'ogr')
-                        symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'solid', 'width': '0.5'})
-                        layer_provinsi_line.rendererV2().setSymbol(symbol)
-                        layer_provinsi.triggerRepaint()
-                        palyr = QgsPalLayerSettings()
-                        palyr.readFromLayer(layer_provinsi)
-                        palyr.enabled = True
-                        palyr.fieldName = 'PROVINSI'
-                        palyr.placement = QgsPalLayerSettings.OverPoint
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '14', '')
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
-                        palyr.writeToLayer(layer_provinsi)
-                        # Districts Styling
-                        layer_kabupaten = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
-                        exp = "\"ID_PROV\"='{}'".format(str(slc_id))
-                        layer_kabupaten.setSubsetString(exp)
-                        symbol = QgsFillSymbolV2.createSimple({'color': '0,0,0,0', 'outline_color': '0,0,0,0', 'outline_style': 'dot', 'outline_width': '0.25'})
-                        layer_kabupaten.rendererV2().setSymbol(symbol)
-                        layer_kabupaten_line = QgsVectorLayer(kabupaten_line, 'Batas Kabupaten', 'ogr')
-                        layer_kabupaten_line.setSubsetString(exp)
-                        symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'dot', 'width': '0.25'})
-                        layer_kabupaten_line.rendererV2().setSymbol(symbol)
-                        palyr = QgsPalLayerSettings()
-                        palyr.readFromLayer(layer_kabupaten)
-                        palyr.enabled = True
-                        palyr.fieldName = 'KABUPATEN'
-                        palyr.placement = QgsPalLayerSettings.OverPoint
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '8', '')
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
-                        palyr.writeToLayer(layer_kabupaten)
-                        # Bathymetry
-                        layer_bath = QgsRasterLayer(self.otoklimdlg.bathymetry.text(), 'Bathymetry')
-                        # Add Layer To QGIS Canvas
-                        canvas = qgis.utils.iface.mapCanvas()
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_bath)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten_line)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi_line)
-                        # Set Extent
-                        canvas.setExtent(layer_kabupaten.extent())
-                        canvas.refresh()
-                        # Create QGIS Porject File
-                        f = QFileInfo(projectqgs)
-                        p = QgsProject.instance()
-                        p.write(f)
-                        QgsProject.instance().clear()
-                        # Read Map
-                        template_file = open(self.otoklimdlg.maptemplate.text())
-                        template_content = template_file.read()
-                        template_file.close()
-                        document = QDomDocument()
-                        document.setContent(template_content)
-                        if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
-                            title_type = "CURAH"
-                        else:
-                            title_type = "SIFAT"
-                        if str(value[0])[0:3].upper().startswith('A'):
-                            title_adj = "ANALISIS"
-                        else:
-                            title_adj = "PERKIRAAN"
-                        map_title = 'PETA ' + title_adj + ' ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
-                        substitution_map = {'map_title': map_title}
-                        canvas = QgsMapCanvas()
-                        QgsProject.instance().read(QFileInfo(projectqgs))
-                        bridge = QgsLayerTreeMapCanvasBridge(QgsProject.instance().layerTreeRoot(), canvas)
-                        bridge.setCanvasLayers()
-                        composition = QgsComposition(canvas.mapSettings())
-                        composition.loadFromTemplate(document, substitution_map)
-                        map_item = composition.getComposerItemById('map')
-                        map_item.setMapCanvas(canvas)
-                        # Province Polygon As Extent
-                        if self.otoklimdlg.province_extent.isChecked():
+                            # Province Styling
+                            layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
+                            exp = "\"ID_PROV\"!='{}'".format(str(slc_id))
+                            layer_provinsi.setSubsetString(exp)
+                            symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,0', 'outline_style': 'solid', 'outline_width': '0.5'})
+                            layer_provinsi.rendererV2().setSymbol(symbol)
+                            layer_provinsi_line = QgsVectorLayer(provinsi_line, 'Batas Provinsi', 'ogr')
+                            symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'solid', 'width': '0.5'})
+                            layer_provinsi_line.rendererV2().setSymbol(symbol)
+                            layer_provinsi.triggerRepaint()
+                            palyr = QgsPalLayerSettings()
+                            palyr.readFromLayer(layer_provinsi)
+                            palyr.enabled = True
+                            palyr.fieldName = 'PROVINSI'
+                            palyr.placement = QgsPalLayerSettings.OverPoint
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '14', '')
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
+                            palyr.writeToLayer(layer_provinsi)
+                            # Districts Styling
+                            layer_kabupaten = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
+                            exp = "\"ID_PROV\"='{}'".format(str(slc_id))
+                            layer_kabupaten.setSubsetString(exp)
+                            symbol = QgsFillSymbolV2.createSimple({'color': '0,0,0,0', 'outline_color': '0,0,0,0', 'outline_style': 'dot', 'outline_width': '0.25'})
+                            layer_kabupaten.rendererV2().setSymbol(symbol)
+                            layer_kabupaten_line = QgsVectorLayer(kabupaten_line, 'Batas Kabupaten', 'ogr')
+                            layer_kabupaten_line.setSubsetString(exp)
+                            symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'dot', 'width': '0.25'})
+                            layer_kabupaten_line.rendererV2().setSymbol(symbol)
+                            palyr = QgsPalLayerSettings()
+                            palyr.readFromLayer(layer_kabupaten)
+                            palyr.enabled = True
+                            palyr.fieldName = 'KABUPATEN'
+                            palyr.placement = QgsPalLayerSettings.OverPoint
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '8', '')
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
+                            palyr.writeToLayer(layer_kabupaten)
+                            # Bathymetry
+                            layer_bath = QgsRasterLayer(self.otoklimdlg.bathymetry.text(), 'Bathymetry')
+                            # Add Layer To QGIS Canvas
+                            canvas = qgis.utils.iface.mapCanvas()
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_bath)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten_line)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi_line)
+                            # Set Extent
+                            canvas.setExtent(layer_kabupaten.extent())
+                            canvas.refresh()
+                            # Create QGIS Porject File
+                            f = QFileInfo(projectqgs)
+                            p = QgsProject.instance()
+                            p.write(f)
+                            QgsProject.instance().clear()
+                            # Read Map
+                            template_file = open(self.otoklimdlg.maptemplate.text())
+                            template_content = template_file.read()
+                            template_file.close()
+                            document = QDomDocument()
+                            document.setContent(template_content)
+                            if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                                title_type = "CURAH"
+                            else:
+                                title_type = "SIFAT"
+                            if str(value[0])[0:3].upper().startswith('A'):
+                                title_adj = "ANALISIS"
+                            else:
+                                title_adj = "PRAKIRAAN"
+                            map_title = 'PETA ' + title_adj + ' ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
+                            substitution_map = {'map_title': map_title}
+                            canvas = QgsMapCanvas()
+                            QgsProject.instance().read(QFileInfo(projectqgs))
+                            bridge = QgsLayerTreeMapCanvasBridge(QgsProject.instance().layerTreeRoot(), canvas)
+                            bridge.setCanvasLayers()
+                            composition = QgsComposition(canvas.mapSettings())
+                            composition.loadFromTemplate(document, substitution_map)
+                            map_item = composition.getComposerItemById('map')
+                            map_item.setMapCanvas(canvas)
+                            # Province Polygon As Extent
+                            if self.otoklimdlg.province_extent.isChecked():
+                                map_item.zoomToExtent(canvas.extent())
+                            legend_item = composition.getComposerItemById('legend_line')
+                            legend_item.updateLegend()
+                            composition.refreshItems()
+                            #composition.exportAsPDF(output_pdf)
+                            # Save as image
+                            dpi = 150
+                            dpmm = dpi / 25.4
+                            width = int(dpmm * composition.paperWidth())
+                            height = int(dpmm * composition.paperHeight())
+                            # create output image and initialize it
+                            image = QImage(QSize(width, height), QImage.Format_ARGB32)
+                            image.setDotsPerMeterX(dpmm * 1000)
+                            image.setDotsPerMeterY(dpmm * 1000)
+                            image.fill(0)
+                            # render the composition
+                            imagePainter = QPainter(image)
+                            composition.renderPage(imagePainter, 0)
+                            imagePainter.end()
+                            image.save(output_jpg, "jpg")
+                            # Remove unuse file
+                            vector = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
+                            kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
+                            provinsi = QgsMapLayerRegistry.instance().mapLayersByName('Provinsi')[0]
+                            bathymetry = QgsMapLayerRegistry.instance().mapLayersByName('Bathymetry')[0]
+                            provinsiline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Provinsi')[0]
+                            kabupatenline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kabupaten')[0]
+                            all_layer = [vector.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), provinsiline.id(), kabupatenline.id()]
+                            QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
+                        elif len(str(slc_id)) == 4:
+                            # projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
+                            # output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
+                            # output_jpg = os.path.join(map_directory, str(slc_id) + '_map_' + str(slc_name) + '_' + str(value[0]) + '.jpg')
+                            # Classified Value Styling
+                            layer_vector_unclip = QgsVectorLayer(vector_classified, '', 'ogr')
+                            # Special Case For Districts (clipping)
+                            layer_districts = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_districts)
+                            exp = "\"ID_KAB\"='{}'".format(str(slc_id))
+                            layer_districts.setSubsetString(exp)
+                            vector_cropped = os.path.join(temp_raster, str(slc_name).replace(" ", "_") + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.shp')
+                            # processing.runalg('saga:clipgridwithpolygon', rasterclassified, layer_districts, raster_cropped)
+                            processing.runalg("qgis:clip", layer_vector_unclip, layer_districts, vector_cropped)
+                            '''
+                            processing.runalg(
+                                "gdalogr:cliprasterbymasklayer", 
+                                rasterclassified, 
+                                layer_districts, 
+                                -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", 
+                                raster_cropped
+                            )
+                            '''
+                            QgsMapLayerRegistry.instance().removeMapLayer(layer_districts.id())
+                            layer_vector = QgsVectorLayer(vector_cropped, '', 'ogr')
+                            layer_vector.loadNamedStyle(style_file)
+                            '''
+                            s = QgsRasterShader()
+                            c = QgsColorRampShader()
+                            c.setColorRampType(QgsColorRampShader.EXACT)
+                            i = []
+                            if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                                color = []
+                                label = []
+                                lng = 1
+                                list_value = []
+                                with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
+                                    spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                                    for row in spamreader:
+                                        if str(row['lower_limit']) == '*':
+                                            label.append('< ' + str(row['upper_limit']))
+                                        elif str(row['upper_limit']) == '*':
+                                            label.append('> ' + str(row['lower_limit']))
+                                        else:
+                                            label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
+                                        color.append(row['color'])
+                                        # LABEL NOT FIX
+                                        #label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
+                                        list_value.append(row['new_value'])
+                                        lng += 1
+                            else:
+                                color = []
+                                label = []
+                                lng = 1
+                                list_value = []
+                                with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
+                                    spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                                    for row in spamreader:
+                                        if str(row['lower_limit']) == '*':
+                                            label.append('< ' + str(row['upper_limit']))
+                                        elif str(row['upper_limit']) == '*':
+                                            label.append('> ' + str(row['lower_limit']))
+                                        else:
+                                            label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
+                                        color.append(row['color'])
+                                        # LABEL NOT FIX
+                                        #label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
+                                        list_value.append(row['new_value'])
+                                        lng += 1
+                            for n in range(1, lng):
+                                i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1]), label[n-1]))
+                            c.setColorRampItemList(i)
+                            s.setRasterShaderFunction(c)
+                            ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
+                            layer_raster.setRenderer(ps)
+                            '''
+
+                            # Province Styling
+                            layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
+                            symbol = QgsFillSymbolV2.createSimple({'color': '240,240,240,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
+                            layer_provinsi.rendererV2().setSymbol(symbol)
+                            layer_provinsi.triggerRepaint()
+
+                            # Districts Styling
+                            layer_kabupaten = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
+                            exp = "\"ID_PROV\"='{}' AND \"ID_KAB\"!='{}'".format(str(slc_id)[0:2], str(slc_id))
+                            layer_kabupaten.setSubsetString(exp)
+                            symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,0', 'outline_style': 'solid', 'outline_width': '0.5'})
+                            layer_kabupaten.rendererV2().setSymbol(symbol)
+                            layer_kabupaten.triggerRepaint()
+                            layer_kabupaten_line = QgsVectorLayer(kabupaten_line, 'Batas Kabupaten', 'ogr')
+                            layer_kabupaten_line.setSubsetString(exp)
+                            symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'solid', 'width': '0.5'})
+                            layer_kabupaten_line.rendererV2().setSymbol(symbol)
+                            palyr = QgsPalLayerSettings()
+                            palyr.readFromLayer(layer_kabupaten)
+                            palyr.enabled = True
+                            palyr.fieldName = 'KABUPATEN'
+                            palyr.placement = QgsPalLayerSettings.OverPoint
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '14', '')
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
+                            palyr.writeToLayer(layer_kabupaten)
+                            # Sub-Districts Styling
+                            layer_kecamatan = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
+                            exp = "\"ID_KAB\"='{}'".format(str(slc_id))
+                            layer_kecamatan.setSubsetString(exp)
+                            symbol = QgsFillSymbolV2.createSimple({'color': '0,0,0,0', 'outline_color': '0,0,0,0', 'outline_style': 'dot', 'outline_width': '0.25'})
+                            layer_kecamatan.rendererV2().setSymbol(symbol)
+                            layer_kecamatan_line = QgsVectorLayer(kecamatan_line, 'Batas Kecamatan', 'ogr')
+                            layer_kecamatan_line.setSubsetString(exp)
+                            symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'dot', 'width': '0.25'})
+                            layer_kecamatan_line.rendererV2().setSymbol(symbol)
+                            palyr = QgsPalLayerSettings()
+                            palyr.readFromLayer(layer_kecamatan)
+                            palyr.enabled = True
+                            palyr.fieldName = 'KECAMATAN'
+                            palyr.placement = QgsPalLayerSettings.OverPoint
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '8', '')
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
+                            palyr.writeToLayer(layer_kecamatan)
+                            # Bathymetry
+                            layer_bath = QgsRasterLayer(self.otoklimdlg.bathymetry.text(), 'Bathymetry')
+                            # Add Layer To QGIS Canvas
+                            canvas = qgis.utils.iface.mapCanvas()
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_bath)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan_line)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten_line)
+                            # Set Extent
+                            canvas.setExtent(layer_kecamatan.extent())
+                            canvas.refresh()
+                            # Create QGIS Porject File
+                            f = QFileInfo(projectqgs)
+                            p = QgsProject.instance()
+                            p.write(f)
+                            QgsProject.instance().clear()
+                            QgsMapLayerRegistry.instance().removeMapLayer(layer_vector.id())
+                            del layer_vector
+                            # Read Map
+                            template_file = open(self.otoklimdlg.maptemplate2.text())
+                            template_content = template_file.read()
+                            template_file.close()
+                            document = QDomDocument()
+                            document.setContent(template_content)
+                            if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                                title_type = "CURAH"
+                            else:
+                                title_type = "SIFAT"
+                            if str(value[0])[0:3].upper().startswith('A'):
+                                title_adj = "ANALISIS"
+                            else:
+                                title_adj = "PRAKIRAAN"
+                            map_title = 'PETA ' + title_adj + ' ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
+                            substitution_map = {'map_title': map_title}
+                            canvas = QgsMapCanvas()
+                            QgsProject.instance().read(QFileInfo(projectqgs))
+                            bridge = QgsLayerTreeMapCanvasBridge(QgsProject.instance().layerTreeRoot(), canvas)
+                            bridge.setCanvasLayers()
+                            composition = QgsComposition(canvas.mapSettings())
+                            composition.loadFromTemplate(document, substitution_map)
+                            map_item = composition.getComposerItemById('map')
+                            map_item.setMapCanvas(canvas)
                             map_item.zoomToExtent(canvas.extent())
-                        legend_item = composition.getComposerItemById('legend_line')
-                        legend_item.updateLegend()
-                        composition.refreshItems()
-                        #composition.exportAsPDF(output_pdf)
-                        # Save as image
-                        dpi = 150
-                        dpmm = dpi / 25.4
-                        width = int(dpmm * composition.paperWidth())
-                        height = int(dpmm * composition.paperHeight())
-                        # create output image and initialize it
-                        image = QImage(QSize(width, height), QImage.Format_ARGB32)
-                        image.setDotsPerMeterX(dpmm * 1000)
-                        image.setDotsPerMeterY(dpmm * 1000)
-                        image.fill(0)
-                        # render the composition
-                        imagePainter = QPainter(image)
-                        composition.renderPage(imagePainter, 0)
-                        imagePainter.end()
-                        image.save(output_jpg, "jpg")
-                        # Remove unuse file
-                        vector = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
-                        kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
-                        provinsi = QgsMapLayerRegistry.instance().mapLayersByName('Provinsi')[0]
-                        bathymetry = QgsMapLayerRegistry.instance().mapLayersByName('Bathymetry')[0]
-                        provinsiline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Provinsi')[0]
-                        kabupatenline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kabupaten')[0]
-                        all_layer = [vector.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), provinsiline.id(), kabupatenline.id()]
-                        QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
-                    elif len(str(slc_id)) == 4:
-                        projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
-                        # output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
-                        output_jpg = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
-                        # Classified Value Styling
-                        layer_vector_unclip = QgsVectorLayer(vector_classified, '', 'ogr')
-                        # Special Case For Districts (clipping)
-                        layer_districts = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_districts)
-                        exp = "\"ID_KAB\"='{}'".format(str(slc_id))
-                        layer_districts.setSubsetString(exp)
-                        vector_cropped = os.path.join(temp_raster, str(slc_name).replace(" ", "_") + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.shp')
-                        # processing.runalg('saga:clipgridwithpolygon', rasterclassified, layer_districts, raster_cropped)
-                        processing.runalg("qgis:clip", layer_vector_unclip, layer_districts, vector_cropped)
-                        '''
-                        processing.runalg(
-                            "gdalogr:cliprasterbymasklayer", 
-                            rasterclassified, 
-                            layer_districts, 
-                            -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", 
-                            raster_cropped
-                        )
-                        '''
-                        QgsMapLayerRegistry.instance().removeMapLayer(layer_districts.id())
-                        layer_vector = QgsVectorLayer(vector_cropped, '', 'ogr')
-                        layer_vector.loadNamedStyle(style_file)
-                        '''
-                        s = QgsRasterShader()
-                        c = QgsColorRampShader()
-                        c.setColorRampType(QgsColorRampShader.EXACT)
-                        i = []
-                        if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
-                            color = []
-                            label = []
-                            lng = 1
-                            list_value = []
-                            with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
-                                spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
-                                for row in spamreader:
-                                    if str(row['lower_limit']) == '*':
-                                        label.append('< ' + str(row['upper_limit']))
-                                    elif str(row['upper_limit']) == '*':
-                                        label.append('> ' + str(row['lower_limit']))
-                                    else:
-                                        label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
-                                    color.append(row['color'])
-                                    # LABEL NOT FIX
-                                    #label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
-                                    list_value.append(row['new_value'])
-                                    lng += 1
+                            composition.refreshItems()
+                            #composition.exportAsPDF(output_pdf)
+                            # Save as image
+                            dpi = 300
+                            dpmm = dpi / 25.4
+                            width = int(dpmm * composition.paperWidth())
+                            height = int(dpmm * composition.paperHeight())
+                            # create output image and initialize it
+                            image = QImage(QSize(width, height), QImage.Format_ARGB32)
+                            image.setDotsPerMeterX(dpmm * 1000)
+                            image.setDotsPerMeterY(dpmm * 1000)
+                            image.fill(0)
+                            # render the composition
+                            imagePainter = QPainter(image)
+                            composition.renderPage(imagePainter, 0)
+                            imagePainter.end()
+                            image.save(output_jpg, "jpg")
+                            # Remove unuse file
+                            vector = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
+                            kecamatan = QgsMapLayerRegistry.instance().mapLayersByName('Kecamatan')[0]
+                            kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
+                            provinsi = QgsMapLayerRegistry.instance().mapLayersByName('Provinsi')[0]
+                            bathymetry = QgsMapLayerRegistry.instance().mapLayersByName('Bathymetry')[0]
+                            kabupatenline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kabupaten')[0]
+                            kecamatanline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kecamatan')[0]
+                            all_layer = [vector.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), kecamatan.id(), kabupatenline.id(), kecamatanline.id()]
+                            QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
+                            del vector
+                            os.remove(projectqgs)
+                            # Remove Vector
+                            layer_vector = QgsVectorLayer(vector_cropped, '', 'ogr')
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
+                            QgsMapLayerRegistry.instance().removeMapLayer(layer_vector.id())
+                            del layer_vector
+                            os.remove(vector_cropped)
                         else:
-                            color = []
-                            label = []
-                            lng = 1
-                            list_value = []
-                            with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
-                                spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
-                                for row in spamreader:
-                                    if str(row['lower_limit']) == '*':
-                                        label.append('< ' + str(row['upper_limit']))
-                                    elif str(row['upper_limit']) == '*':
-                                        label.append('> ' + str(row['lower_limit']))
-                                    else:
-                                        label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
-                                    color.append(row['color'])
-                                    # LABEL NOT FIX
-                                    #label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
-                                    list_value.append(row['new_value'])
-                                    lng += 1
-                        for n in range(1, lng):
-                            i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1]), label[n-1]))
-                        c.setColorRampItemList(i)
-                        s.setRasterShaderFunction(c)
-                        ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
-                        layer_raster.setRenderer(ps)
-                        '''
+                            # projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
+                            # output_jpg = os.path.join(map_directory, str(slc_id) + '_map_' + str(slc_name) + '_' + str(value[0]) + '.jpg')
+                            # Classified Value Styling
+                            layer_vector_unclip = QgsVectorLayer(vector_classified, '', 'ogr')
+                            # Special Case For Sub-Districts (clipping)
+                            layer_subdistricts = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_subdistricts)
+                            exp = "\"ID_KEC\"='{}'".format(str(slc_id))
+                            layer_subdistricts.setSubsetString(exp)
+                            vector_cropped = os.path.join(temp_raster, str(slc_name).replace(" ", "_") + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.shp')
+                            # processing.runalg('saga:clipgridwithpolygon', rasterclassified, layer_subdistricts, raster_cropped)
+                            processing.runalg("qgis:clip", layer_vector_unclip, layer_subdistricts, vector_cropped)
+                            '''
+                            processing.runalg(
+                                "gdalogr:cliprasterbymasklayer", 
+                                rasterclassified, 
+                                layer_subdistricts, 
+                                -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", 
+                                raster_cropped
+                            )
+                            '''
+                            QgsMapLayerRegistry.instance().removeMapLayer(layer_subdistricts.id())
+                            layer_vector = QgsVectorLayer(vector_cropped, '', 'ogr')
+                            layer_vector.loadNamedStyle(style_file)
+                            '''
+                            s = QgsRasterShader()
+                            c = QgsColorRampShader()
+                            c.setColorRampType(QgsColorRampShader.EXACT)
+                            i = []
+                            if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                                color = []
+                                label = []
+                                lng = 1
+                                list_value = []
+                                with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
+                                    spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                                    for row in spamreader:
+                                        if str(row['lower_limit']) == '*':
+                                            label.append('< ' + str(row['upper_limit']))
+                                        elif str(row['upper_limit']) == '*':
+                                            label.append('> ' + str(row['lower_limit']))
+                                        else:
+                                            label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
+                                        color.append(row['color'])
+                                        # LABEL NOT FIX
+                                        #label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
+                                        list_value.append(row['new_value'])
+                                        lng += 1
+                            else:
+                                color = []
+                                label = []
+                                lng = 1
+                                list_value = []
+                                with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
+                                    spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
+                                    for row in spamreader:
+                                        if str(row['lower_limit']) == '*':
+                                            label.append('< ' + str(row['upper_limit']))
+                                        elif str(row['upper_limit']) == '*':
+                                            label.append('> ' + str(row['lower_limit']))
+                                        else:
+                                            label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
+                                        color.append(row['color'])
+                                        # LABEL NOT FIX
+                                        #label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
+                                        list_value.append(row['new_value'])
+                                        lng += 1
+                            for n in range(1, lng):
+                                i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1]), label[n-1]))
+                            c.setColorRampItemList(i)
+                            s.setRasterShaderFunction(c)
+                            ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
+                            layer_raster.setRenderer(ps)
+                            '''
 
-                        # Province Styling
-                        layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
-                        symbol = QgsFillSymbolV2.createSimple({'color': '240,240,240,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
-                        layer_provinsi.rendererV2().setSymbol(symbol)
-                        layer_provinsi.triggerRepaint()
+                            # Province Styling
+                            layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
+                            symbol = QgsFillSymbolV2.createSimple({'color': '240,240,240,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
+                            layer_provinsi.rendererV2().setSymbol(symbol)
+                            layer_provinsi.triggerRepaint()
 
-                        # Districts Styling
-                        layer_kabupaten = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
-                        exp = "\"ID_PROV\"='{}' AND \"ID_KAB\"!='{}'".format(str(slc_id)[0:2], str(slc_id))
-                        layer_kabupaten.setSubsetString(exp)
-                        symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,0', 'outline_style': 'solid', 'outline_width': '0.5'})
-                        layer_kabupaten.rendererV2().setSymbol(symbol)
-                        layer_kabupaten.triggerRepaint()
-                        layer_kabupaten_line = QgsVectorLayer(kabupaten_line, 'Batas Kabupaten', 'ogr')
-                        layer_kabupaten_line.setSubsetString(exp)
-                        symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'solid', 'width': '0.5'})
-                        layer_kabupaten_line.rendererV2().setSymbol(symbol)
-                        palyr = QgsPalLayerSettings()
-                        palyr.readFromLayer(layer_kabupaten)
-                        palyr.enabled = True
-                        palyr.fieldName = 'KABUPATEN'
-                        palyr.placement = QgsPalLayerSettings.OverPoint
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '14', '')
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
-                        palyr.writeToLayer(layer_kabupaten)
-                        # Sub-Districts Styling
-                        layer_kecamatan = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
-                        exp = "\"ID_KAB\"='{}'".format(str(slc_id))
-                        layer_kecamatan.setSubsetString(exp)
-                        symbol = QgsFillSymbolV2.createSimple({'color': '0,0,0,0', 'outline_color': '0,0,0,0', 'outline_style': 'dot', 'outline_width': '0.25'})
-                        layer_kecamatan.rendererV2().setSymbol(symbol)
-                        layer_kecamatan_line = QgsVectorLayer(kecamatan_line, 'Batas Kecamatan', 'ogr')
-                        layer_kecamatan_line.setSubsetString(exp)
-                        symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'dot', 'width': '0.25'})
-                        layer_kecamatan_line.rendererV2().setSymbol(symbol)
-                        palyr = QgsPalLayerSettings()
-                        palyr.readFromLayer(layer_kecamatan)
-                        palyr.enabled = True
-                        palyr.fieldName = 'KECAMATAN'
-                        palyr.placement = QgsPalLayerSettings.OverPoint
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '8', '')
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
-                        palyr.writeToLayer(layer_kecamatan)
-                        # Bathymetry
-                        layer_bath = QgsRasterLayer(self.otoklimdlg.bathymetry.text(), 'Bathymetry')
-                        # Add Layer To QGIS Canvas
-                        canvas = qgis.utils.iface.mapCanvas()
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_bath)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan_line)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten_line)
-                        # Set Extent
-                        canvas.setExtent(layer_kecamatan.extent())
-                        canvas.refresh()
-                        # Create QGIS Porject File
-                        f = QFileInfo(projectqgs)
-                        p = QgsProject.instance()
-                        p.write(f)
-                        QgsProject.instance().clear()
-                        QgsMapLayerRegistry.instance().removeMapLayer(layer_vector.id())
-                        del layer_vector
-                        # Read Map
-                        template_file = open(self.otoklimdlg.maptemplate2.text())
-                        template_content = template_file.read()
-                        template_file.close()
-                        document = QDomDocument()
-                        document.setContent(template_content)
-                        if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
-                            title_type = "CURAH"
-                        else:
-                            title_type = "SIFAT"
-                        if str(value[0])[0:3].upper().startswith('A'):
-                            title_adj = "ANALISIS"
-                        else:
-                            title_adj = "PERKIRAAN"
-                        map_title = 'PETA ' + title_adj + ' ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
-                        substitution_map = {'map_title': map_title}
-                        canvas = QgsMapCanvas()
-                        QgsProject.instance().read(QFileInfo(projectqgs))
-                        bridge = QgsLayerTreeMapCanvasBridge(QgsProject.instance().layerTreeRoot(), canvas)
-                        bridge.setCanvasLayers()
-                        composition = QgsComposition(canvas.mapSettings())
-                        composition.loadFromTemplate(document, substitution_map)
-                        map_item = composition.getComposerItemById('map')
-                        map_item.setMapCanvas(canvas)
-                        map_item.zoomToExtent(canvas.extent())
-                        composition.refreshItems()
-                        #composition.exportAsPDF(output_pdf)
-                        # Save as image
-                        dpi = 300
-                        dpmm = dpi / 25.4
-                        width = int(dpmm * composition.paperWidth())
-                        height = int(dpmm * composition.paperHeight())
-                        # create output image and initialize it
-                        image = QImage(QSize(width, height), QImage.Format_ARGB32)
-                        image.setDotsPerMeterX(dpmm * 1000)
-                        image.setDotsPerMeterY(dpmm * 1000)
-                        image.fill(0)
-                        # render the composition
-                        imagePainter = QPainter(image)
-                        composition.renderPage(imagePainter, 0)
-                        imagePainter.end()
-                        image.save(output_jpg, "jpg")
-                        # Remove unuse file
-                        vector = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
-                        kecamatan = QgsMapLayerRegistry.instance().mapLayersByName('Kecamatan')[0]
-                        kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
-                        provinsi = QgsMapLayerRegistry.instance().mapLayersByName('Provinsi')[0]
-                        bathymetry = QgsMapLayerRegistry.instance().mapLayersByName('Bathymetry')[0]
-                        kabupatenline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kabupaten')[0]
-                        kecamatanline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kecamatan')[0]
-                        all_layer = [vector.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), kecamatan.id(), kabupatenline.id(), kecamatanline.id()]
-                        QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
-                        del vector
-                        os.remove(projectqgs)
-                        # Remove Vector
-                        layer_vector = QgsVectorLayer(vector_cropped, '', 'ogr')
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
-                        QgsMapLayerRegistry.instance().removeMapLayer(layer_vector.id())
-                        del layer_vector
-                        os.remove(vector_cropped)
+                            # Districts Styling
+                            layer_kabupaten = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
+                            exp = "\"ID_PROV\"='{}'".format(str(slc_id)[0:2])
+                            layer_kabupaten.setSubsetString(exp)
+                            symbol = QgsFillSymbolV2.createSimple({'color': '223,223,223,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
+                            layer_kabupaten.rendererV2().setSymbol(symbol)
+                            layer_kabupaten.triggerRepaint()
+
+                            # Sub-Districts Styling
+                            layer_kecamatan = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
+                            exp = "\"ID_KAB\"='{}' AND \"ID_KEC\"!='{}'".format(str(slc_id)[0:4], str(slc_id))
+                            layer_kecamatan.setSubsetString(exp)
+                            symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,0', 'outline_style': 'solid', 'outline_width': '0.5'})
+                            layer_kecamatan.rendererV2().setSymbol(symbol)
+                            layer_kecamatan.triggerRepaint()
+                            layer_kecamatan_line = QgsVectorLayer(kecamatan_line, 'Batas Kecamatan', 'ogr')
+                            layer_kecamatan_line.setSubsetString(exp)
+                            symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'solid', 'width': '0.5'})
+                            layer_kecamatan_line.rendererV2().setSymbol(symbol)
+                            palyr = QgsPalLayerSettings()
+                            palyr.readFromLayer(layer_kecamatan)
+                            palyr.enabled = True
+                            palyr.fieldName = 'KECAMATAN'
+                            palyr.placement = QgsPalLayerSettings.OverPoint
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '14', '')
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
+                            palyr.writeToLayer(layer_kecamatan)
+
+                            # Villages Styling
+                            layer_desa = QgsVectorLayer(self.otoklimdlg.villages.text(), 'Desa', 'ogr')
+                            exp = "\"ID_KEC\"='{}'".format(str(slc_id))
+                            layer_desa.setSubsetString(exp)
+                            symbol = QgsFillSymbolV2.createSimple({'color': '0,0,0,0', 'outline_color': '0,0,0,0', 'outline_style': 'dot', 'outline_width': '0.25'})
+                            layer_desa.rendererV2().setSymbol(symbol)
+                            layer_desa_line = QgsVectorLayer(desa_line, 'Batas Desa', 'ogr')
+                            layer_desa_line.setSubsetString(exp)
+                            symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'dot', 'width': '0.25'})
+                            layer_desa_line.rendererV2().setSymbol(symbol)
+                            palyr = QgsPalLayerSettings()
+                            palyr.readFromLayer(layer_desa)
+                            palyr.enabled = True
+                            palyr.fieldName = 'DESA'
+                            palyr.placement = QgsPalLayerSettings.OverPoint
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '8', '')
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
+                            palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
+                            palyr.writeToLayer(layer_desa)
+                            # Bathymetry
+                            layer_bath = QgsRasterLayer(self.otoklimdlg.bathymetry.text(), 'Bathymetry')
+                            # Add Layer To QGIS Canvas
+                            canvas = qgis.utils.iface.mapCanvas()
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_bath)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_desa)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_desa_line)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan_line)
+                            # Set Extent
+                            canvas.setExtent(layer_desa.extent())
+                            canvas.refresh()
+                            # Create QGIS Porject File
+                            f = QFileInfo(projectqgs)
+                            p = QgsProject.instance()
+                            p.write(f)
+                            QgsProject.instance().clear()
+                            QgsMapLayerRegistry.instance().removeMapLayer(layer_vector.id())
+                            del layer_vector
+                            # Read Map
+                            template_file = open(self.otoklimdlg.maptemplate3.text())
+                            template_content = template_file.read()
+                            template_file.close()
+                            document = QDomDocument()
+                            document.setContent(template_content)
+                            if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                                title_type = "CURAH"
+                            else:
+                                title_type = "SIFAT"
+                            if str(value[0])[0:3].upper().startswith('A'):
+                                title_adj = "ANALISIS"
+                            else:
+                                title_adj = "PRAKIRAAN"
+                            map_title = 'PETA ' + title_adj + ' ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
+                            substitution_map = {'map_title': map_title}
+                            canvas = QgsMapCanvas()
+                            QgsProject.instance().read(QFileInfo(projectqgs))
+                            bridge = QgsLayerTreeMapCanvasBridge(QgsProject.instance().layerTreeRoot(), canvas)
+                            bridge.setCanvasLayers()
+                            composition = QgsComposition(canvas.mapSettings())
+                            composition.loadFromTemplate(document, substitution_map)
+                            map_item = composition.getComposerItemById('map')
+                            map_item.setMapCanvas(canvas)
+                            map_item.zoomToExtent(canvas.extent())
+                            composition.refreshItems()
+                            #composition.exportAsPDF(output_pdf)
+                            # Save as image
+                            dpi = 300
+                            dpmm = dpi / 25.4
+                            width = int(dpmm * composition.paperWidth())
+                            height = int(dpmm * composition.paperHeight())
+                            # create output image and initialize it
+                            image = QImage(QSize(width, height), QImage.Format_ARGB32)
+                            image.setDotsPerMeterX(dpmm * 1000)
+                            image.setDotsPerMeterY(dpmm * 1000)
+                            image.fill(0)
+                            # render the composition
+                            imagePainter = QPainter(image)
+                            composition.renderPage(imagePainter, 0)
+                            imagePainter.end()
+                            image.save(output_jpg, "jpg")
+                            # Remove unuse file
+                            vector = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
+                            desa = QgsMapLayerRegistry.instance().mapLayersByName('Desa')[0]
+                            kecamatan = QgsMapLayerRegistry.instance().mapLayersByName('Kecamatan')[0]
+                            kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
+                            provinsi = QgsMapLayerRegistry.instance().mapLayersByName('Provinsi')[0]
+                            bathymetry = QgsMapLayerRegistry.instance().mapLayersByName('Bathymetry')[0]
+                            kecamatanline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kecamatan')[0]
+                            desaline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Desa')[0]
+                            all_layer = [vector.id(), desa.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), kecamatan.id(), kecamatanline.id(), desaline.id()]
+                            QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
+                            del vector
+                            os.remove(projectqgs)
+                            # Remove Vector
+                            layer_vector = QgsVectorLayer(vector_cropped, '', 'ogr')
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
+                            QgsMapLayerRegistry.instance().removeMapLayer(layer_vector.id())
+                            del layer_vector
+                            os.remove(vector_cropped)
                     else:
-                        projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
-                        output_jpg = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
-                        # Classified Value Styling
-                        layer_vector_unclip = QgsVectorLayer(vector_classified, '', 'ogr')
-                        # Special Case For Sub-Districts (clipping)
-                        layer_subdistricts = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_subdistricts)
-                        exp = "\"ID_KEC\"='{}'".format(str(slc_id))
-                        layer_subdistricts.setSubsetString(exp)
-                        vector_cropped = os.path.join(temp_raster, str(slc_name).replace(" ", "_") + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.shp')
-                        # processing.runalg('saga:clipgridwithpolygon', rasterclassified, layer_subdistricts, raster_cropped)
-                        processing.runalg("qgis:clip", layer_vector_unclip, layer_subdistricts, vector_cropped)
-                        '''
-                        processing.runalg(
-                            "gdalogr:cliprasterbymasklayer", 
-                            rasterclassified, 
-                            layer_subdistricts, 
-                            -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", 
-                            raster_cropped
-                        )
-                        '''
-                        QgsMapLayerRegistry.instance().removeMapLayer(layer_subdistricts.id())
-                        layer_vector = QgsVectorLayer(vector_cropped, '', 'ogr')
-                        layer_vector.loadNamedStyle(style_file)
-                        '''
-                        s = QgsRasterShader()
-                        c = QgsColorRampShader()
-                        c.setColorRampType(QgsColorRampShader.EXACT)
-                        i = []
-                        if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
-                            color = []
-                            label = []
-                            lng = 1
-                            list_value = []
-                            with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
-                                spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
-                                for row in spamreader:
-                                    if str(row['lower_limit']) == '*':
-                                        label.append('< ' + str(row['upper_limit']))
-                                    elif str(row['upper_limit']) == '*':
-                                        label.append('> ' + str(row['lower_limit']))
-                                    else:
-                                        label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
-                                    color.append(row['color'])
-                                    # LABEL NOT FIX
-                                    #label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
-                                    list_value.append(row['new_value'])
-                                    lng += 1
-                        else:
-                            color = []
-                            label = []
-                            lng = 1
-                            list_value = []
-                            with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
-                                spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
-                                for row in spamreader:
-                                    if str(row['lower_limit']) == '*':
-                                        label.append('< ' + str(row['upper_limit']))
-                                    elif str(row['upper_limit']) == '*':
-                                        label.append('> ' + str(row['lower_limit']))
-                                    else:
-                                        label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
-                                    color.append(row['color'])
-                                    # LABEL NOT FIX
-                                    #label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
-                                    list_value.append(row['new_value'])
-                                    lng += 1
-                        for n in range(1, lng):
-                            i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1]), label[n-1]))
-                        c.setColorRampItemList(i)
-                        s.setRasterShaderFunction(c)
-                        ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
-                        layer_raster.setRenderer(ps)
-                        '''
-
-                        # Province Styling
-                        layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
-                        symbol = QgsFillSymbolV2.createSimple({'color': '240,240,240,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
-                        layer_provinsi.rendererV2().setSymbol(symbol)
-                        layer_provinsi.triggerRepaint()
-
-                        # Districts Styling
-                        layer_kabupaten = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
-                        exp = "\"ID_PROV\"='{}'".format(str(slc_id)[0:2])
-                        layer_kabupaten.setSubsetString(exp)
-                        symbol = QgsFillSymbolV2.createSimple({'color': '223,223,223,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
-                        layer_kabupaten.rendererV2().setSymbol(symbol)
-                        layer_kabupaten.triggerRepaint()
-
-                        # Sub-Districts Styling
-                        layer_kecamatan = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
-                        exp = "\"ID_KAB\"='{}' AND \"ID_KEC\"!='{}'".format(str(slc_id)[0:4], str(slc_id))
-                        layer_kecamatan.setSubsetString(exp)
-                        symbol = QgsFillSymbolV2.createSimple({'color': '169,169,169,255', 'outline_color': '0,0,0,0', 'outline_style': 'solid', 'outline_width': '0.5'})
-                        layer_kecamatan.rendererV2().setSymbol(symbol)
-                        layer_kecamatan.triggerRepaint()
-                        layer_kecamatan_line = QgsVectorLayer(kecamatan_line, 'Batas Kecamatan', 'ogr')
-                        layer_kecamatan_line.setSubsetString(exp)
-                        symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'solid', 'width': '0.5'})
-                        layer_kecamatan_line.rendererV2().setSymbol(symbol)
-                        palyr = QgsPalLayerSettings()
-                        palyr.readFromLayer(layer_kecamatan)
-                        palyr.enabled = True
-                        palyr.fieldName = 'KECAMATAN'
-                        palyr.placement = QgsPalLayerSettings.OverPoint
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '14', '')
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
-                        palyr.writeToLayer(layer_kecamatan)
-
-                        # Villages Styling
-                        layer_desa = QgsVectorLayer(self.otoklimdlg.villages.text(), 'Desa', 'ogr')
-                        exp = "\"ID_KEC\"='{}'".format(str(slc_id))
-                        layer_desa.setSubsetString(exp)
-                        symbol = QgsFillSymbolV2.createSimple({'color': '0,0,0,0', 'outline_color': '0,0,0,0', 'outline_style': 'dot', 'outline_width': '0.25'})
-                        layer_desa.rendererV2().setSymbol(symbol)
-                        layer_desa_line = QgsVectorLayer(desa_line, 'Batas Desa', 'ogr')
-                        layer_desa_line.setSubsetString(exp)
-                        symbol = QgsLineSymbolV2.createSimple({'color': '0,0,0,255', 'penstyle': 'dot', 'width': '0.25'})
-                        layer_desa_line.rendererV2().setSymbol(symbol)
-                        palyr = QgsPalLayerSettings()
-                        palyr.readFromLayer(layer_desa)
-                        palyr.enabled = True
-                        palyr.fieldName = 'DESA'
-                        palyr.placement = QgsPalLayerSettings.OverPoint
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.Size, True, True, '8', '')
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
-                        palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
-                        palyr.writeToLayer(layer_desa)
-                        # Bathymetry
-                        layer_bath = QgsRasterLayer(self.otoklimdlg.bathymetry.text(), 'Bathymetry')
-                        # Add Layer To QGIS Canvas
-                        canvas = qgis.utils.iface.mapCanvas()
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_bath)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_desa)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_desa_line)
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan_line)
-                        # Set Extent
-                        canvas.setExtent(layer_desa.extent())
-                        canvas.refresh()
-                        # Create QGIS Porject File
-                        f = QFileInfo(projectqgs)
-                        p = QgsProject.instance()
-                        p.write(f)
-                        QgsProject.instance().clear()
-                        QgsMapLayerRegistry.instance().removeMapLayer(layer_vector.id())
-                        del layer_vector
-                        # Read Map
-                        template_file = open(self.otoklimdlg.maptemplate3.text())
-                        template_content = template_file.read()
-                        template_file.close()
-                        document = QDomDocument()
-                        document.setContent(template_content)
-                        if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
-                            title_type = "CURAH"
-                        else:
-                            title_type = "SIFAT"
-                        if str(value[0])[0:3].upper().startswith('A'):
-                            title_adj = "ANALISIS"
-                        else:
-                            title_adj = "PERKIRAAN"
-                        map_title = 'PETA ' + title_adj + ' ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
-                        substitution_map = {'map_title': map_title}
-                        canvas = QgsMapCanvas()
-                        QgsProject.instance().read(QFileInfo(projectqgs))
-                        bridge = QgsLayerTreeMapCanvasBridge(QgsProject.instance().layerTreeRoot(), canvas)
-                        bridge.setCanvasLayers()
-                        composition = QgsComposition(canvas.mapSettings())
-                        composition.loadFromTemplate(document, substitution_map)
-                        map_item = composition.getComposerItemById('map')
-                        map_item.setMapCanvas(canvas)
-                        map_item.zoomToExtent(canvas.extent())
-                        composition.refreshItems()
-                        #composition.exportAsPDF(output_pdf)
-                        # Save as image
-                        dpi = 300
-                        dpmm = dpi / 25.4
-                        width = int(dpmm * composition.paperWidth())
-                        height = int(dpmm * composition.paperHeight())
-                        # create output image and initialize it
-                        image = QImage(QSize(width, height), QImage.Format_ARGB32)
-                        image.setDotsPerMeterX(dpmm * 1000)
-                        image.setDotsPerMeterY(dpmm * 1000)
-                        image.fill(0)
-                        # render the composition
-                        imagePainter = QPainter(image)
-                        composition.renderPage(imagePainter, 0)
-                        imagePainter.end()
-                        image.save(output_jpg, "jpg")
-                        # Remove unuse file
-                        vector = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
-                        desa = QgsMapLayerRegistry.instance().mapLayersByName('Desa')[0]
-                        kecamatan = QgsMapLayerRegistry.instance().mapLayersByName('Kecamatan')[0]
-                        kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
-                        provinsi = QgsMapLayerRegistry.instance().mapLayersByName('Provinsi')[0]
-                        bathymetry = QgsMapLayerRegistry.instance().mapLayersByName('Bathymetry')[0]
-                        kecamatanline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Kecamatan')[0]
-                        desaline = QgsMapLayerRegistry.instance().mapLayersByName('Batas Desa')[0]
-                        all_layer = [vector.id(), desa.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), kecamatan.id(), kecamatanline.id(), desaline.id()]
-                        QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
-                        del vector
-                        os.remove(projectqgs)
-                        # Remove Vector
-                        layer_vector = QgsVectorLayer(vector_cropped, '', 'ogr')
-                        QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
-                        QgsMapLayerRegistry.instance().removeMapLayer(layer_vector.id())
-                        del layer_vector
-                        os.remove(vector_cropped)
+                        #print 'skip', str(os.path.basename(output_jpg))
+                        pass
                 shutil.rmtree(temp_raster)
                 self.otoklimdlg.showGenerateMapFolder.setEnabled(True)
         except Exception as e:
@@ -4787,12 +4906,13 @@ class Otoklim:
         out_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'output')
         csv_directory = os.path.join(out_directory, 'csv')
         # Logging
-        logger = logging.getLogger(__name__)
+        
         log_filename = os.path.join(prcs_directory, 'otoklim_' + '{:%Y%m%d_%H%M%S}'.format(datetime.datetime.now()) + '.log')
         try:
             os.remove(log_filename)
         except OSError:
             pass
+        logger = logging.getLogger(__name__)
         logger.setLevel(logging.DEBUG)
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
