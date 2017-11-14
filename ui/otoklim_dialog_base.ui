@@ -28,6 +28,58 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
+     <widget class="QScrollArea" name="logoArea">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>800</height>
+       </size>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::WinPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Sunken</enum>
+      </property>
+      <property name="widgetResizable">
+       <bool>true</bool>
+      </property>
+      <widget class="QWidget" name="scrollAreaWidgetContents_2">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>1018</width>
+         <height>327</height>
+        </rect>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QLabel" name="projectname_2">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="font">
+           <font>
+            <family>Calibri</family>
+            <pointsize>10</pointsize>
+            <weight>50</weight>
+            <bold>false</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="pixmap">
+           <pixmap resource="../resources.qrc">:/plugins/Otoklim/usaid_logo.png</pixmap>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item>
      <widget class="QScrollArea" name="scrollArea">
       <property name="maximumSize">
        <size>
@@ -48,7 +100,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-931</y>
+         <y>0</y>
          <width>870</width>
          <height>1807</height>
         </rect>

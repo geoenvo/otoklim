@@ -193,9 +193,11 @@ class Otoklim:
         self.editdelimiterdlg = EditDelimiterDialog()
         self.errormessagedlg = ErrorMessageDialog()
         self.saveconfirmdlg = SaveConfrimDialog()
-        self.replaceconfirmdlg = ReplaceConfrimDialog() 
+        self.replaceconfirmdlg = ReplaceConfrimDialog()
 
         # Default Main Window
+        self.otoklimdlg.logoArea.show()
+        self.otoklimdlg.scrollArea.hide()
         self.otoklimdlg.actionSave_As.setEnabled(False)
         self.otoklimdlg.projectparamPanel.setEnabled(False)
         self.otoklimdlg.projectparamPanel.hide()
@@ -888,6 +890,8 @@ class Otoklim:
         self.otoklimdlg.Select_Province.setWhatsThis('')
         self.otoklimdlg.Select_Month.setWhatsThis('')
         self.otoklimdlg.Select_Year.setWhatsThis('')
+        self.otoklimdlg.logoArea.hide()
+        self.otoklimdlg.scrollArea.show()
         self.otoklimdlg.projectparamPanel.setEnabled(True)
         self.otoklimdlg.projectparamPanel.show()
         self.otoklimdlg.projectparamPanelAccord.setEnabled(True)
@@ -2871,28 +2875,40 @@ class Otoklim:
         mth = self.otoklimdlg.Select_Month.currentText()
         if mth == 'Januari':
             mth = 1
+            mth_s = '01'
         elif mth == 'Februari':
             mth = 2
+            mth_s = '02'
         elif mth == 'Maret':
             mth = 3
+            mth_s = '03'
         elif mth == 'April':
             mth = 4
+            mth_s = '04'
         elif mth == 'Mei':
             mth = 5
+            mth_s = '05'
         elif mth == 'Juni':
             mth = 6
+            mth_s = '06'
         elif mth == 'Juli':
             mth = 7
+            mth_s = '07'
         elif mth == 'Agustus':
             mth = 8
+            mth_s = '08'
         elif mth == 'September':
             mth = 9
+            mth_s = '09'
         elif mth == 'Oktober':
             mth = 10
+            mth_s = '10'
         elif mth == 'November':
             mth = 11
+            mth_s = '11'
         else:
             mth = 12
+            mth_s = '12'
 
         month_dict = {
             0: ['DES', 'DESEMBER', '12'],
@@ -2917,7 +2933,7 @@ class Otoklim:
         pmth_1 = month_dict[mth+1]
         pmth_2 = month_dict[mth+2]
         pmth_3 = month_dict[mth+3]
-        month_header = [amth, pmth_1, pmth_2, pmth_3, mth]
+        month_header = [amth, pmth_1, pmth_2, pmth_3, mth_s]
 
         yrs = int(self.otoklimdlg.Select_Year.text())
         ayrs = yrs
@@ -2982,7 +2998,7 @@ class Otoklim:
             logger.debug('- Listing selected parameter to be processed')
             prc_list = []
             if self.otoklimdlg.ach_1.isChecked():
-                logger.debug(str(idw_params[0]) + ' is checked')
+                logger.debug('-- ' + str(idw_params[0]) + ' is checked')
                 prc_list.append(idw_params[0])
                 self.otoklimdlg.addach_1.setEnabled(True)
                 self.otoklimdlg.addach_1.setWhatsThis(
@@ -2994,7 +3010,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.ash_1.isChecked():
-                logger.debug(str(idw_params[1]) + ' is checked')
+                logger.debug('-- ' + str(idw_params[1]) + ' is checked')
                 prc_list.append(idw_params[1])
                 self.otoklimdlg.addash_1.setEnabled(True)
                 self.otoklimdlg.addash_1.setWhatsThis(
@@ -3006,7 +3022,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.pch_1.isChecked():
-                logger.debug(str(idw_params[2]) + ' is checked')
+                logger.debug('-- ' + str(idw_params[2]) + ' is checked')
                 prc_list.append(idw_params[2])
                 self.otoklimdlg.addpch_1.setEnabled(True)
                 self.otoklimdlg.addpch_1.setWhatsThis(
@@ -3018,7 +3034,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.psh_1.isChecked():
-                logger.debug(str(idw_params[3]) + ' is checked')
+                logger.debug('-- ' + str(idw_params[3]) + ' is checked')
                 prc_list.append(idw_params[3])
                 self.otoklimdlg.addpsh_1.setEnabled(True)
                 self.otoklimdlg.addpsh_1.setWhatsThis(
@@ -3030,7 +3046,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.pch_2.isChecked():
-                logger.debug(str(idw_params[4]) + ' is checked')
+                logger.debug('-- ' + str(idw_params[4]) + ' is checked')
                 prc_list.append(idw_params[4])
                 self.otoklimdlg.addpch_2.setEnabled(True)
                 self.otoklimdlg.addpch_2.setWhatsThis(
@@ -3042,7 +3058,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.psh_2.isChecked():
-                logger.debug(str(idw_params[5]) + ' is checked')
+                logger.debug('-- ' + str(idw_params[5]) + ' is checked')
                 prc_list.append(idw_params[5])
                 self.otoklimdlg.addpsh_2.setEnabled(True)
                 self.otoklimdlg.addpsh_2.setWhatsThis(
@@ -3054,7 +3070,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.pch_3.isChecked():
-                logger.debug(str(idw_params[6]) + ' is checked')
+                logger.debug('-- ' + str(idw_params[6]) + ' is checked')
                 prc_list.append(idw_params[6])
                 self.otoklimdlg.addpch_3.setEnabled(True)
                 self.otoklimdlg.addpch_3.setWhatsThis(
@@ -3066,7 +3082,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.psh_3.isChecked():
-                logger.debug(str(idw_params[7]) + ' is checked')
+                logger.debug('-- ' + str(idw_params[7]) + ' is checked')
                 prc_list.append(idw_params[7])
                 self.otoklimdlg.addpsh_3.setEnabled(True)
                 self.otoklimdlg.addpsh_3.setWhatsThis(
@@ -3366,6 +3382,9 @@ class Otoklim:
     def raster_classify(self):
         """Function To Classify Raster Interpolated"""
         prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
+        logger = self.logger(prcs_directory)
+        logger.info('Classify Raster..')
+        self.iface.mainWindow().statusBar().showMessage('Classify Raster..')
         classified_directory = os.path.join(prcs_directory, 'classified')
         interpolated_directory = os.path.join(prcs_directory, 'interpolated')
         provinsi_polygon_file = os.path.join(prcs_directory, 'provinsi_polygon.shp')
@@ -3375,10 +3394,12 @@ class Otoklim:
         if os.path.exists(output_rainfall):
             os.remove(output_rainfall)
         row_keeper = []
+        logger.debug('- Read classification rule from ', filename_rainfall)
         with open(filename_rainfall, 'rb') as csvfile:
             spamreader = csv.DictReader(csvfile, delimiter=',', quotechar='|')
             for row in spamreader:
                 row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
+        logger.debug('- Write classification rule to ', output_rainfall)
         with open(output_rainfall, "wb+") as txtfile:
             txt_writer = csv.writer(txtfile, delimiter=':')
             for row in row_keeper:
@@ -3388,10 +3409,12 @@ class Otoklim:
         if os.path.exists(output_normalrain):
             os.remove(output_normalrain)
         row_keeper = []
+        logger.debug('- Read classification rule from ', filename_normalrain)
         with open(filename_normalrain, 'rb') as csvfile:
             spamreader = csv.DictReader(csvfile, delimiter=',', quotechar='|')
             for row in spamreader:
                 row_keeper.append([row['lower_limit'], row['upper_limit'], row['new_value']])
+        logger.debug('- Write classification rule to ', output_normalrain)
         with open(output_normalrain, "wb+") as txtfile:
             txt_writer = csv.writer(txtfile, delimiter=':')
             for row in row_keeper:
@@ -3401,6 +3424,7 @@ class Otoklim:
             self.otoklimdlg.projectfilename.text()
         )
         try:
+            logger.debug('- Listing selected parameter to be processed')
             prc_list = []
             if self.otoklimdlg.ach_1_class.isChecked():
                 with open(project, 'r') as jsonfile:
@@ -3415,6 +3439,7 @@ class Otoklim:
                 self.otoklimdlg.addach_1_class.setWhatsThis(
                     os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
+                logger.debug('-- ' + str(param) + ' is checked')
             if self.otoklimdlg.ash_1_class.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -3428,6 +3453,7 @@ class Otoklim:
                 self.otoklimdlg.addash_1_class.setWhatsThis(
                     os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
+                logger.debug('-- ' + str(param) + ' is checked')
             if self.otoklimdlg.pch_1_class.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -3441,6 +3467,7 @@ class Otoklim:
                 self.otoklimdlg.addpch_1_class.setWhatsThis(
                     os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
+                logger.debug('-- ' + str(param) + ' is checked')
             if self.otoklimdlg.psh_1_class.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -3454,6 +3481,7 @@ class Otoklim:
                 self.otoklimdlg.addpsh_1_class.setWhatsThis(
                     os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
+                logger.debug('-- ' + str(param) + ' is checked')
             if self.otoklimdlg.pch_2_class.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -3467,6 +3495,7 @@ class Otoklim:
                 self.otoklimdlg.addpch_2_class.setWhatsThis(
                     os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
+                logger.debug('-- ' + str(param) + ' is checked')
             if self.otoklimdlg.psh_2_class.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -3480,6 +3509,7 @@ class Otoklim:
                 self.otoklimdlg.addpsh_2_class.setWhatsThis(
                     os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
+                logger.debug(str(param) + ' is checked')
             if self.otoklimdlg.pch_3_class.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -3493,6 +3523,7 @@ class Otoklim:
                 self.otoklimdlg.addpch_3_class.setWhatsThis(
                     os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
+                logger.debug('-- ' + str(param) + ' is checked')
             if self.otoklimdlg.psh_3_class.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -3506,8 +3537,12 @@ class Otoklim:
                 self.otoklimdlg.addpsh_3_class.setWhatsThis(
                     os.path.join(classified_directory, 'classified_' + str(param) + '.shp')
                 )
+                logger.debug('-- ' + str(param) + ' is checked')
 
+            logger.info('- Selected parameter :' + str(prc_list))
             for value in prc_list:
+                logger.info('-- Field (Parameter) : ' + value[0])
+                logger.debug('-- Classification In Progress in progress...')
                 raster_classified = os.path.join(classified_directory, 'classified_' + str(value[0]) + '.tif')
                 rasterinterpolated = os.path.join(interpolated_directory, value[1])
                 if os.path.exists(raster_classified):
@@ -3518,6 +3553,7 @@ class Otoklim:
                     else:
                         raise Exception('Skip ' + raster_classified)
                 extent = layer_provinsi.extent()
+                logger.info('-- grass7:r.recode')
                 if value[0][0:3] == 'ach' or value[0][0:3] == 'pch':
                     processing.runalg(
                         'grass7:r.recode',
@@ -3548,8 +3584,11 @@ class Otoklim:
                     except OSError:
                         pass
                 # Polygonize
+                logger.info('-- gdalogr:polygonize')
                 processing.runalg("gdalogr:polygonize", raster_classified, "DN", vector_classified)
+                logger.info('-- Classification success.. Vector data has been stored on ' + str(vector_classified))
                 # Add Attribute
+                logger.debug('-- Add new attribute to vector classified..')
                 layer_vector_classified = QgsVectorLayer(vector_classified, 'vector_classified', 'ogr')
                 res = layer_vector_classified.dataProvider().addAttributes(
                     [
@@ -3600,6 +3639,7 @@ class Otoklim:
                             list_value.append(row['new_value'])
                             label_value.update({row['new_value']: (label_str, row['color'])})
                 # Set Attribute
+                logger.debug('-- Set attribute value to vector classified..')
                 expression = QgsExpression("area(transform($geometry, 'EPSG:4326','EPSG:3857'))")
                 index = layer_vector_classified.fieldNameIndex("Area")
                 expression.prepare(layer_vector_classified.pendingFields())
@@ -3627,6 +3667,7 @@ class Otoklim:
                     )
                 layer_vector_classified.commitChanges()
                 # Render Vector Style
+                logger.debug('-- Vector classified rendering..')
                 style_file = os.path.join(classified_directory, 'classified_' + str(value[0]) + '.qml')
                 categories = []
                 for dn, (label, color) in label_value.items():
@@ -3637,6 +3678,7 @@ class Otoklim:
                 renderer = QgsCategorizedSymbolRendererV2(expression, categories)
                 layer_vector_classified.setRendererV2(renderer)
                 layer_vector_classified.saveNamedStyle(style_file)
+                logger.info('-- Rendering success.. Rendering file has been stored on ' + str(style_file))
 
             with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -3658,6 +3700,7 @@ class Otoklim:
             self.region_listing(province_id, region_csv, False)
         except Exception as e:
             self.errormessagedlg.ErrorMessage.setText(str(e))
+            logger.error(str(e))
             self.errormessagedlg.exec_()
 
     def region_listing(self, province_id, region_csv, save):
@@ -3942,6 +3985,9 @@ class Otoklim:
     def generate_map(self):
         """Function to generate map"""
         prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
+        logger = self.logger(prcs_directory)
+        logger.info('Generate Map..')
+        self.iface.mainWindow().statusBar().showMessage('Generate Map..')
         out_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'output')
         map_directory = os.path.join(out_directory, 'map')
         filename_xml = os.path.join(map_directory, 'phb.xml')
@@ -3963,6 +4009,7 @@ class Otoklim:
             self.otoklimdlg.projectfilename.text()
         )
         try:
+            logger.debug('- Listing selected parameter to be processed')
             prc_list = []
             date_list = []
             curah_hujan = ET.Element("curah_hujan")
@@ -3971,8 +4018,8 @@ class Otoklim:
             # set forecast
             issue = ET.SubElement(forecast, "issue")
             ET.SubElement(issue, "timestamp").text = '{:%Y%m%d%H%M%S}'.format(datetime.datetime.now())
-            ET.SubElement(issue, "year").text = str(months[4])
-            ET.SubElement(issue, "month").text = str(years[4])
+            ET.SubElement(issue, "year").text = str(years[4])
+            ET.SubElement(issue, "month").text = str(months[4])
             # set params
             if self.otoklimdlg.ach_1_map.isChecked():
                 data = ET.SubElement(params, "data")
@@ -3987,6 +4034,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ach_1])
+                logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[0], years[0]])
             if self.otoklimdlg.ash_1_map.isChecked():
                 data = ET.SubElement(params, "data")
@@ -4001,6 +4049,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ash_1])
+                logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[0], years[0]])
             if self.otoklimdlg.pch_1_map.isChecked():
                 data = ET.SubElement(params, "data")
@@ -4015,6 +4064,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_1])
+                logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[1], years[1]])
             if self.otoklimdlg.psh_1_map.isChecked():
                 data = ET.SubElement(params, "data")
@@ -4029,6 +4079,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_1])
+                logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[1], years[1]])
             if self.otoklimdlg.pch_2_map.isChecked():
                 data = ET.SubElement(params, "data")
@@ -4043,6 +4094,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_2])
+                logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[2], years[2]])
             if self.otoklimdlg.psh_2_map.isChecked():
                 data = ET.SubElement(params, "data")
@@ -4057,6 +4109,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_2])
+                logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[2], years[2]])
             if self.otoklimdlg.pch_3_map.isChecked():
                 data = ET.SubElement(params, "data")
@@ -4071,6 +4124,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_3])
+                logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[3], years[3]])
             if self.otoklimdlg.psh_3_map.isChecked():
                 data = ET.SubElement(params, "data")
@@ -4085,32 +4139,44 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_3])
+                logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[3], years[3]])
             tree = ET.ElementTree(curah_hujan)
             tree.write(filename_xml, encoding='utf-8', xml_declaration=True)
+            logger.info('- Selected parameter :' + str(prc_list))
             # Polygon to Line Conversion
             provinsi_line = os.path.join(prcs_directory, 'provinsi_line.shp')
             if not os.path.exists(provinsi_line):
+                logger.debug('- Convert Province Boundary..')
+                logger.info('- polygonstolines')
                 processing.runandload("qgis:polygonstolines", self.otoklimdlg.province.text(), provinsi_line)
                 lineprovince = QgsMapLayerRegistry.instance().mapLayersByName('Lines from polygons')[0]
                 QgsMapLayerRegistry.instance().removeMapLayer(lineprovince.id())
             kabupaten_line = os.path.join(prcs_directory, 'kabupaten_line.shp')
             if not os.path.exists(kabupaten_line):
+                logger.debug('- Convert Districts Boundary..')
+                logger.info('- polygonstolines')
                 processing.runandload("qgis:polygonstolines", self.otoklimdlg.districts.text(), kabupaten_line)
                 linekabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Lines from polygons')[0]
                 QgsMapLayerRegistry.instance().removeMapLayer(linekabupaten.id())
             kecamatan_line = os.path.join(prcs_directory, 'kecamatan_line.shp')
             if not os.path.exists(kecamatan_line):
+                logger.debug('- Convert Sub-Districts Boundary..')
+                logger.info('- polygonstolines')
                 processing.runandload("qgis:polygonstolines", self.otoklimdlg.subdistricts.text(), kecamatan_line)
                 linekecamatan = QgsMapLayerRegistry.instance().mapLayersByName('Lines from polygons')[0]
                 QgsMapLayerRegistry.instance().removeMapLayer(linekecamatan.id())
             desa_line = os.path.join(prcs_directory, 'desa_line.shp')
             if not os.path.exists(desa_line):
+                logger.debug('- Convert Villages Boundary..')
+                logger.info('- polygonstolines')
                 processing.runandload("qgis:polygonstolines", self.otoklimdlg.villages.text(), desa_line)
                 linedesa = QgsMapLayerRegistry.instance().mapLayersByName('Lines from polygons')[0]
                 QgsMapLayerRegistry.instance().removeMapLayer(linedesa.id())
             # Start Listing
             for value, date in zip(prc_list, date_list):
+                logger.info('-- Field (Parameter) : ' + value[0])
+                logger.debug('-- Generate Map in progress...')
                 vector_classified = os.path.join(classified_directory, value[1])
                 style_file = os.path.join(classified_directory, os.path.splitext(value[1])[0] + '.qml')
                 temp_raster = os.path.join(prcs_directory, 'tmp' + str(value[1]))
@@ -4118,9 +4184,10 @@ class Otoklim:
                 month = date[0]
                 year = date[1]
                 for slc_id, slc_name in zip(slc_id_list, slc_name_list):
+                    logger.info('--- Region processed : ' + slc_name)
                     projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
-                    output_jpg = os.path.join(map_directory, str(slc_id) + '_map_' + str(slc_name) + '_' + str(value[0]) + '.jpg')
-                    #print os.path.basename(os.path.join(map_directory, str(slc_id) + '_' + str(year) + str(month[2]) + '_' + str(value[0]).split('_')[0] + '_' + str(slc_name) + '.jpg'))
+                    output_jpg = os.path.join(map_directory, str(slc_id) + '_' + str(year) + str(month[2]) + '_' + str(value[0]).split('_')[0] + '_' + str(slc_name) + '.jpg')
+                    # output_jpg = os.path.join(map_directory, str(slc_id) + '_map_' + str(slc_name) + '_' + str(value[0]) + '.jpg')
                     if os.path.basename(output_jpg) not in os.listdir(map_directory):
                         if len(str(slc_id)) == 2:
                             # projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
@@ -4283,6 +4350,7 @@ class Otoklim:
                             composition.renderPage(imagePainter, 0)
                             imagePainter.end()
                             image.save(output_jpg, "jpg")
+                            logger.info('--- Image saved at : ' + output_jpg)
                             # Remove unuse file
                             vector = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
                             kabupaten = QgsMapLayerRegistry.instance().mapLayersByName('Kabupaten')[0]
@@ -4477,6 +4545,7 @@ class Otoklim:
                             composition.renderPage(imagePainter, 0)
                             imagePainter.end()
                             image.save(output_jpg, "jpg")
+                            logger.info('--- Image saved at : ' + output_jpg)
                             # Remove unuse file
                             vector = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
                             kecamatan = QgsMapLayerRegistry.instance().mapLayersByName('Kecamatan')[0]
@@ -4689,6 +4758,7 @@ class Otoklim:
                             composition.renderPage(imagePainter, 0)
                             imagePainter.end()
                             image.save(output_jpg, "jpg")
+                            logger.info('--- Image saved at : ' + output_jpg)
                             # Remove unuse file
                             vector = QgsMapLayerRegistry.instance().mapLayersByName('')[0]
                             desa = QgsMapLayerRegistry.instance().mapLayersByName('Desa')[0]
@@ -4710,11 +4780,13 @@ class Otoklim:
                             os.remove(vector_cropped)
                     else:
                         #print 'skip', str(os.path.basename(output_jpg))
+                        logger.info('--- Skip processing for ' + str(os.path.basename(output_jpg)))
                         pass
                 shutil.rmtree(temp_raster)
                 self.otoklimdlg.showGenerateMapFolder.setEnabled(True)
         except Exception as e:
             self.errormessagedlg.ErrorMessage.setText(str(e))
+            logger.error(str(e))
             self.errormessagedlg.exec_()
 
     '''
@@ -4902,27 +4974,12 @@ class Otoklim:
     def generate_csv(self):
         """Function to generate CSV"""
         prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
+        logger = self.logger(prcs_directory)
+        logger.info('Generate CSV..')
+        self.iface.mainWindow().statusBar().showMessage('Generate CSV..')
         classified_directory = os.path.join(prcs_directory, 'classified')
         out_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'output')
         csv_directory = os.path.join(out_directory, 'csv')
-        # Logging
-        
-        log_filename = os.path.join(prcs_directory, 'otoklim_' + '{:%Y%m%d_%H%M%S}'.format(datetime.datetime.now()) + '.log')
-        try:
-            os.remove(log_filename)
-        except OSError:
-            pass
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.DEBUG)
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
-        fh = logging.FileHandler(log_filename)
-        formatter = logging.Formatter("%(asctime)s - [%(levelname)s] %(message)s")
-        ch.setFormatter(formatter)
-        fh.setFormatter(formatter)
-        logger.addHandler(ch)
-        logger.addHandler(fh)
-        logger.info('Running start at ' + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
         '''
         date = self.select_date_now()
         months = date[0]
@@ -4943,6 +5000,7 @@ class Otoklim:
             self.otoklimdlg.projectfilename.text()
         )
         try:
+            logger.debug('- Listing selected parameter to be processed')
             prc_list = []
             if self.otoklimdlg.ach_1_csv.isChecked():
                 with open(project, 'r') as jsonfile:
@@ -4957,6 +5015,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ach_1])
+                logger.debug('-- ' + str(param) + ' is checked')
             if self.otoklimdlg.ash_1_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -4970,6 +5029,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ash_1])
+                logger.debug('-- ' + str(param) + ' is checked')
             if self.otoklimdlg.pch_1_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -4983,6 +5043,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_1])
+                logger.debug('-- ' + str(param) + ' is checked')
             if self.otoklimdlg.psh_1_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -4996,6 +5057,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_1])
+                logger.debug('-- ' + str(param) + ' is checked')
             if self.otoklimdlg.pch_2_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -5009,6 +5071,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_2])
+                logger.debug('-- ' + str(param) + ' is checked')
             if self.otoklimdlg.psh_2_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -5022,6 +5085,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_2])
+                logger.debug('-- ' + str(param) + ' is checked')
             if self.otoklimdlg.pch_3_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -5035,6 +5099,7 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_3])
+                logger.debug('-- ' + str(param) + ' is checked')
             if self.otoklimdlg.psh_3_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -5048,6 +5113,8 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_3])
+                logger.debug('-- ' + str(param) + ' is checked')
+            logger.info('- Selected parameter :' + str(prc_list))
             # Create CSV Default File
             if len(prc_list) > 0:
                 # default_csv = self.create_default_csv(prc_list, csv_directory, prcs_directory, slc_id_list)
@@ -5071,6 +5138,7 @@ class Otoklim:
                 json_kecamatan = []
                 json_desa = []
                 for shp, output_csv, output_json, region_id in zip(shp_list, output_csv_list, output_json_list, region_id_list):
+                    logger.debug('--- Generate in progress for :', output_csv)
                     with open(output_csv, "wb+") as csvfile:
                         # csv_writer = csv.writer(csvfile, delimiter=',')
                         if region_id == 1:
@@ -5096,6 +5164,7 @@ class Otoklim:
                         for feature in layersource:
                             if (region_id == 1 and feature.GetField("ID_PROV") in slc_id_list) or (region_id == 2 and feature.GetField("ID_KAB") in slc_id_list) or (region_id == 3 and feature.GetField("ID_KEC") in slc_id_list):
                                 if region_id == 1:
+                                    logger.info('---- Region : ', feature.GetField("ID_KAB"))
                                     main_values = {
                                         'No': n,
                                         'Provinsi': feature.GetField("PROVINSI"),
@@ -5103,6 +5172,7 @@ class Otoklim:
                                         'Kabupaten_Kota': feature.GetField("KABUPATEN")
                                     }
                                 elif region_id == 2:
+                                    logger.info('---- Region : ', feature.GetField("ID_KEC"))
                                     main_values = {
                                         'No': n,
                                         'Provinsi': feature.GetField("PROVINSI"),
@@ -5112,6 +5182,7 @@ class Otoklim:
                                         'Kecamatan': feature.GetField("KECAMATAN")
                                     }
                                 else:
+                                    logger.info('---- Region : ', feature.GetField("ID_DES"))
                                     main_values = {
                                         'No': n,
                                         'Provinsi': feature.GetField("PROVINSI"),
@@ -5125,6 +5196,7 @@ class Otoklim:
                                 param_values = {}
                                 # LOGIC START HERE
                                 for prc in prc_list:
+                                    logger.debug('----- Clipping Vector :', str(prc))
                                     sbk = {}
                                     sb = {}
                                     sbb = {}
@@ -5155,7 +5227,9 @@ class Otoklim:
                                         layer.setSubsetString(exp)
                                         cliped = os.path.join(temp_raster, str(feature.GetField("ID_DES")) + '_' + str(prc[0]) + '_clp.shp')
                                     # processing.runalg('saga:clipgridwithpolygon', raster_classified, layer, cliped)
+                                    logger.info('----- qgis:clip')
                                     processing.runalg("qgis:clip", vector_classified, layer, cliped)
+                                    logger.info('-- Clipping success.. Vector data has been stored on ' + str(cliped))
                                     '''
                                     read_raster = gdal.Open(cliped, GA_ReadOnly)
                                     raster_value = np.array(read_raster.GetRasterBand(1).ReadAsArray(), dtype ="int")
@@ -5167,6 +5241,7 @@ class Otoklim:
                                     all_cell = sum(unique_counts.values())
                                     '''
                                     # Calculate Area
+                                    logger.info('----- Calculate area of cliped vector')
                                     unique_counts = {}
                                     expression = QgsExpression("area(transform($geometry, 'EPSG:4326','EPSG:3857'))")
                                     layer_cliped = QgsVectorLayer(cliped, 'cliped', 'ogr')
@@ -5215,6 +5290,7 @@ class Otoklim:
                                     })
                                     shutil.rmtree(temp_raster)
                                 # JSON Structure
+                                logger.debug('----- Write JSON')
                                 json_values = {}
                                 json_values.update({"VALUES": param_values})
                                 json_values.update(main_values)
@@ -5226,6 +5302,7 @@ class Otoklim:
                                     json_desa.append(json_values)
                                 # CSV Structure
                                 main_values.update(param_values)
+                                logger.debug('----- Write CSV')
                                 csv_writer.writerow(main_values)
                                 n += 1
                                 # END HERE
@@ -5456,6 +5533,7 @@ class Otoklim:
             '''
         except Exception as e:
             self.errormessagedlg.ErrorMessage.setText(str(e))
+            logger.error(str(e))
             self.errormessagedlg.exec_()
 
     def run(self):

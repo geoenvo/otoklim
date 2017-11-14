@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/plugins/Otoklim" >
         <file>icon.png</file>
+        <file>usaid_logo.png</file>
     </qresource>
 </RCC>
