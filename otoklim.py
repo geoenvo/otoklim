@@ -3747,7 +3747,7 @@ class Otoklim:
                 region_list = [row for row in spamreader]
             for region in region_list:
                 item = QTreeWidgetItem([region[1] + ' ' + region[0]])
-                item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                item.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
                 if len(str(int(float(region[2])))) == 2:
                     parent_1 = item
                     self.otoklimdlg.treeWidget_option_1.addTopLevelItem(item)
@@ -3758,7 +3758,7 @@ class Otoklim:
                     child_1.addChild(item)
                 self.otoklimdlg.treeWidget_option_1.expandToDepth(0)
                 item2 = QTreeWidgetItem([region[1] + ' ' + region[0]])
-                item2.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                item2.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
                 if len(str(int(float(region[2])))) == 2:
                     parent_2 = item2
                     self.otoklimdlg.treeWidget_option_2.addTopLevelItem(item2)
@@ -3803,14 +3803,14 @@ class Otoklim:
         self.otoklimdlg.treeWidget_option_1.clear()
         for region in filter_list:
             item = QTreeWidgetItem([region[1] + ' ' + region[0]])
-            item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+            item.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
             if len(str(int(float(region[2])))) == 2 or default:
                 parent = item
                 self.otoklimdlg.treeWidget_option_1.addTopLevelItem(item)
                 parent_code = str(int(float(region[2])))
                 for region in region_list:
                     item = QTreeWidgetItem([region[1] + ' ' + region[0]])
-                    item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                    item.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
                     if len(str(int(float(region[2])))) == 4 and str(region[2][:2]) == parent_code:
                         parent.addChild(item)
                         child = item
@@ -3828,7 +3828,7 @@ class Otoklim:
                 parent_code = str(int(float(region[2])))
                 for region in region_list:
                     item = QTreeWidgetItem([region[1] + ' ' + region[0]])
-                    item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                    item.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
                     if len(str(int(float(region[2])))) > 4 and str(region[2][:4]) == parent_code:
                         parent.addChild(item)
             else:
@@ -3861,14 +3861,14 @@ class Otoklim:
         self.otoklimdlg.treeWidget_option_2.clear()
         for region in filter_list:
             item = QTreeWidgetItem([region[1] + ' ' + region[0]])
-            item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+            item.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
             if len(str(int(float(region[2])))) == 2 or default:
                 parent = item
                 self.otoklimdlg.treeWidget_option_2.addTopLevelItem(item)
                 parent_code = str(int(float(region[2])))
                 for region in region_list:
                     item = QTreeWidgetItem([region[1] + ' ' + region[0]])
-                    item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                    item.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
                     if len(str(int(float(region[2])))) == 4 and str(region[2][:2]) == parent_code:
                         parent.addChild(item)
                         child = item
@@ -3886,7 +3886,7 @@ class Otoklim:
                 parent_code = str(int(float(region[2])))
                 for region in region_list:
                     item = QTreeWidgetItem([region[1] + ' ' + region[0]])
-                    item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                    item.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
                     if len(str(int(float(region[2])))) > 4 and str(region[2][:4]) == parent_code:
                         parent.addChild(item)
             else:
@@ -4186,7 +4186,7 @@ class Otoklim:
                 for slc_id, slc_name in zip(slc_id_list, slc_name_list):
                     logger.info('--- Region processed : ' + slc_name)
                     projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
-                    output_jpg = os.path.join(map_directory, str(slc_id) + '_' + str(year) + str(month[2]) + '_' + str(value[0]).split('_')[0] + '_' + str(slc_name) + '.jpg')
+                    output_jpg = os.path.join(map_directory, str(slc_id) + '_' + str(years[4]) + str(months[4]) + '_' + str(year) + str(month[2]) + '_' + str(value[0]).split('_')[0] + '_' + str(slc_name) + '.jpg')
                     # output_jpg = os.path.join(map_directory, str(slc_id) + '_map_' + str(slc_name) + '_' + str(value[0]) + '.jpg')
                     if os.path.basename(output_jpg) not in os.listdir(map_directory):
                         if len(str(slc_id)) == 2:
@@ -4336,7 +4336,7 @@ class Otoklim:
                             composition.refreshItems()
                             #composition.exportAsPDF(output_pdf)
                             # Save as image
-                            dpi = 150
+                            dpi = 300
                             dpmm = dpi / 25.4
                             width = int(dpmm * composition.paperWidth())
                             height = int(dpmm * composition.paperHeight())
@@ -4531,7 +4531,7 @@ class Otoklim:
                             composition.refreshItems()
                             #composition.exportAsPDF(output_pdf)
                             # Save as image
-                            dpi = 300
+                            dpi = 200
                             dpmm = dpi / 25.4
                             width = int(dpmm * composition.paperWidth())
                             height = int(dpmm * composition.paperHeight())
@@ -4744,7 +4744,7 @@ class Otoklim:
                             composition.refreshItems()
                             #composition.exportAsPDF(output_pdf)
                             # Save as image
-                            dpi = 300
+                            dpi = 150
                             dpmm = dpi / 25.4
                             width = int(dpmm * composition.paperWidth())
                             height = int(dpmm * composition.paperHeight())
