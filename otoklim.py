@@ -3731,7 +3731,12 @@ class Otoklim:
                     layer_kab.setSubsetString(exp)
                     # City \ District Listing
                     for feature in layer_kab.getFeatures():
-                        district_list.append((feature['KABUPATEN'].capitalize(), feature['ADM_REGION'].capitalize(), feature['ID_KAB']))
+                        district_list.append((
+                            feature['KABUPATEN'].capitalize(),
+                            feature['ADM_REGION'].capitalize(),
+                            feature['ID_KAB'],
+                            feature['PROVINSI'].capitalize()
+                        ))
                     for kab in sorted(district_list, key=lambda x: x[0]):
                         csv_writer.writerow(kab)
                         subdistrict_list = []
@@ -3739,7 +3744,13 @@ class Otoklim:
                         layer_kec.setSubsetString(exp)
                         # Sub-District Listing
                         for feature in layer_kec.getFeatures():
-                            subdistrict_list.append((feature['KECAMATAN'].capitalize(), feature['ADM_REGION'].capitalize(), feature['ID_KEC']))
+                            subdistrict_list.append((
+                                feature['KECAMATAN'].capitalize(),
+                                feature['ADM_REGION'].capitalize(),
+                                feature['ID_KEC'],
+                                feature['KABUPATEN'].capitalize(),
+                                feature['PROVINSI'].capitalize(),
+                            ))
                         for kec in sorted(subdistrict_list, key=lambda x: x[0]):
                             csv_writer.writerow(kec)
             with open(region_csv, 'rb') as csvfile:
@@ -3747,10 +3758,14 @@ class Otoklim:
                 region_list = [row for row in spamreader]
             for region in region_list:
                 item = QTreeWidgetItem([region[1] + ' ' + region[0]])
-                if str(region[1]) == "Kota":
-                    item.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
+                if str(region[1]) == "Provinsi":
+                    item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ str(region[1]) + ' '+ str(region[0]))
+                elif str(region[1]) == "Kabupaten":
+                    item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KAB. ' + str(region[0]) + ', PROV. ' + str(region[3]))
+                elif str(region[1]) == "Kota":
+                    item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KOTA ' + str(region[0]) + ', PROV. ' + str(region[3]))
                 else:
-                    item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                    item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KEC. ' + str(region[0]) + ', KAB. ' + str(region[3]) + ', PROV. ' + str(region[4]))
                 if len(str(int(float(region[2])))) == 2:
                     parent_1 = item
                     self.otoklimdlg.treeWidget_option_1.addTopLevelItem(item)
@@ -3761,10 +3776,14 @@ class Otoklim:
                     child_1.addChild(item)
                 self.otoklimdlg.treeWidget_option_1.expandToDepth(0)
                 item2 = QTreeWidgetItem([region[1] + ' ' + region[0]])
-                if str(region[1]) == "Kota":
-                    item2.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
+                if str(region[1]) == "Provinsi":
+                    item2.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ str(region[1]) + ' '+ str(region[0]))
+                elif str(region[1]) == "Kabupaten":
+                    item2.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KAB. ' + str(region[0]) + ', PROV. ' + str(region[3]))
+                elif str(region[1]) == "Kota":
+                    item2.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KOTA ' + str(region[0]) + ', PROV. ' + str(region[3]))
                 else:
-                    item2.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                    item2.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KEC. ' + str(region[0]) + ', KAB. ' + str(region[3]) + ', PROV. ' + str(region[4]))
                 if len(str(int(float(region[2])))) == 2:
                     parent_2 = item2
                     self.otoklimdlg.treeWidget_option_2.addTopLevelItem(item2)
@@ -3809,20 +3828,28 @@ class Otoklim:
         self.otoklimdlg.treeWidget_option_1.clear()
         for region in filter_list:
             item = QTreeWidgetItem([region[1] + ' ' + region[0]])
-            if str(region[1]) == "Kota":
-                item.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
+            if str(region[1]) == "Provinsi":
+                item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ str(region[1]) + ' '+ str(region[0]))
+            elif str(region[1]) == "Kabupaten":
+                item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KAB. ' + str(region[0]) + ', PROV. ' + str(region[3]))
+            elif str(region[1]) == "Kota":
+                item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KOTA ' + str(region[0]) + ', PROV. ' + str(region[3]))
             else:
-                item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KEC. ' + str(region[0]) + ', KAB. ' + str(region[3]) + ', PROV. ' + str(region[4]))
             if len(str(int(float(region[2])))) == 2 or default:
                 parent = item
                 self.otoklimdlg.treeWidget_option_1.addTopLevelItem(item)
                 parent_code = str(int(float(region[2])))
                 for region in region_list:
                     item = QTreeWidgetItem([region[1] + ' ' + region[0]])
-                    if str(region[1]) == "Kota":
-                        item.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
+                    if str(region[1]) == "Provinsi":
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ str(region[1]) + ' '+ str(region[0]))
+                    elif str(region[1]) == "Kabupaten":
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KAB. ' + str(region[0]) + ', PROV. ' + str(region[3]))
+                    elif str(region[1]) == "Kota":
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KOTA ' + str(region[0]) + ', PROV. ' + str(region[3]))
                     else:
-                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KEC. ' + str(region[0]) + ', KAB. ' + str(region[3]) + ', PROV. ' + str(region[4]))
                     if len(str(int(float(region[2])))) == 4 and str(region[2][:2]) == parent_code:
                         parent.addChild(item)
                         child = item
@@ -3840,10 +3867,14 @@ class Otoklim:
                 parent_code = str(int(float(region[2])))
                 for region in region_list:
                     item = QTreeWidgetItem([region[1] + ' ' + region[0]])
-                    if str(region[1]) == "Kota":
-                        item.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
+                    if str(region[1]) == "Provinsi":
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ str(region[1]) + ' '+ str(region[0]))
+                    elif str(region[1]) == "Kabupaten":
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KAB. ' + str(region[0]) + ', PROV. ' + str(region[3]))
+                    elif str(region[1]) == "Kota":
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KOTA ' + str(region[0]) + ', PROV. ' + str(region[3]))
                     else:
-                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KEC. ' + str(region[0]) + ', KAB. ' + str(region[3]) + ', PROV. ' + str(region[4]))
                     if len(str(int(float(region[2])))) > 4 and str(region[2][:4]) == parent_code:
                         parent.addChild(item)
             else:
@@ -3876,20 +3907,28 @@ class Otoklim:
         self.otoklimdlg.treeWidget_option_2.clear()
         for region in filter_list:
             item = QTreeWidgetItem([region[1] + ' ' + region[0]])
-            if str(region[1]) == "Kota":
-                item.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
+            if str(region[1]) == "Provinsi":
+                item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ str(region[1]) + ' '+ str(region[0]))
+            elif str(region[1]) == "Kabupaten":
+                item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KAB. ' + str(region[0]) + ', PROV. ' + str(region[3]))
+            elif str(region[1]) == "Kota":
+                item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KOTA ' + str(region[0]) + ', PROV. ' + str(region[3]))
             else:
-                item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KEC. ' + str(region[0]) + ', KAB. ' + str(region[3]) + ', PROV. ' + str(region[4]))
             if len(str(int(float(region[2])))) == 2 or default:
                 parent = item
                 self.otoklimdlg.treeWidget_option_2.addTopLevelItem(item)
                 parent_code = str(int(float(region[2])))
                 for region in region_list:
                     item = QTreeWidgetItem([region[1] + ' ' + region[0]])
-                    if str(region[1]) == "Kota":
-                        item.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
+                    if str(region[1]) == "Provinsi":
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ str(region[1]) + ' '+ str(region[0]))
+                    elif str(region[1]) == "Kabupaten":
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KAB. ' + str(region[0]) + ', PROV. ' + str(region[3]))
+                    elif str(region[1]) == "Kota":
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KOTA ' + str(region[0]) + ', PROV. ' + str(region[3]))
                     else:
-                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KEC. ' + str(region[0]) + ', KAB. ' + str(region[3]) + ', PROV. ' + str(region[4]))
                     if len(str(int(float(region[2])))) == 4 and str(region[2][:2]) == parent_code:
                         parent.addChild(item)
                         child = item
@@ -3907,10 +3946,14 @@ class Otoklim:
                 parent_code = str(int(float(region[2])))
                 for region in region_list:
                     item = QTreeWidgetItem([region[1] + ' ' + region[0]])
-                    if str(region[1]) == "Kota":
-                        item.setWhatsThis(1, str(region[1]) + ' ' + str(region[0]) + '|' + str(region[2]))
+                    if str(region[1]) == "Provinsi":
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ str(region[1]) + ' '+ str(region[0]))
+                    elif str(region[1]) == "Kabupaten":
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KAB. ' + str(region[0]) + ', PROV. ' + str(region[3]))
+                    elif str(region[1]) == "Kota":
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KOTA ' + str(region[0]) + ', PROV. ' + str(region[3]))
                     else:
-                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]))
+                        item.setWhatsThis(1, str(region[0]) + '|' + str(region[2]) + '|'+ 'KEC. ' + str(region[0]) + ', KAB. ' + str(region[3]) + ', PROV. ' + str(region[4]))
                     if len(str(int(float(region[2])))) > 4 and str(region[2][:4]) == parent_code:
                         parent.addChild(item)
             else:
@@ -4029,6 +4072,7 @@ class Otoklim:
         '''
         slc_id_list = [int(float(i.whatsThis(0).split('|')[1])) for i in items]
         slc_name_list = [str(i.whatsThis(0).split('|')[0]) for i in items]
+        slc_nametitle_list = [str(i.whatsThis(0).split('|')[2]) for i in items]
         project = os.path.join(
             self.otoklimdlg.projectworkspace.text(),
             self.otoklimdlg.projectfilename.text()
@@ -4208,7 +4252,7 @@ class Otoklim:
                 os.mkdir(temp_raster)
                 month = date[0]
                 year = date[1]
-                for slc_id, slc_name in zip(slc_id_list, slc_name_list):
+                for slc_id, slc_name, slc_nametitle in zip(slc_id_list, slc_name_list, slc_nametitle_list):
                     logger.info('--- Region processed : ' + slc_name)
                     projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
                     output_jpg = os.path.join(map_directory, str(slc_id) + '_' + str(years[4]) + str(months[4]) + '_' + str(year) + str(month[2]) + '_' + str(value[0]).split('_')[0] + '_' + str(slc_name) + '.jpg')
@@ -4343,7 +4387,7 @@ class Otoklim:
                                 title_adj = "ANALISIS"
                             else:
                                 title_adj = "PRAKIRAAN"
-                            map_title = 'PETA ' + title_adj + ' ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
+                            map_title = 'PETA ' + title_adj + ' ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_nametitle).upper()
                             substitution_map = {'map_title': map_title, 'date_produced':date_produced}
                             canvas = QgsMapCanvas()
                             QgsProject.instance().read(QFileInfo(projectqgs))
@@ -4542,7 +4586,7 @@ class Otoklim:
                                 title_adj = "ANALISIS"
                             else:
                                 title_adj = "PRAKIRAAN"
-                            map_title = 'PETA ' + title_adj + ' ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
+                            map_title = 'PETA ' + title_adj + ' ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_nametitle).upper()
                             substitution_map = {'map_title': map_title, 'date_produced':date_produced}
                             canvas = QgsMapCanvas()
                             QgsProject.instance().read(QFileInfo(projectqgs))
@@ -4755,7 +4799,7 @@ class Otoklim:
                                 title_adj = "ANALISIS"
                             else:
                                 title_adj = "PRAKIRAAN"
-                            map_title = 'PETA ' + title_adj + ' ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_name).upper()
+                            map_title = 'PETA ' + title_adj + ' ' + title_type + ' HUJAN BULAN ' + str(month[1]) + ' TAHUN '+ str(year) + ' ' + str(slc_nametitle).upper()
                             substitution_map = {'map_title': map_title, 'date_produced':date_produced}
                             canvas = QgsMapCanvas()
                             QgsProject.instance().read(QFileInfo(projectqgs))
