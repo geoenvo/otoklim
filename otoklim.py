@@ -1903,7 +1903,7 @@ class Otoklim:
                         raise Exception(errormessage)
                     try:
                         if 'ACH_1' in row:
-                            if row['ACH_1'] == '':
+                            if row['ACH_1'].strip() == '':
                                 pass
                             else:
                                 float(row['ACH_1'])
@@ -1913,7 +1913,7 @@ class Otoklim:
                         raise Exception(errormessage)
                     try:
                         if 'ASH_1' in row:
-                            if row['ASH_1'] == '':
+                            if row['ASH_1'].strip() == '':
                                 pass
                             else:
                                 float(row['ASH_1'])
@@ -1923,7 +1923,7 @@ class Otoklim:
                         raise Exception(errormessage)
                     try:
                         if 'PCH_1' in row:
-                            if row['PCH_1'] == '':
+                            if row['PCH_1'].strip() == '':
                                 pass
                             else:
                                 float(row['PCH_1'])
@@ -1933,7 +1933,7 @@ class Otoklim:
                         raise Exception(errormessage)
                     try:
                         if 'PSH_1' in row:
-                            if row['PSH_1'] == '':
+                            if row['PSH_1'].strip() == '':
                                 pass
                             else:
                                 float(row['PSH_1'])
@@ -1943,7 +1943,7 @@ class Otoklim:
                         raise Exception(errormessage)
                     try:
                         if 'PCH_2' in row:
-                            if row['PCH_2'] == '':
+                            if row['PCH_2'].strip() == '':
                                 pass
                             else:
                                 float(row['PCH_2'])
@@ -1953,7 +1953,7 @@ class Otoklim:
                         raise Exception(errormessage)
                     try:
                         if 'PSH_2' in row:
-                            if row['PSH_2'] == '':
+                            if row['PSH_2'].strip() == '':
                                 pass
                             else:
                                 float(row['PSH_2'])
@@ -1963,7 +1963,7 @@ class Otoklim:
                         raise Exception(errormessage)
                     try:
                         if 'PCH_3' in row:
-                            if row['PCH_3'] == '':
+                            if row['PCH_3'].strip() == '':
                                 pass
                             else:
                                 float(row['PCH_3'])
@@ -1973,7 +1973,7 @@ class Otoklim:
                         raise Exception(errormessage)
                     try:
                         if 'PSH_3' in row:
-                            if row['PSH_3'] == '':
+                            if row['PSH_3'].strip() == '':
                                 pass
                             else:
                                 float(row['PSH_3'])
