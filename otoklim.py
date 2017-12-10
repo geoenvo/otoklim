@@ -4722,7 +4722,7 @@ class Otoklim:
 
                             # Districts Styling
                             layer_kabupaten = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
-                            exp = "\"ID_PROV\"='{}'".format(str(slc_id)[0:2])
+                            exp = "\"ID_PROV\"='{}' AND \"ID_KAB\"!='{}'".format(str(slc_id)[0:2], str(slc_id)[0:4])
                             layer_kabupaten.setSubsetString(exp)
                             symbol = QgsFillSymbolV2.createSimple({'color': '223,223,223,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
                             layer_kabupaten.rendererV2().setSymbol(symbol)
@@ -4774,8 +4774,8 @@ class Otoklim:
                             canvas = qgis.utils.iface.mapCanvas()
                             QgsMapLayerRegistry.instance().addMapLayer(layer_bath)
                             QgsMapLayerRegistry.instance().addMapLayer(layer_provinsi)
-                            QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
                             QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
+                            QgsMapLayerRegistry.instance().addMapLayer(layer_kabupaten)
                             QgsMapLayerRegistry.instance().addMapLayer(layer_kecamatan)
                             QgsMapLayerRegistry.instance().addMapLayer(layer_desa)
                             QgsMapLayerRegistry.instance().addMapLayer(layer_desa_line)
