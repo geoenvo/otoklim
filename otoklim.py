@@ -887,7 +887,7 @@ class Otoklim:
         self.region_listing(province_id, region_csv, save)
 
         self.otoklimdlg.Input_Value_CSV.setWhatsThis('')
-        self.otoklimdlg.Select_Province.setWhatsThis('')
+        self.otoklimdlg.Select_Province.setWhatsThis('edited')
         self.otoklimdlg.Select_Month.setWhatsThis('')
         self.otoklimdlg.Select_Year.setWhatsThis('')
         self.otoklimdlg.logoArea.hide()
@@ -5214,190 +5214,199 @@ class Otoklim:
                 json_kecamatan = []
                 json_desa = []
 
+                for i in slc_id_list:
+                    if len(str(i)) == 2:
+                        csv_edit = 1
+                    elif len(str(i)) == 4:
+                        csv_edit = 2
+                    else:
+                        csv_edit = 3
+
                 check_slc = []
-                n = 1
                 for shp, output_csv, output_json, region_id in zip(shp_list, output_csv_list, output_json_list, region_id_list):
                     logger.debug('--- Generate in progress for :' + str(output_csv))
-                    with open(output_csv, "wb+") as csvfile:
-                        if region_id == 1:
-                            main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota']
-                        elif region_id == 2:
-                            main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota', 'ID_Kecamatan', 'Kecamatan']
-                        else:
-                            main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota', 'ID_Kecamatan', 'Kecamatan', 'ID_Desa', 'Desa']
-                        header = main_header
-                        param = []
-                        for prc in prc_list:
-                            param_header = [prc[0].upper() + '_SBK', prc[0].upper() + '_SB', prc[0].upper() + '_SBB', prc[0].upper() + '_M']
-                            param.append(param_header)
-                            header += param_header
-                        csv_writer = csv.DictWriter(csvfile, fieldnames=header,  delimiter=',')
-                        csv_writer.writeheader()
-                        for slc_id in slc_id_list:
-                            if slc_id not in check_slc:
-                                if len(str(slc_id)) == 2 and region_id == 1:
-                                    check_slc.append(slc_id)
-                                    logger.info('---- Region : ' + str(slc_id))
-                                    layer = QgsVectorLayer(shp, "PROVINSI", "ogr")
-                                    #QgsMapLayerRegistry.instance().addMapLayer(layer)
-                                    exp = "\"ID_PROV\"='{}'".format(str(slc_id))
-                                    layer.setSubsetString(exp)
-                                elif len(str(slc_id)) == 4 and region_id == 2:
-                                    check_slc.append(slc_id)
-                                    logger.info('---- Region : ' + str(slc_id))
-                                    layer = QgsVectorLayer(shp, "KABUPATEN", "ogr")
-                                    #QgsMapLayerRegistry.instance().addMapLayer(layer)
-                                    exp = "\"ID_KAB\"='{}'".format(str(slc_id))
-                                    layer.setSubsetString(exp)
-                                elif len(str(slc_id)) == 7 and region_id == 3:
-                                    check_slc.append(slc_id)
-                                    logger.info('---- Region : ' + str(slc_id))
-                                    layer = QgsVectorLayer(shp, "KECAMATAN", "ogr")
-                                    #QgsMapLayerRegistry.instance().addMapLayer(layer)
-                                    exp = "\"ID_KEC\"='{}'".format(str(slc_id))
-                                    layer.setSubsetString(exp)
-                                else:
-                                    break
-                                union_list = {}
-                                temp_list = []
-                                for prc in prc_list:
-                                    logger.debug('----- Union :' + str(slc_id) + ' & ' + str(prc[0]))
-                                    vector_classified = os.path.join(classified_directory, prc[1])
-                                    temp = os.path.join(prcs_directory, 'tmp_' + str(prc[0]))
-                                    temp_list.append(temp)
-                                    union = os.path.join(temp, str(slc_id) + '_' + str(prc[0]) + '_un.shp')
-                                    if os.path.exists(temp):
-                                        pass
+                    n = 1
+                    if region_id in range(1, csv_edit+1):
+                        with open(output_csv, "wb+") as csvfile:
+                            if region_id == 1:
+                                main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota']
+                            elif region_id == 2:
+                                main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota', 'ID_Kecamatan', 'Kecamatan']
+                            else:
+                                main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota', 'ID_Kecamatan', 'Kecamatan', 'ID_Desa', 'Desa']
+                            header = main_header
+                            param = []
+                            for prc in prc_list:
+                                param_header = [prc[0].upper() + '_SBK', prc[0].upper() + '_SB', prc[0].upper() + '_SBB', prc[0].upper() + '_M']
+                                param.append(param_header)
+                                header += param_header
+                            csv_writer = csv.DictWriter(csvfile, fieldnames=header,  delimiter=',')
+                            csv_writer.writeheader()
+                            for slc_id in slc_id_list:
+                                if slc_id not in check_slc:
+                                    if len(str(slc_id)) == 2 and region_id == 1:
+                                        check_slc.append(slc_id)
+                                        logger.info('---- Region : ' + str(slc_id))
+                                        layer = QgsVectorLayer(shp, "PROVINSI", "ogr")
+                                        #QgsMapLayerRegistry.instance().addMapLayer(layer)
+                                        exp = "\"ID_PROV\"='{}'".format(str(slc_id))
+                                        layer.setSubsetString(exp)
+                                    elif len(str(slc_id)) == 4 and region_id == 2:
+                                        check_slc.append(slc_id)
+                                        logger.info('---- Region : ' + str(slc_id))
+                                        layer = QgsVectorLayer(shp, "KABUPATEN", "ogr")
+                                        #QgsMapLayerRegistry.instance().addMapLayer(layer)
+                                        exp = "\"ID_KAB\"='{}'".format(str(slc_id))
+                                        layer.setSubsetString(exp)
+                                    elif len(str(slc_id)) == 7 and region_id == 3:
+                                        check_slc.append(slc_id)
+                                        logger.info('---- Region : ' + str(slc_id))
+                                        layer = QgsVectorLayer(shp, "KECAMATAN", "ogr")
+                                        #QgsMapLayerRegistry.instance().addMapLayer(layer)
+                                        exp = "\"ID_KEC\"='{}'".format(str(slc_id))
+                                        layer.setSubsetString(exp)
                                     else:
-                                        os.mkdir(temp)
-                                    processing.runandload("qgis:union", layer, vector_classified, union)
-                                    layer_union = QgsMapLayerRegistry.instance().mapLayersByName('Union')[0]
-                                    QgsMapLayerRegistry.instance().removeMapLayer(layer_union)
-                                    logger.info('----- Union success.. Vector data has been stored on ' + str(union))
-                                    union_list.update({str(prc[0]):  str(union)})
-                                dataSource = driver.Open(shp, 0)
-                                layersource = dataSource.GetLayer()
-                                for feature in layersource:
-                                    if (region_id == 1 and feature.GetField("ID_PROV") == slc_id) or (region_id == 2 and feature.GetField("ID_KAB") == slc_id) or (region_id == 3 and feature.GetField("ID_KEC") == slc_id):
-                                        if region_id == 1:
-                                            logger.info('---- Region : ' + str(feature.GetField("ID_KAB")))
-                                            main_values = {
-                                                'No': n,
-                                                'Provinsi': feature.GetField("PROVINSI"),
-                                                'ID_Kabupaten_Kota': feature.GetField("ID_KAB"),
-                                                'Kabupaten_Kota': feature.GetField("KABUPATEN")
-                                            }
-                                            exp = "\"ID_KAB\"='{}'".format(str(feature.GetField("ID_KAB")))
-                                        elif region_id == 2:
-                                            logger.info('---- Region : ' + str(feature.GetField("ID_KEC")))
-                                            main_values = {
-                                                'No': n,
-                                                'Provinsi': feature.GetField("PROVINSI"),
-                                                'ID_Kabupaten_Kota': feature.GetField("ID_KAB"),
-                                                'Kabupaten_Kota': feature.GetField("KABUPATEN"),
-                                                'ID_Kecamatan': feature.GetField("ID_KEC"),
-                                                'Kecamatan': feature.GetField("KECAMATAN")
-                                            }
-                                            exp = "\"ID_KEC\"='{}'".format(str(feature.GetField("ID_KEC")))
+                                        break
+                                    union_list = {}
+                                    temp_list = []
+                                    for prc in prc_list:
+                                        logger.debug('----- Union :' + str(slc_id) + ' & ' + str(prc[0]))
+                                        vector_classified = os.path.join(classified_directory, prc[1])
+                                        temp = os.path.join(prcs_directory, 'tmp_' + str(prc[0]))
+                                        temp_list.append(temp)
+                                        union = os.path.join(temp, str(slc_id) + '_' + str(prc[0]) + '_un.shp')
+                                        if os.path.exists(temp):
+                                            pass
                                         else:
-                                            logger.info('---- Region : ' + str(feature.GetField("ID_DES")))
-                                            main_values = {
-                                                'No': n,
-                                                'Provinsi': feature.GetField("PROVINSI"),
-                                                'ID_Kabupaten_Kota': feature.GetField("ID_KAB"),
-                                                'Kabupaten_Kota': feature.GetField("KABUPATEN"),
-                                                'ID_Kecamatan': feature.GetField("ID_KEC"),
-                                                'Kecamatan': feature.GetField("KECAMATAN"),
-                                                'ID_Desa': feature.GetField("ID_DES"),
-                                                'Desa': feature.GetField("DESA")
-                                            }
-                                            exp = "\"ID_DES\"='{}'".format(str(feature.GetField("ID_DES")))
-                                        param_values = {}
-                                        for prc in prc_list:
-                                            # Calculate Area
-                                            logger.info('----- Calculate Area Classified')
-                                            sbk = {}
-                                            sb = {}
-                                            sbb = {}
-                                            m = {}
-                                            unique_counts = {}
-                                            expression = QgsExpression("area(transform($geometry, 'EPSG:4326','EPSG:3857'))")
-                                            layer_union = QgsVectorLayer(union_list[str(prc[0])], str(prc[0]), 'ogr')
-                                            layer_union.setSubsetString(exp)
-                                            index = layer_union.fieldNameIndex("Area")
-                                            expression.prepare(layer_union.pendingFields())
-                                            area_all = 0
-                                            features = layer_union.getFeatures()
-                                            for i in features:
-                                                if expression.evaluate(i):
-                                                    area_all += expression.evaluate(i)
-                                                else:
-                                                    area_all += 0
-                                            layer_union.startEditing()
-                                            features = layer_union.getFeatures()
-                                            for i in features:
-                                                if i[prc[0].upper().split('_')[0]]:
+                                            os.mkdir(temp)
+                                        processing.runandload("qgis:union", layer, vector_classified, union)
+                                        layer_union = QgsMapLayerRegistry.instance().mapLayersByName('Union')[0]
+                                        QgsMapLayerRegistry.instance().removeMapLayer(layer_union)
+                                        logger.info('----- Union success.. Vector data has been stored on ' + str(union))
+                                        union_list.update({str(prc[0]):  str(union)})
+                                    dataSource = driver.Open(shp, 0)
+                                    layersource = dataSource.GetLayer()
+                                    for feature in layersource:
+                                        if (region_id == 1 and feature.GetField("ID_PROV") == slc_id) or (region_id == 2 and feature.GetField("ID_KAB") == slc_id) or (region_id == 3 and feature.GetField("ID_KEC") == slc_id):
+                                            if region_id == 1:
+                                                logger.info('---- Region : ' + str(feature.GetField("ID_KAB")))
+                                                main_values = {
+                                                    'No': n,
+                                                    'Provinsi': feature.GetField("PROVINSI"),
+                                                    'ID_Kabupaten_Kota': feature.GetField("ID_KAB"),
+                                                    'Kabupaten_Kota': feature.GetField("KABUPATEN")
+                                                }
+                                                exp = "\"ID_KAB\"='{}'".format(str(feature.GetField("ID_KAB")))
+                                            elif region_id == 2:
+                                                logger.info('---- Region : ' + str(feature.GetField("ID_KEC")))
+                                                main_values = {
+                                                    'No': n,
+                                                    'Provinsi': feature.GetField("PROVINSI"),
+                                                    'ID_Kabupaten_Kota': feature.GetField("ID_KAB"),
+                                                    'Kabupaten_Kota': feature.GetField("KABUPATEN"),
+                                                    'ID_Kecamatan': feature.GetField("ID_KEC"),
+                                                    'Kecamatan': feature.GetField("KECAMATAN")
+                                                }
+                                                exp = "\"ID_KEC\"='{}'".format(str(feature.GetField("ID_KEC")))
+                                            else:
+                                                logger.info('---- Region : ' + str(feature.GetField("ID_DES")))
+                                                main_values = {
+                                                    'No': n,
+                                                    'Provinsi': feature.GetField("PROVINSI"),
+                                                    'ID_Kabupaten_Kota': feature.GetField("ID_KAB"),
+                                                    'Kabupaten_Kota': feature.GetField("KABUPATEN"),
+                                                    'ID_Kecamatan': feature.GetField("ID_KEC"),
+                                                    'Kecamatan': feature.GetField("KECAMATAN"),
+                                                    'ID_Desa': feature.GetField("ID_DES"),
+                                                    'Desa': feature.GetField("DESA")
+                                                }
+                                                exp = "\"ID_DES\"='{}'".format(str(feature.GetField("ID_DES")))
+                                            param_values = {}
+                                            for prc in prc_list:
+                                                # Calculate Area
+                                                logger.info('----- Calculate Area Classified: ' + str(prc[0]))
+                                                sbk = {}
+                                                sb = {}
+                                                sbb = {}
+                                                m = {}
+                                                unique_counts = {}
+                                                expression = QgsExpression("area(transform($geometry, 'EPSG:4326','EPSG:3857'))")
+                                                layer_union = QgsVectorLayer(union_list[str(prc[0])], str(prc[0]), 'ogr')
+                                                layer_union.setSubsetString(exp)
+                                                index = layer_union.fieldNameIndex("Area")
+                                                expression.prepare(layer_union.pendingFields())
+                                                area_all = 0
+                                                features = layer_union.getFeatures()
+                                                for i in features:
                                                     if expression.evaluate(i):
-                                                        area = expression.evaluate(i)
+                                                        area_all += expression.evaluate(i)
                                                     else:
-                                                        area = 0
-                                                    layer_union.changeAttributeValue(
-                                                        i.id(),
-                                                        layer_union.fieldNameIndex('Area'), 
-                                                        area
-                                                    )
-                                                    layer_union.changeAttributeValue(
-                                                        i.id(),
-                                                        layer_union.fieldNameIndex('Percent'), 
-                                                        (area / float(area_all)) * 100
-                                                    )
-                                                    if i[prc[0].upper().split('_')[0]] not in unique_counts:
-                                                        unique_counts[i[prc[0].upper().split('_')[0]]] = (area / float(area_all)) * 100
-                                                    else:
-                                                        unique_counts[i[prc[0].upper().split('_')[0]]] += (area / float(area_all)) * 100
-                                            layer_union.commitChanges()
-                                            for key, value in zip(unique_counts.keys(), unique_counts.values()):
-                                                if value > 0 and value < 20:
-                                                    sbk.update({key: value})
-                                                elif value >= 20 and value < 50:
-                                                    sb.update({key: value})
-                                                elif value >= 50 and value < 100:
-                                                    sbb.update({key: value})
-                                                elif value == 100:
-                                                    m.update({key: value})
-                                            param_values.update({
-                                                prc[0].upper() + '_SBK': sbk,
-                                                prc[0].upper() + '_SB': sb,
-                                                prc[0].upper() + '_SBB': sbb,
-                                                prc[0].upper() + '_M': m
-                                            })
-                                        # JSON Structure
-                                        logger.debug('----- Write JSON')
-                                        json_values = {}
-                                        json_values.update({"VALUES": param_values})
-                                        json_values.update(main_values)
-                                        if region_id == 1:
-                                            json_kabupaten.append(json_values)
-                                        elif region_id == 2:
-                                            json_kecamatan.append(json_values)
-                                        else:
-                                            json_desa.append(json_values)
-                                        # CSV Structure
-                                        main_values.update(param_values)
-                                        logger.debug('----- Write CSV')
-                                        csv_writer.writerow(main_values)
-                                        n += 1
-                                del layer_union    
-                                dataSource.Destroy()
-                                for temp in temp_list:
-                                    shutil.rmtree(temp)
-                    with open(output_json, 'w') as jsonfile:
-                        if region_id == 1:
-                            jsonfile.write(json.dumps(json_kabupaten, indent=4))
-                        elif region_id == 2:
-                            jsonfile.write(json.dumps(json_kecamatan, indent=4))
-                        else:
-                            jsonfile.write(json.dumps(json_desa, indent=4))     
+                                                        area_all += 0
+                                                layer_union.startEditing()
+                                                features = layer_union.getFeatures()
+                                                for i in features:
+                                                    if i[prc[0].upper().split('_')[0]]:
+                                                        if expression.evaluate(i):
+                                                            area = expression.evaluate(i)
+                                                        else:
+                                                            area = 0
+                                                        layer_union.changeAttributeValue(
+                                                            i.id(),
+                                                            layer_union.fieldNameIndex('Area'), 
+                                                            area
+                                                        )
+                                                        layer_union.changeAttributeValue(
+                                                            i.id(),
+                                                            layer_union.fieldNameIndex('Percent'), 
+                                                            (area / float(area_all)) * 100
+                                                        )
+                                                        if i[prc[0].upper().split('_')[0]] not in unique_counts:
+                                                            unique_counts[i[prc[0].upper().split('_')[0]]] = (area / float(area_all)) * 100
+                                                        else:
+                                                            unique_counts[i[prc[0].upper().split('_')[0]]] += (area / float(area_all)) * 100
+                                                layer_union.commitChanges()
+                                                for key, value in zip(unique_counts.keys(), unique_counts.values()):
+                                                    if value > 0 and value < 20:
+                                                        sbk.update({key: value})
+                                                    elif value >= 20 and value < 50:
+                                                        sb.update({key: value})
+                                                    elif value >= 50 and value < 100:
+                                                        sbb.update({key: value})
+                                                    elif value == 100:
+                                                        m.update({key: value})
+                                                param_values.update({
+                                                    prc[0].upper() + '_SBK': sbk,
+                                                    prc[0].upper() + '_SB': sb,
+                                                    prc[0].upper() + '_SBB': sbb,
+                                                    prc[0].upper() + '_M': m
+                                                })
+                                            # JSON Structure
+                                            logger.debug('----- Write JSON')
+                                            json_values = {}
+                                            json_values.update({"VALUES": param_values})
+                                            json_values.update(main_values)
+                                            if region_id == 1:
+                                                json_kabupaten.append(json_values)
+                                            elif region_id == 2:
+                                                json_kecamatan.append(json_values)
+                                            else:
+                                                json_desa.append(json_values)
+                                            # CSV Structure
+                                            main_values.update(param_values)
+                                            logger.debug('----- Write CSV')
+                                            csv_writer.writerow(main_values)
+                                            n += 1
+                                    del layer_union    
+                                    dataSource.Destroy()
+                                    for temp in temp_list:
+                                        shutil.rmtree(temp)
+                        with open(output_json, 'w') as jsonfile:
+                            if region_id == 1:
+                                jsonfile.write(json.dumps(json_kabupaten, indent=4))
+                            elif region_id == 2:
+                                jsonfile.write(json.dumps(json_kecamatan, indent=4))
+                            else:
+                                jsonfile.write(json.dumps(json_desa, indent=4))     
             self.otoklimdlg.showGenerateCSVFolder.setEnabled(True)
         except Exception as e:
             self.errormessagedlg.ErrorMessage.setText(str(e))
