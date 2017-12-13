@@ -5214,19 +5214,20 @@ class Otoklim:
                 json_kecamatan = []
                 json_desa = []
 
+                csv_edit = []
                 for i in slc_id_list:
                     if len(str(i)) == 2:
-                        csv_edit = 1
+                        csv_edit.append(1)
                     elif len(str(i)) == 4:
-                        csv_edit = 2
+                        csv_edit.append(2)
                     else:
-                        csv_edit = 3
+                        csv_edit.append(3)
 
                 check_slc = []
                 for shp, output_csv, output_json, region_id in zip(shp_list, output_csv_list, output_json_list, region_id_list):
                     logger.debug('--- Generate in progress for :' + str(output_csv))
                     n = 1
-                    if region_id in range(1, csv_edit+1):
+                    if region_id in csv_edit:
                         with open(output_csv, "wb+") as csvfile:
                             if region_id == 1:
                                 main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota']
@@ -5279,7 +5280,7 @@ class Otoklim:
                                             pass
                                         else:
                                             os.mkdir(temp)
-                                        processing.runandload("qgis:union", layer, vector_classified, union)
+                                        processing.runandload("qgis:union", vector_classified, layer, union)
                                         layer_union = QgsMapLayerRegistry.instance().mapLayersByName('Union')[0]
                                         QgsMapLayerRegistry.instance().removeMapLayer(layer_union)
                                         logger.info('----- Union success.. Vector data has been stored on ' + str(union))
