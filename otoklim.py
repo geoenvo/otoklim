@@ -75,8 +75,6 @@ import processing
 import csv
 import logging
 import xml.etree.cElementTree as ET
-# import numpy as np
-# import math
 
 
 class Otoklim:
@@ -143,44 +141,6 @@ class Otoklim:
         status_tip=None,
         whats_this=None,
         parent=None):
-        """Add a toolbar icon to the toolbar.
-
-        :param icon_path: Path to the icon for this action. Can be a resource
-            path (e.g. ':/plugins/foo/bar.png') or a normal file system path.
-        :type icon_path: str
-
-        :param text: Text that should be shown in menu items for this action.
-        :type text: str
-
-        :param callback: Function to be called when the action is triggered.
-        :type callback: function
-
-        :param enabled_flag: A flag indicating if the action should be enabled
-            by default. Defaults to True.
-        :type enabled_flag: bool
-
-        :param add_to_menu: Flag indicating whether the action should also
-            be added to the menu. Defaults to True.
-        :type add_to_menu: bool
-
-        :param add_to_toolbar: Flag indicating whether the action should also
-            be added to the toolbar. Defaults to True.
-        :type add_to_toolbar: bool
-
-        :param status_tip: Optional text to show in a popup when mouse pointer
-            hovers over the action.
-        :type status_tip: str
-
-        :param parent: Parent widget for the new action. Defaults None.
-        :type parent: QWidget
-
-        :param whats_this: Optional text to show in the status bar when the
-            mouse pointer hovers over the action.
-
-        :returns: The action that was created. Note that the action is also
-            added to self.actions list.
-        :rtype: QAction
-        """
 
         # Create the dialog (after translation) and keep reference
         self.otoklimdlg = OtoklimDialog()
@@ -1982,7 +1942,6 @@ class Otoklim:
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
 
-
     def copy_file(self, sourcefile, targetdir, shp):
         """Copy file function"""
         if not os.path.exists(sourcefile):
@@ -3124,15 +3083,6 @@ class Otoklim:
                 )
                 logger.info('-- runalg saga:clipgridwithpolygon')
                 processing.runalg('saga:clipgridwithpolygon', raster_interpolated, provinsi_polygon_file, raster_cropped)
-                '''
-                processing.runalg(
-                    "gdalogr:cliprasterbymasklayer", 
-                    raster_interpolated,
-                    provinsi_polygon_file,
-                    -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", 
-                    raster_cropped
-                )
-                '''
                 logger.info('-- Interpolating success.. Raster data has been stored on ' + str(raster_cropped))
             with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -3793,15 +3743,6 @@ class Otoklim:
                 else:
                     child_2.addChild(item2)
                 self.otoklimdlg.treeWidget_option_2.expandToDepth(0)
-            '''
-            for region in region_list:
-                item = QListWidgetItem(region[3] + region[1] + ' ' + region[0])
-                item.setWhatsThis(str(region[0]) + '|' + str(region[2]))
-                self.otoklimdlg.listWidget_option_1.addItem(item)
-                item2 = QListWidgetItem(region[3] + region[1] + ' ' + region[0])
-                item2.setWhatsThis(str(region[0]) + '|' + str(region[2]))
-                self.otoklimdlg.listWidget_option_2.addItem(item2)
-            '''
 
     def expand_option_1(self):
         self.search_option_1(expand=True)
@@ -3879,14 +3820,6 @@ class Otoklim:
                         parent.addChild(item)
             else:
                 self.otoklimdlg.treeWidget_option_1.addTopLevelItem(item)
-            #self.otoklimdlg.treeWidget_option_1.expandToDepth(0)
-        '''
-        self.otoklimdlg.listWidget_option_1.clear()
-        for region in filter_list:
-            item = QListWidgetItem(region[3] + region[1] + ' ' + region[0])
-            item.setWhatsThis(str(region[0]) + '|' + str(region[2]))
-            self.otoklimdlg.listWidget_option_1.addItem(item)
-        '''
     
     def search_option_2(self, expand=False):
         """Function to search region"""
@@ -3958,14 +3891,6 @@ class Otoklim:
                         parent.addChild(item)
             else:
                 self.otoklimdlg.treeWidget_option_2.addTopLevelItem(item)
-            #self.otoklimdlg.treeWidget_option_2.expandToDepth(0)
-        '''
-        self.otoklimdlg.listWidget_option_2.clear()
-        for region in filter_list:
-            item = QListWidgetItem(region[3] + region[1] + ' ' + region[0])
-            item.setWhatsThis(str(region[0]) + '|' + str(region[2]))
-            self.otoklimdlg.listWidget_option_2.addItem(item)
-        '''
 
     def add_to_selected_1(self):
         """Function to move selected region"""
@@ -3981,19 +3906,6 @@ class Otoklim:
                 self.otoklimdlg.treeWidget_selected_1.addTopLevelItem(newitem)
             else:
                 pass
-        '''
-        for index in xrange(self.otoklimdlg.listWidget_selected_1.count()):
-            items.append(self.otoklimdlg.listWidget_selected_1.item(index))
-        selected_items = [i.text() for i in items]
-
-        for item in self.otoklimdlg.listWidget_option_1.selectedItems():
-            if item.text() not in selected_items:
-                newitem = QListWidgetItem(item.text())
-                newitem.setWhatsThis(item.whatsThis())
-                self.otoklimdlg.listWidget_selected_1.addItem(newitem)
-            else:
-                pass
-        '''
     
     def add_to_selected_2(self):
         """Function to move selected region"""
@@ -4009,19 +3921,6 @@ class Otoklim:
                 self.otoklimdlg.treeWidget_selected_2.addTopLevelItem(newitem)
             else:
                 pass
-        '''
-        for index in xrange(self.otoklimdlg.listWidget_selected_2.count()):
-            items.append(self.otoklimdlg.listWidget_selected_2.item(index))
-        selected_items = [i.text() for i in items]
-
-        for item in self.otoklimdlg.listWidget_option_2.selectedItems():
-            if item.text() not in selected_items:
-                newitem = QListWidgetItem(item.text())
-                newitem.setWhatsThis(item.whatsThis())
-                self.otoklimdlg.listWidget_selected_2.addItem(newitem)
-            else:
-                pass
-        '''
 
     def delete_from_selected_1(self):
         """Function to remove selected region"""
@@ -4029,12 +3928,6 @@ class Otoklim:
             self.otoklimdlg.treeWidget_selected_1.takeTopLevelItem(
                 self.otoklimdlg.treeWidget_selected_1.indexOfTopLevelItem(item)
             )
-        '''
-        for item in self.otoklimdlg.listWidget_selected_1.selectedItems():
-            self.otoklimdlg.listWidget_selected_1.takeItem(
-                self.otoklimdlg.listWidget_selected_1.row(item)
-            )
-        '''
     
     def delete_from_selected_2(self):
         """Function to remove selected region"""
@@ -4042,12 +3935,6 @@ class Otoklim:
             self.otoklimdlg.treeWidget_selected_2.takeTopLevelItem(
                 self.otoklimdlg.treeWidget_selected_2.indexOfTopLevelItem(item)
             )
-        '''
-        for item in self.otoklimdlg.listWidget_selected_2.selectedItems():
-            self.otoklimdlg.listWidget_selected_2.takeItem(
-                self.otoklimdlg.listWidget_selected_2.row(item)
-            )
-        '''
 
     def generate_map(self):
         """Function to generate map"""
@@ -4066,10 +3953,6 @@ class Otoklim:
         items = []
         for index in xrange(self.otoklimdlg.treeWidget_selected_1.topLevelItemCount()):
             items.append(self.otoklimdlg.treeWidget_selected_1.topLevelItem(index))
-        '''
-        for index in xrange(self.otoklimdlg.listWidget_selected_1.count()):
-            items.append(self.otoklimdlg.listWidget_selected_1.item(index))
-        '''
         slc_id_list = [int(float(i.whatsThis(0).split('|')[1])) for i in items]
         slc_name_list = [str(i.whatsThis(0).split('|')[0]) for i in items]
         slc_nametitle_list = [str(i.whatsThis(0).split('|')[2]) for i in items]
@@ -4259,67 +4142,11 @@ class Otoklim:
                     logger.info('--- Region processed : ' + slc_name)
                     projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
                     output_jpg = os.path.join(map_directory, str(slc_id) + '_' + str(years[4]) + str(months[4]) + '_' + str(year) + str(month[2]) + '_' + str(value[0]).split('_')[0] + '_' + str(slc_name) + '.jpg')
-                    # output_jpg = os.path.join(map_directory, str(slc_id) + '_map_' + str(slc_name) + '_' + str(value[0]) + '.jpg')
                     if os.path.basename(output_jpg) not in os.listdir(map_directory):
                         if len(str(slc_id)) == 2:
-                            # projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
-                            # output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.pdf')
-                            # output_jpg = os.path.join(map_directory, str(slc_id) + '_map_' + str(slc_name) + '_' + str(value[0]) + '.jpg')
                             # Classified Value Styling
                             layer_vector = QgsVectorLayer(vector_classified, '', 'ogr')
                             layer_vector.loadNamedStyle(style_file)
-                            '''
-                            layer_raster = QgsRasterLayer(raster_classified, '')
-                            s = QgsRasterShader()
-                            c = QgsColorRampShader()
-                            c.setColorRampType(QgsColorRampShader.EXACT)
-                            i = []
-                            if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
-                                color = []
-                                label = []
-                                lng = 1
-                                list_value = []
-                                with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
-                                    spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
-                                    for row in spamreader:
-                                        if str(row['lower_limit']) == '*':
-                                            label.append('< ' + str(row['upper_limit']))
-                                        elif str(row['upper_limit']) == '*':
-                                            label.append('> ' + str(row['lower_limit']))
-                                        else:
-                                            label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
-                                        color.append(row['color'])
-                                        # LABEL NOT FIX
-                                        #label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
-                                        list_value.append(row['new_value'])
-                                        lng += 1
-                            else:
-                                color = []
-                                label = []
-                                lng = 1
-                                list_value = []
-                                with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
-                                    spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
-                                    for row in spamreader:
-                                        if str(row['lower_limit']) == '*':
-                                            label.append('< ' + str(row['upper_limit']))
-                                        elif str(row['upper_limit']) == '*':
-                                            label.append('> ' + str(row['lower_limit']))
-                                        else:
-                                            label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
-                                        color.append(row['color'])
-                                        # LABEL NOT FIX
-                                        #label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
-                                        list_value.append(row['new_value'])
-                                        lng += 1
-                            for n in range(1, lng):
-                                i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1]), label[n-1]))
-                            c.setColorRampItemList(i)
-                            s.setRasterShaderFunction(c)
-                            ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
-                            layer_raster.setRenderer(ps)
-                            '''
-
                             # Province Styling
                             layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
                             exp = "\"ID_PROV\"!='{}'".format(str(slc_id))
@@ -4406,7 +4233,6 @@ class Otoklim:
                             legend_item = composition.getComposerItemById('legend_line')
                             legend_item.updateLegend()
                             composition.refreshItems()
-                            #composition.exportAsPDF(output_pdf)
                             # Save as image
                             dpi = 300
                             dpmm = dpi / 25.4
@@ -4433,88 +4259,14 @@ class Otoklim:
                             all_layer = [vector.id(), kabupaten.id(), provinsi.id(), bathymetry.id(), provinsiline.id(), kabupatenline.id()]
                             QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
                         elif len(str(slc_id)) == 4:
-                            # projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
-                            # output_pdf = os.path.join(map_directory, str(slc_name) + '_map_' + str(value[0]) + '_' + str(slc_id) + '.jpg')
-                            # output_jpg = os.path.join(map_directory, str(slc_id) + '_map_' + str(slc_name) + '_' + str(value[0]) + '.jpg')
                             # Classified Value Styling
-                            #layer_vector_unclip = QgsVectorLayer(vector_classified, '', 'ogr')
-                            # Special Case For Districts (clipping)
-                            #layer_districts = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
-                            #QgsMapLayerRegistry.instance().addMapLayer(layer_districts)
-                            #exp = "\"ID_KAB\"='{}'".format(str(slc_id))
-                            #layer_districts.setSubsetString(exp)
-                            #vector_cropped = os.path.join(temp_raster, str(slc_name).replace(" ", "_") + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.shp')
-                            # processing.runalg('saga:clipgridwithpolygon', rasterclassified, layer_districts, raster_cropped)
-                            #processing.runalg("qgis:clip", layer_vector_unclip, layer_districts, vector_cropped)
-                            '''
-                            processing.runalg(
-                                "gdalogr:cliprasterbymasklayer", 
-                                rasterclassified, 
-                                layer_districts, 
-                                -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", 
-                                raster_cropped
-                            )
-                            '''
-                            #QgsMapLayerRegistry.instance().removeMapLayer(layer_districts.id())
                             layer_vector = QgsVectorLayer(vector_classified, '', 'ogr')
                             layer_vector.loadNamedStyle(style_file)
-                            '''
-                            s = QgsRasterShader()
-                            c = QgsColorRampShader()
-                            c.setColorRampType(QgsColorRampShader.EXACT)
-                            i = []
-                            if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
-                                color = []
-                                label = []
-                                lng = 1
-                                list_value = []
-                                with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
-                                    spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
-                                    for row in spamreader:
-                                        if str(row['lower_limit']) == '*':
-                                            label.append('< ' + str(row['upper_limit']))
-                                        elif str(row['upper_limit']) == '*':
-                                            label.append('> ' + str(row['lower_limit']))
-                                        else:
-                                            label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
-                                        color.append(row['color'])
-                                        # LABEL NOT FIX
-                                        #label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
-                                        list_value.append(row['new_value'])
-                                        lng += 1
-                            else:
-                                color = []
-                                label = []
-                                lng = 1
-                                list_value = []
-                                with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
-                                    spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
-                                    for row in spamreader:
-                                        if str(row['lower_limit']) == '*':
-                                            label.append('< ' + str(row['upper_limit']))
-                                        elif str(row['upper_limit']) == '*':
-                                            label.append('> ' + str(row['lower_limit']))
-                                        else:
-                                            label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
-                                        color.append(row['color'])
-                                        # LABEL NOT FIX
-                                        #label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
-                                        list_value.append(row['new_value'])
-                                        lng += 1
-                            for n in range(1, lng):
-                                i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1]), label[n-1]))
-                            c.setColorRampItemList(i)
-                            s.setRasterShaderFunction(c)
-                            ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
-                            layer_raster.setRenderer(ps)
-                            '''
-
                             # Province Styling
                             layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
                             symbol = QgsFillSymbolV2.createSimple({'color': '240,240,240,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
                             layer_provinsi.rendererV2().setSymbol(symbol)
                             layer_provinsi.triggerRepaint()
-
                             # Districts Styling
                             layer_kabupaten = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
                             exp = "\"ID_PROV\"='{}' AND \"ID_KAB\"!='{}'".format(str(slc_id)[0:2], str(slc_id))
@@ -4601,7 +4353,6 @@ class Otoklim:
                             map_item.setMapCanvas(canvas)
                             map_item.zoomToExtent(canvas.extent())
                             composition.refreshItems()
-                            #composition.exportAsPDF(output_pdf)
                             # Save as image
                             dpi = 200
                             dpmm = dpi / 25.4
@@ -4630,96 +4381,15 @@ class Otoklim:
                             QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
                             del vector
                             os.remove(projectqgs)
-                            # Remove Vector
-                            '''
-                            layer_vector = QgsVectorLayer(vector_cropped, '', 'ogr')
-                            QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
-                            QgsMapLayerRegistry.instance().removeMapLayer(layer_vector.id())
-                            del layer_vector
-                            os.remove(vector_cropped)
-                            '''
                         else:
-                            # projectqgs = os.path.join(prcs_directory, str(slc_name) + '_qgisproject_' + str(value[0]) + '_' + str(slc_id) + '.qgs')
-                            # output_jpg = os.path.join(map_directory, str(slc_id) + '_map_' + str(slc_name) + '_' + str(value[0]) + '.jpg')
                             # Classified Value Styling
-                            #layer_vector_unclip = QgsVectorLayer(vector_classified, '', 'ogr')
-                            # Special Case For Sub-Districts (clipping)
-                            #layer_subdistricts = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
-                            #QgsMapLayerRegistry.instance().addMapLayer(layer_subdistricts)
-                            #exp = "\"ID_KEC\"='{}'".format(str(slc_id))
-                            #layer_subdistricts.setSubsetString(exp)
-                            #vector_cropped = os.path.join(temp_raster, str(slc_name).replace(" ", "_") + '_clipper_' + str(value[0]) + '_' + str(slc_id) + '.shp')
-                            # processing.runalg('saga:clipgridwithpolygon', rasterclassified, layer_subdistricts, raster_cropped)
-                            #processing.runalg("qgis:clip", layer_vector_unclip, layer_subdistricts, vector_cropped)
-                            '''
-                            processing.runalg(
-                                "gdalogr:cliprasterbymasklayer", 
-                                rasterclassified, 
-                                layer_subdistricts, 
-                                -1, False, False, False, 6, 0, 75, 1, 1, False, 0, False, "", 
-                                raster_cropped
-                            )
-                            '''
-                            #QgsMapLayerRegistry.instance().removeMapLayer(layer_subdistricts.id())
                             layer_vector = QgsVectorLayer(vector_classified, '', 'ogr')
                             layer_vector.loadNamedStyle(style_file)
-                            '''
-                            s = QgsRasterShader()
-                            c = QgsColorRampShader()
-                            c.setColorRampType(QgsColorRampShader.EXACT)
-                            i = []
-                            if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
-                                color = []
-                                label = []
-                                lng = 1
-                                list_value = []
-                                with open(self.otoklimdlg.rainfallfile.text(), 'rb') as csvfile:
-                                    spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
-                                    for row in spamreader:
-                                        if str(row['lower_limit']) == '*':
-                                            label.append('< ' + str(row['upper_limit']))
-                                        elif str(row['upper_limit']) == '*':
-                                            label.append('> ' + str(row['lower_limit']))
-                                        else:
-                                            label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
-                                        color.append(row['color'])
-                                        # LABEL NOT FIX
-                                        #label = ['0 - 20', '21 - 50', '51 - 100', '101 - 150', '151 - 200', '201 - 300', '301 - 400', '401 - 500', '> 500']
-                                        list_value.append(row['new_value'])
-                                        lng += 1
-                            else:
-                                color = []
-                                label = []
-                                lng = 1
-                                list_value = []
-                                with open(self.otoklimdlg.normalrainfile.text(), 'rb') as csvfile:
-                                    spamreader = csv.DictReader(csvfile, delimiter=str(self.otoklimdlg.csvdelimiter.text()), quotechar='|')
-                                    for row in spamreader:
-                                        if str(row['lower_limit']) == '*':
-                                            label.append('< ' + str(row['upper_limit']))
-                                        elif str(row['upper_limit']) == '*':
-                                            label.append('> ' + str(row['lower_limit']))
-                                        else:
-                                            label.append(str(row['lower_limit']) + ' - ' + str(row['upper_limit']))
-                                        color.append(row['color'])
-                                        # LABEL NOT FIX
-                                        #label = ['0 - 30', '31 - 50', '51 - 84', '85 - 115', '116 - 150', '151 - 200', '> 201']                                    
-                                        list_value.append(row['new_value'])
-                                        lng += 1
-                            for n in range(1, lng):
-                                i.append(QgsColorRampShader.ColorRampItem(int(list_value[n-1]), QColor(color[n-1]), label[n-1]))
-                            c.setColorRampItemList(i)
-                            s.setRasterShaderFunction(c)
-                            ps = QgsSingleBandPseudoColorRenderer(layer_raster.dataProvider(), 1, s)
-                            layer_raster.setRenderer(ps)
-                            '''
-
                             # Province Styling
                             layer_provinsi = QgsVectorLayer(self.otoklimdlg.province.text(), 'Provinsi', 'ogr')
                             symbol = QgsFillSymbolV2.createSimple({'color': '240,240,240,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
                             layer_provinsi.rendererV2().setSymbol(symbol)
                             layer_provinsi.triggerRepaint()
-
                             # Districts Styling
                             layer_kabupaten = QgsVectorLayer(self.otoklimdlg.districts.text(), 'Kabupaten', 'ogr')
                             exp = "\"ID_PROV\"='{}' AND \"ID_KAB\"!='{}'".format(str(slc_id)[0:2], str(slc_id)[0:4])
@@ -4727,7 +4397,6 @@ class Otoklim:
                             symbol = QgsFillSymbolV2.createSimple({'color': '223,223,223,255', 'outline_color': '0,0,0,255', 'outline_style': 'solid', 'outline_width': '0.5'})
                             layer_kabupaten.rendererV2().setSymbol(symbol)
                             layer_kabupaten.triggerRepaint()
-
                             # Sub-Districts Styling
                             layer_kecamatan = QgsVectorLayer(self.otoklimdlg.subdistricts.text(), 'Kecamatan', 'ogr')
                             exp = "\"ID_KAB\"='{}' AND \"ID_KEC\"!='{}'".format(str(slc_id)[0:4], str(slc_id))
@@ -4748,7 +4417,6 @@ class Otoklim:
                             palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferDraw, True, True, '1', '')
                             palyr.setDataDefinedProperty(QgsPalLayerSettings.BufferSize, True, True, '1', '')
                             palyr.writeToLayer(layer_kecamatan)
-
                             # Villages Styling
                             layer_desa = QgsVectorLayer(self.otoklimdlg.villages.text(), 'Desa', 'ogr')
                             exp = "\"ID_KEC\"='{}'".format(str(slc_id))
@@ -4816,7 +4484,6 @@ class Otoklim:
                             map_item.setMapCanvas(canvas)
                             map_item.zoomToExtent(canvas.extent())
                             composition.refreshItems()
-                            #composition.exportAsPDF(output_pdf)
                             # Save as image
                             dpi = 150
                             dpmm = dpi / 25.4
@@ -4846,16 +4513,7 @@ class Otoklim:
                             QgsMapLayerRegistry.instance().removeMapLayers(all_layer)
                             del vector
                             os.remove(projectqgs)
-                            # Remove Vector
-                            '''
-                            layer_vector = QgsVectorLayer(vector_cropped, '', 'ogr')
-                            QgsMapLayerRegistry.instance().addMapLayer(layer_vector)
-                            QgsMapLayerRegistry.instance().removeMapLayer(layer_vector.id())
-                            del layer_vector
-                            os.remove(vector_cropped)
-                            '''
                     else:
-                        #print 'skip', str(os.path.basename(output_jpg))
                         logger.info('--- Skip processing for ' + str(os.path.basename(output_jpg)))
                         pass
                 shutil.rmtree(temp_raster)
@@ -4864,188 +4522,6 @@ class Otoklim:
             self.errormessagedlg.ErrorMessage.setText(str(e))
             logger.error(str(e))
             self.errormessagedlg.exec_()
-
-    '''
-    def get_category(self, title, value):
-        """Get Category"""
-        # CATEGORY NOT FIX -> MAKE DYNAMICALLY BASED ON CLASSIFICATION CSV FILE
-        if title.startswith('c'):
-            if value == 1:
-                val = "0 - 20"
-            elif value == 2:
-                val = "21 - 50"
-            elif value == 3:
-                val = "51 - 100"
-            elif value == 4:
-                val = "101 - 150"
-            elif value == 5:
-                val = "151 - 200"
-            elif value == 6:
-                val = "201 - 300"
-            elif value == 7:
-                val = "301 - 400"
-            elif value == 8:
-                val = "401 - 500"
-            elif value == 9:
-                val = "> 500"
-            else:
-                val = str(value) + '_error'
-        else:
-            if value == 1:
-                val = "0 - 30"
-            elif value == 2:
-                val = "31 - 50"
-            elif value == 3:
-                val = "51 - 84"
-            elif value == 4:
-                val = "85 - 115"
-            elif value == 5:
-                val = "116 - 150"
-            elif value == 6:
-                val = "151 - 200"
-            elif value == 7:
-                val = "> 200"
-            else:
-                val = str(value) + '_error'
-        return val
-    '''
-
-    '''
-    def create_default_csv(self, prc_list, csv_directory, prcs_directory, slc_id_list):
-        """Create Default CSV File"""
-        driver = ogr.GetDriverByName("ESRI Shapefile")
-        kabupaten_csv = os.path.join(csv_directory, '1_kabupaten.csv')
-        kecamatan_csv = os.path.join(csv_directory, '2_kecamatan.csv')
-        desa_csv = os.path.join(csv_directory, '3_desa.csv')
-        output_csv_list = [kabupaten_csv, kecamatan_csv, desa_csv]
-        # Create ZS Shapefile
-        def create_zs_shp(region, region_type):
-            zs_shp = os.path.join(prcs_directory, str(region_type) + '.shp')
-            try:
-                os.remove(zs_shp)
-            except:
-                pass
-            layer = QgsVectorLayer(str(region), str(region_type), 'ogr')
-            exp = "\"PROVINSI\"='{}'".format(self.otoklimdlg.Select_Province.currentText())
-            it = layer.getFeatures(QgsFeatureRequest(QgsExpression(exp)))
-            ids = [i.id() for i in it]
-            layer.setSelectedFeatures(ids)
-            QgsVectorFileWriter.writeAsVectorFormat(layer, zs_shp, "utf-8", layer.crs(), "ESRI Shapefile", 1)
-            del layer
-            return zs_shp
-        copied_shp_list = [
-            create_zs_shp(self.otoklimdlg.districts.text(), 'kabupaten_kota'), 
-            create_zs_shp(self.otoklimdlg.subdistricts.text(), 'kecamatan'), 
-            create_zs_shp(self.otoklimdlg.villages.text(), 'desa')]
-        region_id_list = [1, 2, 3]
-        # for copied_shp, output_csv, region_id in zip(copied_shp_list, output_csv_list, region_id_list):
-        for output_csv, region_id in zip(output_csv_list, region_id_list):
-            with open(output_csv, "wb+") as csvfile:
-                csv_writer = csv.writer(csvfile, delimiter=',')
-                if region_id == 1:
-                    main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota']
-                elif region_id == 2:
-                    main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota', 'ID_Kecamatan', 'Kecamatan']
-                else:
-                    main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota', 'ID_Kecamatan', 'Kecamatan', 'ID_Desa', 'Desa']
-                header = main_header
-                for prc in prc_list:
-                    param_header = [prc[0].upper() + '_min', prc[0].upper() + '_maj', prc[0].upper() + '_ket']
-                    header += param_header
-                csv_writer.writerow(header)
-                # Update 25092017 Zonal Statistic unuse
-                for prc in prc_list:
-                    raster = os.path.join(prcs_directory, prc[1])
-                    if prc[0][0:3] == 'ach' or prc[0][0:3] == 'pch':
-                        typ = 'ch'
-                    else:
-                        typ = 'sh'
-                    polygonLayer = QgsVectorLayer(copied_shp, 'zonepolygons', "ogr")
-                    zoneStat = QgsZonalStatistics(polygonLayer, raster, typ, 1, QgsZonalStatistics.Min|QgsZonalStatistics.Max|QgsZonalStatistics.Minority|QgsZonalStatistics.Majority)
-                    zoneStat.calculateStatistics(None)
-                    del polygonLayer
-
-                layer = QgsVectorLayer(copied_shp, 'layer', 'ogr')
-                fields = layer.pendingFields()
-                field_names = [field.name() for field in fields]
-                dataSource = driver.Open(copied_shp, 0)
-                layersource = dataSource.GetLayer()
-                n = 1
-                for feature in layersource:
-                    if (region_id == 1 and feature.GetField("ID_PROV") in slc_id_list) or (region_id == 2 and feature.GetField("ID_KAB") in slc_id_list) or (region_id == 3 and feature.GetField("ID_KEC") in slc_id_list):
-                        if region_id == 1:
-                            main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN")]
-                        elif region_id == 2:
-                            main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN"), feature.GetField("ID_KEC"), feature.GetField("KECAMATAN")]
-                        else:
-                            main_values = [n, feature.GetField("PROVINSI"), feature.GetField("ID_KAB"), feature.GetField("KABUPATEN"), feature.GetField("ID_KEC"), feature.GetField("KECAMATAN"), feature.GetField("ID_DES"), feature.GetField("DESA")]
-                        param_values = []
-                        h = 0
-                        for fieldname in field_names:
-                            if fieldname.startswith('ch'):
-                                break
-                            h += 1
-                        m = 0
-                        for field1, field2, field3, field4 in zip(field_names[h:], field_names[h+1:], field_names[h+2:], field_names[h+3:]):
-                            if m == 0:
-                                v_r = False
-                                v_m = False
-                                v_t = False
-                                v_st = False
-                                v_bn = False
-                                v_n = False
-                                v_an = False
-                                minor_val = self.get_category(field3, feature.GetField(str(field3)))
-                                major_val = self.get_category(field4, feature.GetField(str(field4)))
-                                param_values.append(minor_val)
-                                param_values.append(major_val)
-                                min_val = feature.GetField(str(field1))
-                                max_val = feature.GetField(str(field2))
-                                ket_list = []
-                                if min_val and max_val:
-                                    for value in range(int(min_val), int(max_val) + 1):
-                                        if field1.startswith('c'):
-                                            if (value == 1 or value == 2 or value == 3) and not v_r:
-                                                ket_list.append('R')
-                                                v_r = True
-                                            elif (value == 4 or value == 5 or value == 6) and not v_m:
-                                                ket_list.append('M')
-                                                v_m = True
-                                            elif value == 7 and not v_t:
-                                                ket_list.append('T')
-                                                v_t = True
-                                            elif (value == 8 or value == 9) and not v_st:
-                                                ket_list.append('ST')
-                                                v_st = True
-                                        else:
-                                            if (value == 1 or value == 2 or value == 3) and not v_bn:
-                                                ket_list.append('BN')
-                                                v_bn = True
-                                            elif value == 4 and not v_n:
-                                                ket_list.append('N')
-                                                v_n = True
-                                            elif (value == 5 or value == 6 or value == 7) and not v_an:
-                                                ket_list.append('AN')
-                                                v_an = True
-                                    param_values.append('/'.join(ket_list))
-                                else:
-                                    param_values.append('error')
-                            m += 1
-                            if m == 4:
-                                m = 0
-                        csv_writer.writerow(main_values + param_values)
-                        n += 1
-                dataSource.Destroy()
-            del layer
-        # Delete Unuse SHP
-        for shp in copied_shp_list:
-            QgsVectorFileWriter.deleteShapeFile(shp)
-            try:
-                os.remove(os.path.splitext(shp)[0] +  '.cpg')
-            except OSError:
-                pass
-        return kabupaten_csv, kecamatan_csv, desa_csv
-        '''
 
     def generate_csv(self):
         """Function to generate CSV"""
@@ -5056,21 +4532,10 @@ class Otoklim:
         classified_directory = os.path.join(prcs_directory, 'classified')
         out_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'output')
         csv_directory = os.path.join(out_directory, 'csv')
-        '''
-        date = self.select_date_now()
-        months = date[0]
-        years = date[1]
-        '''
         items = []
         for index in xrange(self.otoklimdlg.treeWidget_selected_2.topLevelItemCount()):
             items.append(self.otoklimdlg.treeWidget_selected_2.topLevelItem(index))
-        '''
-        for index in xrange(self.otoklimdlg.listWidget_selected_2.count()):
-            items.append(self.otoklimdlg.listWidget_selected_2.item(index))
-        '''
-
         slc_id_list = [int(float(i.whatsThis(0).split('|')[1])) for i in items]
-        # slc_name_list = [str(i.whatsThis().split('|')[0]) for i in items]
         project = os.path.join(
             self.otoklimdlg.projectworkspace.text(),
             self.otoklimdlg.projectfilename.text()
@@ -5084,10 +4549,6 @@ class Otoklim:
                     raster_ach_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ACH_1"]["NAME"]
                     param = os.path.splitext(raster_ach_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ach_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_ACH_1"]["REGION_LIST"] = str(slc_id_list)
-                    '''
-                    month = months[0]
-                    year = years[0]
-                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ach_1])
@@ -5098,10 +4559,6 @@ class Otoklim:
                     raster_ash_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ASH_1"]["NAME"]
                     param = os.path.splitext(raster_ash_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ash_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_ASH_1"]["REGION_LIST"] = str(slc_id_list)
-                    '''
-                    month = months[0]
-                    year = years[0]
-                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ash_1])
@@ -5112,10 +4569,6 @@ class Otoklim:
                     raster_pch_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_1"]["NAME"]
                     param = os.path.splitext(raster_pch_1)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PCH_1"]["REGION_LIST"] = str(slc_id_list)
-                    '''
-                    month = months[1]
-                    year = years[1]
-                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_1])
@@ -5126,10 +4579,6 @@ class Otoklim:
                     raster_psh_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_1"]["NAME"]
                     param = os.path.splitext(raster_psh_1)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_1)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PSH_1"]["REGION_LIST"] = str(slc_id_list)
-                    '''
-                    month = months[1]
-                    year = years[1]
-                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_1])
@@ -5140,10 +4589,6 @@ class Otoklim:
                     raster_pch_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_2"]["NAME"]
                     param = os.path.splitext(raster_pch_2)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_2)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PCH_2"]["REGION_LIST"] = str(slc_id_list)
-                    '''
-                    month = months[2]
-                    year = years[2]
-                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_2])
@@ -5154,10 +4599,6 @@ class Otoklim:
                     raster_psh_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_2"]["NAME"]
                     param = os.path.splitext(raster_psh_2)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_2)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PSH_2"]["REGION_LIST"] = str(slc_id_list)
-                    '''
-                    month = months[2]
-                    year = years[2]
-                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_2])
@@ -5168,10 +4609,6 @@ class Otoklim:
                     raster_pch_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_3"]["NAME"]
                     param = os.path.splitext(raster_pch_3)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_3)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PCH_3"]["REGION_LIST"] = str(slc_id_list)
-                    '''
-                    month = months[3]
-                    year = years[3]
-                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_3])
@@ -5182,10 +4619,6 @@ class Otoklim:
                     raster_psh_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_3"]["NAME"]
                     param = os.path.splitext(raster_psh_3)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_3)[0].split('_')[2]
                     otoklim_project["PROCESSING"]["GENERATE_CSV"]["RASTER_PSH_3"]["REGION_LIST"] = str(slc_id_list)
-                    '''
-                    month = months[3]
-                    year = years[3]
-                    '''
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_3])
@@ -5193,8 +4626,6 @@ class Otoklim:
             logger.info('- Selected parameter :' + str(prc_list))
             # Create CSV Default File
             if len(prc_list) > 0:
-                # default_csv = self.create_default_csv(prc_list, csv_directory, prcs_directory, slc_id_list)
-                # Update 26092017, New output CSV
                 driver = ogr.GetDriverByName("ESRI Shapefile")
                 kabupaten_csv = os.path.join(csv_directory, 'kabupaten.csv')
                 kecamatan_csv = os.path.join(csv_directory, 'kecamatan.csv')
@@ -5249,21 +4680,18 @@ class Otoklim:
                                         check_slc.append(slc_id)
                                         logger.info('---- Region : ' + str(slc_id))
                                         layer = QgsVectorLayer(shp, "PROVINSI", "ogr")
-                                        #QgsMapLayerRegistry.instance().addMapLayer(layer)
                                         exp = "\"ID_PROV\"='{}'".format(str(slc_id))
                                         layer.setSubsetString(exp)
                                     elif len(str(slc_id)) == 4 and region_id == 2:
                                         check_slc.append(slc_id)
                                         logger.info('---- Region : ' + str(slc_id))
                                         layer = QgsVectorLayer(shp, "KABUPATEN", "ogr")
-                                        #QgsMapLayerRegistry.instance().addMapLayer(layer)
                                         exp = "\"ID_KAB\"='{}'".format(str(slc_id))
                                         layer.setSubsetString(exp)
                                     elif len(str(slc_id)) == 7 and region_id == 3:
                                         check_slc.append(slc_id)
                                         logger.info('---- Region : ' + str(slc_id))
                                         layer = QgsVectorLayer(shp, "KECAMATAN", "ogr")
-                                        #QgsMapLayerRegistry.instance().addMapLayer(layer)
                                         exp = "\"ID_KEC\"='{}'".format(str(slc_id))
                                         layer.setSubsetString(exp)
                                     else:
