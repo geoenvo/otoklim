@@ -4672,7 +4672,7 @@ class Otoklim:
                                 param_header = [prc[0].upper() + '_SBK', prc[0].upper() + '_SB', prc[0].upper() + '_SBB', prc[0].upper() + '_M']
                                 param.append(param_header)
                                 header += param_header
-                            csv_writer = csv.DictWriter(csvfile, fieldnames=header,  delimiter=',')
+                            csv_writer = csv.DictWriter(csvfile, fieldnames=header,  delimiter=';')
                             csv_writer.writeheader()
                             for slc_id in slc_id_list:
                                 if slc_id not in check_slc:
