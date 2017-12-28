@@ -689,6 +689,12 @@ class Otoklim:
         self.otoklimdlg.Select_Month.setCurrentIndex(index)
         year = json['PROCESSING']['IDW_INTERPOLATION']['THIS_YEAR']
         self.otoklimdlg.Select_Year.setText(year)
+        noip = json['PROCESSING']['IDW_INTERPOLATION']['NOIP']
+        self.otoklimdlg.Select_NOIP.setText(noip)
+        power = json['PROCESSING']['IDW_INTERPOLATION']['POWER']
+        self.otoklimdlg.Select_Power.setText(power)
+        cell_size = json['PROCESSING']['IDW_INTERPOLATION']['CELL_SIZE']
+        self.otoklimdlg.Select_Cell_Size.setText(cell_size)
         idw_interpolate_prc = json['PROCESSING']['IDW_INTERPOLATION']['PROCESSED']
         if idw_interpolate_prc:
             self.otoklimdlg.classificationPanelAccord.setEnabled(True)
@@ -850,6 +856,9 @@ class Otoklim:
         self.otoklimdlg.Select_Province.setWhatsThis('edited')
         self.otoklimdlg.Select_Month.setWhatsThis('')
         self.otoklimdlg.Select_Year.setWhatsThis('')
+        self.otoklimdlg.Select_NOIP.setWhatsThis('')
+        self.otoklimdlg.Select_Power.setWhatsThis('')
+        self.otoklimdlg.Select_Cell_Size.setWhatsThis('')
         self.otoklimdlg.logoArea.hide()
         self.otoklimdlg.scrollArea.show()
         self.otoklimdlg.projectparamPanel.setEnabled(True)
@@ -901,6 +910,9 @@ class Otoklim:
             self.otoklimdlg.Select_Province.setWhatsThis('')
             self.otoklimdlg.Select_Month.setWhatsThis('')
             self.otoklimdlg.Select_Year.setWhatsThis('')
+            self.otoklimdlg.Select_NOIP.setWhatsThis('')
+            self.otoklimdlg.Select_Power.setWhatsThis('')
+            self.otoklimdlg.Select_Cell_Size.setWhatsThis('')
             with open(open_project) as jsonfile:
                 otoklim_project = json.load(jsonfile)
             self.read_otoklim_file(otoklim_project)
@@ -1539,7 +1551,7 @@ class Otoklim:
         self.otoklimdlg.addpsh_3.setEnabled(False)
 
     def year_now_edited(self):
-        """Function to set year nor as edited"""
+        """Function to set year now as edited"""
         self.otoklimdlg.Select_Year.setWhatsThis('edited')
         self.otoklimdlg.groupBox_3.setEnabled(False)
         self.otoklimdlg.ach_1.setChecked(False)
@@ -1580,7 +1592,6 @@ class Otoklim:
         self.otoklimdlg.addpsh_2.setEnabled(False)
         self.otoklimdlg.addpch_3.setEnabled(False)
         self.otoklimdlg.addpsh_3.setEnabled(False)
-
 
     def month_edited(self):
         """Function to set month edited"""
@@ -2261,6 +2272,49 @@ class Otoklim:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 self.otoklimdlg.Select_Year.setWhatsThis('')
                 change = True
+
+            if self.otoklimdlg.Select_NOIP.whatsThis() == 'edited':
+                try:
+                    int(self.otoklimdlg.Select_NOIP.text())
+                except:
+                    errormessage = 'Number of interpolation points value must be integer'
+                    raise Exception(errormessage)
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]['NOIP'] = str(self.otoklimdlg.Select_NOIP.text())
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                self.otoklimdlg.Select_NOIP.setWhatsThis('')
+                change = True
+            
+            if self.otoklimdlg.Select_Power.whatsThis() == 'edited':
+                try:
+                    float(self.otoklimdlg.Select_Power.text())
+                except:
+                    errormessage = 'Power parameter value must be float'
+                    raise Exception(errormessage)
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]['POWER'] = str(self.otoklimdlg.Select_Power.text())
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                self.otoklimdlg.Select_Power.setWhatsThis('')
+                change = True
+            
+            if self.otoklimdlg.Select_Cell_Size.whatsThis() == 'edited':
+                try:
+                    float(self.otoklimdlg.Select_Cell_Size.text())
+                except:
+                    errormessage = 'Cell size value must be float'
+                    raise Exception(errormessage)
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["PROCESSING"]["IDW_INTERPOLATION"]['CELL_SIZE'] = str(self.otoklimdlg.Select_Cell_Size.text())
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                self.otoklimdlg.Select_Cell_Size.setWhatsThis('')
+                change = True
+
             if change:
                 self.read_otoklim_file(otoklim_project, True)
         except Exception as e:
@@ -2602,6 +2656,9 @@ class Otoklim:
                             "ID_PROV": "",
                             "THIS_MONTH": month_name(datetime.datetime.now().month),
                             "THIS_YEAR": str(datetime.datetime.now().year),
+                            "NOIP": "12",
+                            "POWER": "2.0",
+                            "CELL_SIZE": "0.001",
                             "RASTER_ACH_1": {
                                 "NAME": "",
                                 "LOCATION": "INTER_FILE_LOC",
@@ -2818,7 +2875,10 @@ class Otoklim:
             self.otoklimdlg.Input_Value_CSV.whatsThis(),
             self.otoklimdlg.Select_Province.whatsThis(),
             self.otoklimdlg.Select_Month.whatsThis(),
-            self.otoklimdlg.Select_Year.whatsThis()
+            self.otoklimdlg.Select_Year.whatsThis(),
+            self.otoklimdlg.Select_NOIP.whatsThis(),
+            self.otoklimdlg.Select_Power.whatsThis(),
+            self.otoklimdlg.Select_Cell_Size.whatsThis()
         ]
         if 'edited' in all_param:
             result = self.saveconfirmdlg.exec_()
@@ -3054,6 +3114,24 @@ class Otoklim:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
 
             logger.info('- Selected parameter :' + str(prc_list))
+            try:
+                noip = int(self.otoklimdlg.Select_NOIP.text())
+            except:
+                errormessage = 'Number of interpolation points value must be integer'
+                raise Exception(errormessage)
+            try:
+                power = float(self.otoklimdlg.Select_Power.text())
+            except:
+                errormessage = 'Power parameter value must be float'
+                raise Exception(errormessage)
+            try:
+                cell_size = float(self.otoklimdlg.Select_Cell_Size.text())
+            except:
+                errormessage = 'Cell size value must be float'
+                raise Exception(errormessage)
+            logger.info('- Number of interpolation points :' + str(noip))
+            logger.info('- Power Parameter :' + str(power))
+            logger.info('- Cell Size :' + str(cell_size))
             for param in prc_list:
                 logger.info('-- Field (Parameter) : ' + param)
                 logger.debug('-- Interpolating in progress...')
@@ -3075,10 +3153,18 @@ class Otoklim:
 
                 extent = layer_provinsi.extent()
                 logger.info('-- runalg v.surf.idw')
+                '''
                 processing.runalg(
                     'grass7:v.surf.idw',
                     layer, 8.0, 5.0, param, False,
                     "%f,%f,%f,%f" % (extent.xMinimum(), extent.xMaximum(), extent.yMinimum(), extent.yMaximum()), 0.001, -1.0, 0.0001,
+                    raster_interpolated
+                )
+                '''
+                processing.runalg(
+                    'grass7:v.surf.idw',
+                    layer, noip, power, param, False,
+                    "%f,%f,%f,%f" % (extent.xMinimum(), extent.xMaximum(), extent.yMinimum(), extent.yMaximum()), cell_size, -1.0, 0.0001,
                     raster_interpolated
                 )
                 logger.info('-- runalg saga:clipgridwithpolygon')
@@ -4543,6 +4629,7 @@ class Otoklim:
         try:
             logger.debug('- Listing selected parameter to be processed')
             prc_list = []
+            prc_list_fixed = []
             if self.otoklimdlg.ach_1_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -4552,7 +4639,11 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ach_1])
+                prc_list_fixed.append([param, raster_ach_1])
                 logger.debug('-- ' + str(param) + ' is checked')
+            else:
+                prc_list_fixed.append(['', ''])
+
             if self.otoklimdlg.ash_1_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -4562,7 +4653,11 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ash_1])
+                prc_list_fixed.append([param, raster_ash_1])
                 logger.debug('-- ' + str(param) + ' is checked')
+            else:
+                prc_list_fixed.append(['', ''])
+
             if self.otoklimdlg.pch_1_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -4572,7 +4667,11 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_1])
+                prc_list_fixed.append([param, raster_pch_1])
                 logger.debug('-- ' + str(param) + ' is checked')
+            else:
+                prc_list_fixed.append(['', ''])
+
             if self.otoklimdlg.psh_1_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -4582,7 +4681,11 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_1])
+                prc_list_fixed.append([param, raster_psh_1])
                 logger.debug('-- ' + str(param) + ' is checked')
+            else:
+                prc_list_fixed.append(['', ''])
+
             if self.otoklimdlg.pch_2_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -4592,7 +4695,11 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_2])
+                prc_list_fixed.append([param, raster_pch_2])
                 logger.debug('-- ' + str(param) + ' is checked')
+            else:
+                prc_list_fixed.append(['', ''])
+
             if self.otoklimdlg.psh_2_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -4602,7 +4709,11 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_2])
+                prc_list_fixed.append([param, raster_psh_2])
                 logger.debug('-- ' + str(param) + ' is checked')
+            else:
+                prc_list_fixed.append(['', ''])
+
             if self.otoklimdlg.pch_3_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -4612,7 +4723,11 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_3])
+                prc_list_fixed.append([param, raster_pch_3])
                 logger.debug('-- ' + str(param) + ' is checked')
+            else:
+                prc_list_fixed.append(['', ''])
+
             if self.otoklimdlg.psh_3_csv.isChecked():
                 with open(project, 'r') as jsonfile:
                     otoklim_project = json.load(jsonfile)
@@ -4622,7 +4737,11 @@ class Otoklim:
                 with open(project, 'w') as jsonfile:
                     jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_3])
+                prc_list_fixed.append([param, raster_psh_3])
                 logger.debug('-- ' + str(param) + ' is checked')
+            else:
+                prc_list_fixed.append(['', ''])
+
             logger.info('- Selected parameter :' + str(prc_list))
             # Create CSV Default File
             if len(prc_list) > 0:
@@ -4668,7 +4787,7 @@ class Otoklim:
                                 main_header = ['No', 'Provinsi', 'ID_Kabupaten_Kota', 'Kabupaten_Kota', 'ID_Kecamatan', 'Kecamatan', 'ID_Desa', 'Desa']
                             header = main_header
                             param = []
-                            for prc in prc_list:
+                            for prc in prc_list_fixed:
                                 param_header = [prc[0].upper() + '_SBK', prc[0].upper() + '_SB', prc[0].upper() + '_SBB', prc[0].upper() + '_M']
                                 param.append(param_header)
                                 header += param_header
