@@ -4888,10 +4888,11 @@ class Otoklim:
                                                     area_all = 0
                                                     features = layer_union.getFeatures()
                                                     for i in features:
-                                                        if expression.evaluate(i):
-                                                            area_all += expression.evaluate(i)
-                                                        else:
-                                                            area_all += 0
+                                                        if i[prc[0].upper().split('_')[0]]:
+                                                            if expression.evaluate(i):
+                                                                area_all += expression.evaluate(i)
+                                                            else:
+                                                                area_all += 0
                                                     layer_union.startEditing()
                                                     features = layer_union.getFeatures()
                                                     for i in features:
