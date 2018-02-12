@@ -1803,6 +1803,8 @@ class Otoklim:
             for row in spamreader:
                 line += 1
                 if type == 'rainpost':
+                    '''
+                    post_id is allowed to be varchar
                     try:
                         int(row['post_id'])
                     except:
@@ -1811,6 +1813,7 @@ class Otoklim:
                         raise Exception(errormessage)
                         item = QListWidgetItem(errormessage)
                         self.projectprogressdlg.ProgressList.addItem(item)
+                    '''
                     try:
                         float(row['lat'])
                     except:
@@ -1866,12 +1869,15 @@ class Otoklim:
                         item = QListWidgetItem(errormessage)
                         self.projectprogressdlg.ProgressList.addItem(item)
                 else:
+                    '''
+                    post_id is allowed to be varchar
                     try:
                         int(row['post_id'])
                     except:
                         error_message = ': post_id [' + row['post_id'] + '] value must be integer'
                         errormessage = 'error at line: ' + str(line) + error_message
                         raise Exception(errormessage)
+                    '''
                     try:
                         if 'ACH_1' in row:
                             if row['ACH_1'].strip() == '':
