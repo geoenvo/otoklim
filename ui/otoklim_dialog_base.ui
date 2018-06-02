@@ -48,8 +48,8 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>0</y>
-         <width>861</width>
+         <y>-127</y>
+         <width>862</width>
          <height>588</height>
         </rect>
        </property>
@@ -110,9 +110,9 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-540</y>
+         <y>-195</y>
          <width>870</width>
-         <height>1817</height>
+         <height>1827</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -141,13 +141,13 @@
           <property name="minimumSize">
            <size>
             <width>840</width>
-            <height>400</height>
+            <height>410</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
             <width>840</width>
-            <height>400</height>
+            <height>410</height>
            </size>
           </property>
           <property name="frameShape">
@@ -163,8 +163,32 @@
            <number>1</number>
           </property>
           <layout class="QGridLayout" name="gridLayout">
-           <item row="13" column="5">
-            <widget class="QPushButton" name="Add_bathymetry">
+           <item row="21" column="0">
+            <widget class="QLabel" name="label_21">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>200</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Legenda CH :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="21" column="4">
+            <widget class="QPushButton" name="Edit_legenda_ch">
              <property name="maximumSize">
               <size>
                <width>40</width>
@@ -172,30 +196,12 @@
               </size>
              </property>
              <property name="text">
-              <string>Add</string>
+              <string>Edit</string>
              </property>
             </widget>
            </item>
-           <item row="2" column="1">
-            <widget class="QLabel" name="projectname">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>name</string>
-             </property>
-            </widget>
-           </item>
-           <item row="9" column="1">
-            <widget class="QLabel" name="province">
+           <item row="21" column="1">
+            <widget class="QLabel" name="legendach">
              <property name="enabled">
               <bool>true</bool>
              </property>
@@ -209,72 +215,6 @@
              </property>
              <property name="text">
               <string>path</string>
-             </property>
-            </widget>
-           </item>
-           <item row="12" column="1">
-            <widget class="QLabel" name="villages">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>path</string>
-             </property>
-            </widget>
-           </item>
-           <item row="10" column="0">
-            <widget class="QLabel" name="label_10">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>200</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Cities/Districts :</string>
-             </property>
-            </widget>
-           </item>
-           <item row="18" column="0">
-            <widget class="QLabel" name="label_18">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>200</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Map Template 1 :</string>
              </property>
             </widget>
            </item>
@@ -302,27 +242,45 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="3">
-            <widget class="QPushButton" name="showFolder">
-             <property name="minimumSize">
-              <size>
-               <width>85</width>
-               <height>30</height>
-              </size>
-             </property>
+           <item row="15" column="5">
+            <widget class="QPushButton" name="View_rainpost">
              <property name="maximumSize">
               <size>
-               <width>80</width>
-               <height>30</height>
+               <width>40</width>
+               <height>25</height>
               </size>
              </property>
              <property name="text">
-              <string>Show In Folder</string>
+              <string>View</string>
              </property>
             </widget>
            </item>
-           <item row="3" column="1">
-            <widget class="QLabel" name="projectworkspace">
+           <item row="10" column="0">
+            <widget class="QLabel" name="label_10">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>200</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Cities/Districts :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="11" column="1">
+            <widget class="QLabel" name="subdistricts">
              <property name="enabled">
               <bool>true</bool>
              </property>
@@ -411,6 +369,19 @@
              </property>
             </widget>
            </item>
+           <item row="13" column="5">
+            <widget class="QPushButton" name="Add_bathymetry">
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Add</string>
+             </property>
+            </widget>
+           </item>
            <item row="4" column="0">
             <widget class="QLabel" name="label_8">
              <property name="enabled">
@@ -435,21 +406,26 @@
              </property>
             </widget>
            </item>
-           <item row="15" column="5">
-            <widget class="QPushButton" name="View_rainpost">
-             <property name="maximumSize">
-              <size>
-               <width>40</width>
-               <height>25</height>
-              </size>
+           <item row="2" column="1">
+            <widget class="QLabel" name="projectname">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
              </property>
              <property name="text">
-              <string>View</string>
+              <string>name</string>
              </property>
             </widget>
            </item>
-           <item row="10" column="1">
-            <widget class="QLabel" name="districts">
+           <item row="12" column="1">
+            <widget class="QLabel" name="villages">
              <property name="enabled">
               <bool>true</bool>
              </property>
@@ -490,6 +466,176 @@
              </property>
             </widget>
            </item>
+           <item row="13" column="4">
+            <widget class="QPushButton" name="Edit_bathymetry">
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Edit</string>
+             </property>
+            </widget>
+           </item>
+           <item row="18" column="0">
+            <widget class="QLabel" name="label_18">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>200</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Map Template 1 :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLabel" name="projectfilename">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>path</string>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="1">
+            <widget class="QLabel" name="province">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>path</string>
+             </property>
+            </widget>
+           </item>
+           <item row="17" column="0">
+            <widget class="QLabel" name="label_17">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>200</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Normal Rain Classification :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="13" column="0">
+            <widget class="QLabel" name="label_13">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>200</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Bathymetry :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="11" column="5">
+            <widget class="QPushButton" name="Add_subdistricts">
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Add</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLabel" name="projectworkspace">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>path</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QLabel" name="csvdelimiter">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>delimiter</string>
+             </property>
+            </widget>
+           </item>
            <item row="16" column="4">
             <widget class="QPushButton" name="Edit_rainfall_class">
              <property name="maximumSize">
@@ -503,8 +649,95 @@
              </property>
             </widget>
            </item>
-           <item row="11" column="1">
-            <widget class="QLabel" name="subdistricts">
+           <item row="2" column="3">
+            <widget class="QPushButton" name="showFolder">
+             <property name="minimumSize">
+              <size>
+               <width>85</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>80</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Show In Folder</string>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="5">
+            <widget class="QPushButton" name="Add_districts">
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Add</string>
+             </property>
+            </widget>
+           </item>
+           <item row="16" column="5">
+            <widget class="QPushButton" name="View_rainfall_class">
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>View</string>
+             </property>
+            </widget>
+           </item>
+           <item row="12" column="0">
+            <widget class="QLabel" name="label_12">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>200</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Villages :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="1">
+            <widget class="QLabel" name="districts">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>path</string>
+             </property>
+            </widget>
+           </item>
+           <item row="15" column="1">
+            <widget class="QLabel" name="rainpostfile">
              <property name="enabled">
               <bool>true</bool>
              </property>
@@ -534,197 +767,6 @@
              </property>
             </widget>
            </item>
-           <item row="16" column="5">
-            <widget class="QPushButton" name="View_rainfall_class">
-             <property name="maximumSize">
-              <size>
-               <width>40</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>View</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="1">
-            <widget class="QLabel" name="projectfilename">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>path</string>
-             </property>
-            </widget>
-           </item>
-           <item row="13" column="0">
-            <widget class="QLabel" name="label_13">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>200</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Bathymetry :</string>
-             </property>
-            </widget>
-           </item>
-           <item row="12" column="0">
-            <widget class="QLabel" name="label_12">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>200</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Villages :</string>
-             </property>
-            </widget>
-           </item>
-           <item row="17" column="0">
-            <widget class="QLabel" name="label_17">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>200</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Normal Rain Classification :</string>
-             </property>
-            </widget>
-           </item>
-           <item row="15" column="4">
-            <widget class="QPushButton" name="Edit_rainpost">
-             <property name="maximumSize">
-              <size>
-               <width>40</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Edit</string>
-             </property>
-            </widget>
-           </item>
-           <item row="15" column="1">
-            <widget class="QLabel" name="rainpostfile">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>path</string>
-             </property>
-            </widget>
-           </item>
-           <item row="11" column="5">
-            <widget class="QPushButton" name="Add_subdistricts">
-             <property name="maximumSize">
-              <size>
-               <width>40</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Add</string>
-             </property>
-            </widget>
-           </item>
-           <item row="13" column="4">
-            <widget class="QPushButton" name="Edit_bathymetry">
-             <property name="maximumSize">
-              <size>
-               <width>40</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Edit</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="1">
-            <widget class="QLabel" name="csvdelimiter">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>delimiter</string>
-             </property>
-            </widget>
-           </item>
-           <item row="10" column="5">
-            <widget class="QPushButton" name="Add_districts">
-             <property name="maximumSize">
-              <size>
-               <width>40</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Add</string>
-             </property>
-            </widget>
-           </item>
            <item row="17" column="1">
             <widget class="QLabel" name="normalrainfile">
              <property name="enabled">
@@ -743,103 +785,8 @@
              </property>
             </widget>
            </item>
-           <item row="13" column="1">
-            <widget class="QLabel" name="bathymetry">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>path</string>
-             </property>
-            </widget>
-           </item>
-           <item row="11" column="4">
-            <widget class="QPushButton" name="Edit_subdistricts">
-             <property name="maximumSize">
-              <size>
-               <width>40</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Edit</string>
-             </property>
-            </widget>
-           </item>
-           <item row="10" column="4">
-            <widget class="QPushButton" name="Edit_districts">
-             <property name="maximumSize">
-              <size>
-               <width>40</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Edit</string>
-             </property>
-            </widget>
-           </item>
-           <item row="14" column="0" colspan="6">
-            <widget class="Line" name="line_2">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
-           </item>
-           <item row="16" column="1">
-            <widget class="QLabel" name="rainfallfile">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>path</string>
-             </property>
-            </widget>
-           </item>
-           <item row="17" column="5">
-            <widget class="QPushButton" name="View_normalrain_class">
-             <property name="maximumSize">
-              <size>
-               <width>40</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>View</string>
-             </property>
-            </widget>
-           </item>
-           <item row="18" column="4">
-            <widget class="QPushButton" name="Edit_map_template">
-             <property name="maximumSize">
-              <size>
-               <width>40</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Edit</string>
-             </property>
-            </widget>
-           </item>
-           <item row="17" column="4">
-            <widget class="QPushButton" name="Edit_normalrain_class">
+           <item row="15" column="4">
+            <widget class="QPushButton" name="Edit_rainpost">
              <property name="maximumSize">
               <size>
                <width>40</width>
@@ -864,8 +811,165 @@
              </property>
             </widget>
            </item>
+           <item row="14" column="0" colspan="6">
+            <widget class="Line" name="line_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="17" column="5">
+            <widget class="QPushButton" name="View_normalrain_class">
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>View</string>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="4">
+            <widget class="QPushButton" name="Edit_districts">
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Edit</string>
+             </property>
+            </widget>
+           </item>
+           <item row="16" column="1">
+            <widget class="QLabel" name="rainfallfile">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>path</string>
+             </property>
+            </widget>
+           </item>
+           <item row="17" column="4">
+            <widget class="QPushButton" name="Edit_normalrain_class">
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Edit</string>
+             </property>
+            </widget>
+           </item>
+           <item row="18" column="4">
+            <widget class="QPushButton" name="Edit_map_template">
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Edit</string>
+             </property>
+            </widget>
+           </item>
+           <item row="11" column="4">
+            <widget class="QPushButton" name="Edit_subdistricts">
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Edit</string>
+             </property>
+            </widget>
+           </item>
            <item row="9" column="4">
             <widget class="QPushButton" name="Edit_province">
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Edit</string>
+             </property>
+            </widget>
+           </item>
+           <item row="13" column="1">
+            <widget class="QLabel" name="bathymetry">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>path</string>
+             </property>
+            </widget>
+           </item>
+           <item row="18" column="1">
+            <widget class="QLabel" name="maptemplate">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>path</string>
+             </property>
+            </widget>
+           </item>
+           <item row="19" column="1">
+            <widget class="QLabel" name="maptemplate2">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>path</string>
+             </property>
+            </widget>
+           </item>
+           <item row="20" column="4">
+            <widget class="QPushButton" name="Edit_map_template_3">
              <property name="maximumSize">
               <size>
                <width>40</width>
@@ -901,133 +1005,10 @@
              </property>
             </widget>
            </item>
-           <item row="16" column="0">
-            <widget class="QLabel" name="label_16">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>200</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Rainfall Classification :</string>
-             </property>
-            </widget>
-           </item>
            <item row="8" column="0" colspan="6">
             <widget class="Line" name="line">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="4">
-            <widget class="QPushButton" name="Edit_csvdelimiter">
-             <property name="maximumSize">
-              <size>
-               <width>40</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Edit</string>
-             </property>
-            </widget>
-           </item>
-           <item row="12" column="4">
-            <widget class="QPushButton" name="Edit_village">
-             <property name="maximumSize">
-              <size>
-               <width>40</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Edit</string>
-             </property>
-            </widget>
-           </item>
-           <item row="19" column="4">
-            <widget class="QPushButton" name="Edit_map_template_2">
-             <property name="maximumSize">
-              <size>
-               <width>40</width>
-               <height>25</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Edit</string>
-             </property>
-            </widget>
-           </item>
-           <item row="19" column="1">
-            <widget class="QLabel" name="maptemplate2">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>path</string>
-             </property>
-            </widget>
-           </item>
-           <item row="18" column="1">
-            <widget class="QLabel" name="maptemplate">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>50</weight>
-               <bold>false</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>path</string>
-             </property>
-            </widget>
-           </item>
-           <item row="19" column="0">
-            <widget class="QLabel" name="label_19">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>200</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="font">
-              <font>
-               <family>Calibri</family>
-               <pointsize>10</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Map Template 2 :</string>
              </property>
             </widget>
            </item>
@@ -1055,6 +1036,93 @@
              </property>
             </widget>
            </item>
+           <item row="19" column="0">
+            <widget class="QLabel" name="label_19">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>200</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Map Template 2 :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="16" column="0">
+            <widget class="QLabel" name="label_16">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>200</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Rainfall Classification :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="12" column="4">
+            <widget class="QPushButton" name="Edit_village">
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Edit</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="4">
+            <widget class="QPushButton" name="Edit_csvdelimiter">
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Edit</string>
+             </property>
+            </widget>
+           </item>
+           <item row="19" column="4">
+            <widget class="QPushButton" name="Edit_map_template_2">
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>25</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Edit</string>
+             </property>
+            </widget>
+           </item>
            <item row="20" column="1">
             <widget class="QLabel" name="maptemplate3">
              <property name="enabled">
@@ -1073,8 +1141,50 @@
              </property>
             </widget>
            </item>
-           <item row="20" column="4">
-            <widget class="QPushButton" name="Edit_map_template_3">
+           <item row="22" column="0">
+            <widget class="QLabel" name="label_22">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>200</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Legenda SH :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="22" column="1">
+            <widget class="QLabel" name="legendash">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="font">
+              <font>
+               <family>Calibri</family>
+               <pointsize>10</pointsize>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>path</string>
+             </property>
+            </widget>
+           </item>
+           <item row="22" column="4">
+            <widget class="QPushButton" name="Edit_legenda_sh">
              <property name="maximumSize">
               <size>
                <width>40</width>
@@ -1140,6 +1250,12 @@
           <zorder>label_20</zorder>
           <zorder>maptemplate3</zorder>
           <zorder>Edit_map_template_3</zorder>
+          <zorder>label_21</zorder>
+          <zorder>legendach</zorder>
+          <zorder>Edit_legenda_ch</zorder>
+          <zorder>label_22</zorder>
+          <zorder>legendash</zorder>
+          <zorder>Edit_legenda_sh</zorder>
          </widget>
         </item>
         <item>
@@ -3142,7 +3258,7 @@
      <x>0</x>
      <y>0</y>
      <width>900</width>
-     <height>21</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuMenu">
@@ -3150,7 +3266,7 @@
      <rect>
       <x>541</x>
       <y>219</y>
-      <width>135</width>
+      <width>128</width>
       <height>169</height>
      </rect>
     </property>

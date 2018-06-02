@@ -280,6 +280,22 @@ class Otoklim:
             self.select_input_map_template_3
         )
 
+        self.newprojectdlg.Input_Legenda_CH.clear()
+        self.newprojectdlg.Input_Legenda_CH.textChanged.connect(
+            self.enable_create_button
+        )
+        self.newprojectdlg.Browse_legenda_ch.clicked.connect(
+            self.select_input_legenda_ch
+        )
+
+        self.newprojectdlg.Input_Legenda_SH.clear()
+        self.newprojectdlg.Input_Legenda_SH.textChanged.connect(
+            self.enable_create_button
+        )
+        self.newprojectdlg.Browse_legenda_sh.clicked.connect(
+            self.select_input_legenda_sh
+        )
+
         # Add New Project Next Trigger
         self.newprojectdlg.ProjectCreate.clicked.connect(
             self.select_project_create
@@ -321,6 +337,12 @@ class Otoklim:
         )
         self.otoklimdlg.Edit_map_template_3.clicked.connect(
             self.edit_map_template_3
+        )
+        self.otoklimdlg.Edit_legenda_ch.clicked.connect(
+            self.edit_legenda_ch
+        )
+        self.otoklimdlg.Edit_legenda_sh.clicked.connect(
+            self.edit_legenda_sh
         )
 
         # Add Show Folder Trigger Logic
@@ -573,6 +595,10 @@ class Otoklim:
             self.otoklimdlg.maptemplate2.setStyleSheet('color: black')
             self.otoklimdlg.maptemplate3.setWhatsThis('')
             self.otoklimdlg.maptemplate3.setStyleSheet('color: black')
+            self.otoklimdlg.legendach.setWhatsThis('')
+            self.otoklimdlg.legendach.setStyleSheet('color: black')
+            self.otoklimdlg.legendash.setWhatsThis('')
+            self.otoklimdlg.legendash.setStyleSheet('color: black')
             project_name = self.askprojectdlg.ProjectName.text()
             self.askprojectdlg.ProjectName.clear()
             self.otoklimdlg.hide()
@@ -595,6 +621,8 @@ class Otoklim:
                 self.newprojectdlg.Input_map_template.clear()
                 self.newprojectdlg.Input_map_template_2.clear()
                 self.newprojectdlg.Input_map_template_3.clear()
+                self.newprojectdlg.Input_Legenda_CH.clear()
+                self.newprojectdlg.Input_Legenda_SH.clear()
         else:
             self.askprojectdlg.ProjectName.clear()
 
@@ -670,6 +698,16 @@ class Otoklim:
             json['FILE']['MAP_TEMP_3']['NAME']
         )
         self.otoklimdlg.maptemplate3.setText(map_template_3)
+        legenda_ch = os.path.join(
+            json['LOCATION'][json['FILE']['LEGENDA_CH']['LOCATION']],
+            json['FILE']['LEGENDA_CH']['NAME']
+        )
+        self.otoklimdlg.legendach.setText(legenda_ch)
+        legenda_sh = os.path.join(
+            json['LOCATION'][json['FILE']['LEGENDA_SH']['LOCATION']],
+            json['FILE']['LEGENDA_SH']['NAME']
+        )
+        self.otoklimdlg.legendash.setText(legenda_sh)
         try:
             value_csv = os.path.join(
                 json['LOCATION'][json['PROCESSING']['IDW_INTERPOLATION']['INPUT_VALUE_FILE']['LOCATION']],
@@ -906,6 +944,10 @@ class Otoklim:
             self.otoklimdlg.maptemplate2.setStyleSheet('color: black')
             self.otoklimdlg.maptemplate3.setWhatsThis('')
             self.otoklimdlg.maptemplate3.setStyleSheet('color: black')
+            self.otoklimdlg.legendach.setWhatsThis('')
+            self.otoklimdlg.legendach.setStyleSheet('color: black')
+            self.otoklimdlg.legendash.setWhatsThis('')
+            self.otoklimdlg.legendash.setStyleSheet('color: black')
             self.otoklimdlg.Input_Value_CSV.setWhatsThis('')
             self.otoklimdlg.Select_Province.setWhatsThis('')
             self.otoklimdlg.Select_Month.setWhatsThis('')
@@ -1035,6 +1077,26 @@ class Otoklim:
             "*.qpt"
         )
         self.newprojectdlg.Input_map_template_3.setText(maptemplate_file_3)
+    
+    def select_input_legenda_ch(self):
+        """Select QGIS Legenda CH Image file"""
+        legenda_ch = QFileDialog.getOpenFileName(
+            self.newprojectdlg,
+            "",
+            "",
+            ""
+        )
+        self.newprojectdlg.Input_Legenda_CH.setText(legenda_ch)
+    
+    def select_input_legenda_sh(self):
+        """Select QGIS Legenda SH Image file"""
+        legenda_sh = QFileDialog.getOpenFileName(
+            self.newprojectdlg,
+            "",
+            "",
+            ""
+        )
+        self.newprojectdlg.Input_Legenda_SH.setText(legenda_sh)
 
     # Project Parameter Edit Function
     def edit_csv_delimiter(self):
@@ -1315,6 +1377,56 @@ class Otoklim:
             self.otoklimdlg.generatecsvPanel.hide()
             self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
 
+    def edit_legenda_ch(self):
+        """Edit QGIS Legenda CH file"""
+        legenda_ch_file = QFileDialog.getOpenFileName(
+            self.otoklimdlg,
+            "",
+            "",
+            ""
+        )
+        if legenda_ch_file:
+            self.otoklimdlg.legendach.setText(legenda_ch_file)
+            self.otoklimdlg.legendach.setWhatsThis('edited')
+            self.otoklimdlg.legendach.setStyleSheet('color: red')
+            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+            self.otoklimdlg.idwinterpolationPanel.hide()
+            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
+            self.otoklimdlg.classificationPanel.setEnabled(False)
+            self.otoklimdlg.classificationPanel.hide()
+            self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.hide()
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.hide()
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
+
+    def edit_legenda_sh(self):
+        """Edit QGIS Legenda SH file"""
+        legenda_sh_file = QFileDialog.getOpenFileName(
+            self.otoklimdlg,
+            "",
+            "",
+            ""
+        )
+        if legenda_sh_file:
+            self.otoklimdlg.legendash.setText(legenda_sh_file)
+            self.otoklimdlg.legendash.setWhatsThis('edited')
+            self.otoklimdlg.legendash.setStyleSheet('color: red')
+            self.otoklimdlg.idwinterpolationPanel.setEnabled(False)
+            self.otoklimdlg.idwinterpolationPanel.hide()
+            self.otoklimdlg.idwinterpolationPanelAccord.setEnabled(False)
+            self.otoklimdlg.classificationPanel.setEnabled(False)
+            self.otoklimdlg.classificationPanel.hide()
+            self.otoklimdlg.classificationPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.setEnabled(False)
+            self.otoklimdlg.generatemapPanel.hide()
+            self.otoklimdlg.generatemapPanelAccord.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.setEnabled(False)
+            self.otoklimdlg.generatecsvPanel.hide()
+            self.otoklimdlg.generatecsvPanelAccord.setEnabled(False)
+
     # Workspace Show In Folder
     def show_folder(self):
         """Workspace Show In Folder """
@@ -1509,7 +1621,9 @@ class Otoklim:
             self.newprojectdlg.Input_normalrain_class.text(),
             self.newprojectdlg.Input_map_template.text(),
             self.newprojectdlg.Input_map_template_2.text(),
-            self.newprojectdlg.Input_map_template_3.text()
+            self.newprojectdlg.Input_map_template_3.text(),
+            self.newprojectdlg.Input_Legenda_CH.text(),
+            self.newprojectdlg.Input_Legenda_SH.text(),
         ]
         enable_bool = True
         for inputline in input_list:
@@ -2221,6 +2335,26 @@ class Otoklim:
                 self.otoklimdlg.maptemplate3.setStyleSheet('color: black')
                 self.otoklimdlg.maptemplate3.setWhatsThis('')
                 change = True
+            if self.otoklimdlg.legendach.whatsThis() == 'edited':
+                self.copy_file(self.otoklimdlg.legendach.text(), input_directory, False)
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["FILE"]["LEGENDA_CH"]["NAME"] = os.path.basename(self.otoklimdlg.legendach.text())
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                self.otoklimdlg.legendach.setStyleSheet('color: black')
+                self.otoklimdlg.legendach.setWhatsThis('')
+                change = True
+            if self.otoklimdlg.legendash.whatsThis() == 'edited':
+                self.copy_file(self.otoklimdlg.legendash.text(), input_directory, False)
+                with open(project, 'r') as jsonfile:
+                    otoklim_project = json.load(jsonfile)
+                    otoklim_project["FILE"]["LEGENDA_SH"]["NAME"] = os.path.basename(self.otoklimdlg.legendash.text())
+                with open(project, 'w') as jsonfile:
+                    jsonfile.write(json.dumps(otoklim_project, indent=4))
+                self.otoklimdlg.legendash.setStyleSheet('color: black')
+                self.otoklimdlg.legendash.setWhatsThis('')
+                change = True
             # Special case for Input Value CSV
             if self.otoklimdlg.Input_Value_CSV.whatsThis() == 'edited':
                 self.check_csv(self.otoklimdlg.Input_Value_CSV.text(), self.otoklimdlg.csvdelimiter.text(), 'input_value')
@@ -2357,6 +2491,10 @@ class Otoklim:
             self.otoklimdlg.maptemplate2.setStyleSheet('color: black')
             self.otoklimdlg.maptemplate3.setWhatsThis('')
             self.otoklimdlg.maptemplate3.setStyleSheet('color: black')
+            self.otoklimdlg.legendach.setWhatsThis('')
+            self.otoklimdlg.legendach.setStyleSheet('color: black')
+            self.otoklimdlg.legendash.setWhatsThis('')
+            self.otoklimdlg.legendash.setStyleSheet('color: black')
         else:
             self.saveasprodlg.ProjectName.clear()
             self.saveasprodlg.ProjectFileName.clear()
@@ -2380,6 +2518,8 @@ class Otoklim:
             map_template = self.newprojectdlg.Input_map_template.text()
             map_template_2 = self.newprojectdlg.Input_map_template_2.text()
             map_template_3 = self.newprojectdlg.Input_map_template_3.text()
+            legenda_ch = self.newprojectdlg.Input_Legenda_CH.text()
+            legenda_sh = self.newprojectdlg.Input_Legenda_SH.text()
             project_name = self.newprojectdlg.Input_prj_name.text()
         else:
             project_directory = self.saveasprodlg.ProjectFolder.text()
@@ -2396,6 +2536,8 @@ class Otoklim:
             map_template = self.otoklimdlg.maptemplate.text()
             map_template_2 = self.otoklimdlg.maptemplate2.text()
             map_template_3 = self.otoklimdlg.maptemplate3.text()
+            legenda_ch = self.otoklimdlg.legendach.text()
+            legenda_sh = self.otoklimdlg.legendash.text()
             project_name = self.saveasprodlg.ProjectName.text()
         self.createprojectdlg.project_dir.setText(str(project_directory))
         result = self.createprojectdlg.exec_()
@@ -2545,6 +2687,20 @@ class Otoklim:
                 self.copy_file(map_template_3, input_directory, False)
                 item.setText(message + ' Done')
                 self.projectprogressdlg.ProgressList.addItem(item)
+                # Copy Legenda CH Image File
+                message = 'Checking QGIS Legenda Image CH Files..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                self.copy_file(legenda_ch, input_directory, False)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
+                # Copy Legenda SH Image File
+                message = 'Checking QGIS Legenda Image SH Files..'
+                item = QListWidgetItem(message)
+                self.projectprogressdlg.ProgressList.addItem(item)
+                self.copy_file(legenda_sh, input_directory, False)
+                item.setText(message + ' Done')
+                self.projectprogressdlg.ProgressList.addItem(item)
                 # Create Project JSON File
                 message = 'Create Project File..'
                 item = QListWidgetItem(message)
@@ -2649,6 +2805,16 @@ class Otoklim:
                             "NAME": os.path.basename(map_template_3),
                             "LOCATION": "IN_FILE_LOC",
                             "FORMAT": "QPT",
+                        },
+                        "LEGENDA_CH": {
+                            "NAME": os.path.basename(legenda_ch),
+                            "LOCATION": "IN_FILE_LOC",
+                            "FORMAT": "PNG",
+                        },
+                        "LEGENDA_SH": {
+                            "NAME": os.path.basename(legenda_sh),
+                            "LOCATION": "IN_FILE_LOC",
+                            "FORMAT": "PNG",
                         },
                     },
                     "PROCESSING": {
@@ -2878,6 +3044,8 @@ class Otoklim:
             self.otoklimdlg.maptemplate.whatsThis(),
             self.otoklimdlg.maptemplate2.whatsThis(),
             self.otoklimdlg.maptemplate3.whatsThis(),
+            self.otoklimdlg.legendach.whatsThis(),
+            self.otoklimdlg.legendash.whatsThis(),
             self.otoklimdlg.Input_Value_CSV.whatsThis(),
             self.otoklimdlg.Select_Province.whatsThis(),
             self.otoklimdlg.Select_Month.whatsThis(),
@@ -4031,6 +4199,8 @@ class Otoklim:
     def generate_map(self):
         """Function to generate map"""
         prcs_directory = os.path.join(self.otoklimdlg.projectworkspace.text(), 'processing')
+        legenda_ch = self.otoklimdlg.legendach.text()
+        legenda_sh = self.otoklimdlg.legendash.text()
         logger = self.logger(prcs_directory)
         logger.info('Generate Map..')
         self.iface.mainWindow().statusBar().showMessage('Generate Map..')
@@ -4065,126 +4235,136 @@ class Otoklim:
             ET.SubElement(issue, "year").text = str(years[4])
             ET.SubElement(issue, "month").text = str(months[4])
             # set params
+
+            # if self.otoklimdlg.ach_1_map.isChecked():
+            data = ET.SubElement(params, "data")
+            with open(project, 'r') as jsonfile:
+                otoklim_project = json.load(jsonfile)
+                raster_ach_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ACH_1"]["NAME"]
+                param = os.path.splitext(raster_ach_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ach_1)[0].split('_')[2]
+                otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_ACH_1"]["REGION_LIST"] = str(slc_id_list)
+                ET.SubElement(data, "param").text = str(param.split('_')[0])
+                ET.SubElement(data, "month").text = str(months[0][2])
+                ET.SubElement(data, "year").text = str(years[0])
+            with open(project, 'w') as jsonfile:
+                jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.ach_1_map.isChecked():
-                data = ET.SubElement(params, "data")
-                with open(project, 'r') as jsonfile:
-                    otoklim_project = json.load(jsonfile)
-                    raster_ach_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ACH_1"]["NAME"]
-                    param = os.path.splitext(raster_ach_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ach_1)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_ACH_1"]["REGION_LIST"] = str(slc_id_list)
-                    ET.SubElement(data, "param").text = str(param.split('_')[0])
-                    ET.SubElement(data, "month").text = str(months[0][2])
-                    ET.SubElement(data, "year").text = str(years[0])
-                with open(project, 'w') as jsonfile:
-                    jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ach_1])
                 logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[0], years[0]])
+            # if self.otoklimdlg.ash_1_map.isChecked():
+            data = ET.SubElement(params, "data")
+            with open(project, 'r') as jsonfile:
+                otoklim_project = json.load(jsonfile)
+                raster_ash_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ASH_1"]["NAME"]
+                param = os.path.splitext(raster_ash_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ash_1)[0].split('_')[2]
+                otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_ASH_1"]["REGION_LIST"] = str(slc_id_list)
+                ET.SubElement(data, "param").text = str(param.split('_')[0])
+                ET.SubElement(data, "month").text = str(months[0][2])
+                ET.SubElement(data, "year").text = str(years[0])
+            with open(project, 'w') as jsonfile:
+                jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.ash_1_map.isChecked():
-                data = ET.SubElement(params, "data")
-                with open(project, 'r') as jsonfile:
-                    otoklim_project = json.load(jsonfile)
-                    raster_ash_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_ASH_1"]["NAME"]
-                    param = os.path.splitext(raster_ash_1)[0].split('_')[1] + '_' + os.path.splitext(raster_ash_1)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_ASH_1"]["REGION_LIST"] = str(slc_id_list)
-                    ET.SubElement(data, "param").text = str(param.split('_')[0])
-                    ET.SubElement(data, "month").text = str(months[0][2])
-                    ET.SubElement(data, "year").text = str(years[0])
-                with open(project, 'w') as jsonfile:
-                    jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_ash_1])
                 logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[0], years[0]])
+            # if self.otoklimdlg.pch_1_map.isChecked():
+            data = ET.SubElement(params, "data")
+            with open(project, 'r') as jsonfile:
+                otoklim_project = json.load(jsonfile)
+                raster_pch_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_1"]["NAME"]
+                param = os.path.splitext(raster_pch_1)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_1)[0].split('_')[2]
+                otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_1"]["REGION_LIST"] = str(slc_id_list)
+                ET.SubElement(data, "param").text = str(param.split('_')[0])
+                ET.SubElement(data, "month").text = str(months[1][2])
+                ET.SubElement(data, "year").text = str(years[1])
+            with open(project, 'w') as jsonfile:
+                jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.pch_1_map.isChecked():
-                data = ET.SubElement(params, "data")
-                with open(project, 'r') as jsonfile:
-                    otoklim_project = json.load(jsonfile)
-                    raster_pch_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_1"]["NAME"]
-                    param = os.path.splitext(raster_pch_1)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_1)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_1"]["REGION_LIST"] = str(slc_id_list)
-                    ET.SubElement(data, "param").text = str(param.split('_')[0])
-                    ET.SubElement(data, "month").text = str(months[1][2])
-                    ET.SubElement(data, "year").text = str(years[1])
-                with open(project, 'w') as jsonfile:
-                    jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_1])
                 logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[1], years[1]])
+            # if self.otoklimdlg.psh_1_map.isChecked():
+            data = ET.SubElement(params, "data")
+            with open(project, 'r') as jsonfile:
+                otoklim_project = json.load(jsonfile)
+                raster_psh_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_1"]["NAME"]
+                param = os.path.splitext(raster_psh_1)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_1)[0].split('_')[2]
+                otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_1"]["REGION_LIST"] = str(slc_id_list)
+                ET.SubElement(data, "param").text = str(param.split('_')[0])
+                ET.SubElement(data, "month").text = str(months[1][2])
+                ET.SubElement(data, "year").text = str(years[1])
+            with open(project, 'w') as jsonfile:
+                jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.psh_1_map.isChecked():
-                data = ET.SubElement(params, "data")
-                with open(project, 'r') as jsonfile:
-                    otoklim_project = json.load(jsonfile)
-                    raster_psh_1 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_1"]["NAME"]
-                    param = os.path.splitext(raster_psh_1)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_1)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_1"]["REGION_LIST"] = str(slc_id_list)
-                    ET.SubElement(data, "param").text = str(param.split('_')[0])
-                    ET.SubElement(data, "month").text = str(months[1][2])
-                    ET.SubElement(data, "year").text = str(years[1])
-                with open(project, 'w') as jsonfile:
-                    jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_1])
                 logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[1], years[1]])
+            # if self.otoklimdlg.pch_2_map.isChecked():
+            data = ET.SubElement(params, "data")
+            with open(project, 'r') as jsonfile:
+                otoklim_project = json.load(jsonfile)
+                raster_pch_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_2"]["NAME"]
+                param = os.path.splitext(raster_pch_2)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_2)[0].split('_')[2]
+                otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_2"]["REGION_LIST"] = str(slc_id_list)
+                ET.SubElement(data, "param").text = str(param.split('_')[0])
+                ET.SubElement(data, "month").text = str(months[2][2])
+                ET.SubElement(data, "year").text = str(years[2])
+            with open(project, 'w') as jsonfile:
+                jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.pch_2_map.isChecked():
-                data = ET.SubElement(params, "data")
-                with open(project, 'r') as jsonfile:
-                    otoklim_project = json.load(jsonfile)
-                    raster_pch_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_2"]["NAME"]
-                    param = os.path.splitext(raster_pch_2)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_2)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_2"]["REGION_LIST"] = str(slc_id_list)
-                    ET.SubElement(data, "param").text = str(param.split('_')[0])
-                    ET.SubElement(data, "month").text = str(months[2][2])
-                    ET.SubElement(data, "year").text = str(years[2])
-                with open(project, 'w') as jsonfile:
-                    jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_2])
                 logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[2], years[2]])
+            # if self.otoklimdlg.psh_2_map.isChecked():
+            data = ET.SubElement(params, "data")
+            with open(project, 'r') as jsonfile:
+                otoklim_project = json.load(jsonfile)
+                raster_psh_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_2"]["NAME"]
+                param = os.path.splitext(raster_psh_2)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_2)[0].split('_')[2]
+                otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_2"]["REGION_LIST"] = str(slc_id_list)
+                ET.SubElement(data, "param").text = str(param.split('_')[0])
+                ET.SubElement(data, "month").text = str(months[2][2])
+                ET.SubElement(data, "year").text = str(years[2])
+            with open(project, 'w') as jsonfile:
+                jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.psh_2_map.isChecked():
-                data = ET.SubElement(params, "data")
-                with open(project, 'r') as jsonfile:
-                    otoklim_project = json.load(jsonfile)
-                    raster_psh_2 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_2"]["NAME"]
-                    param = os.path.splitext(raster_psh_2)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_2)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_2"]["REGION_LIST"] = str(slc_id_list)
-                    ET.SubElement(data, "param").text = str(param.split('_')[0])
-                    ET.SubElement(data, "month").text = str(months[2][2])
-                    ET.SubElement(data, "year").text = str(years[2])
-                with open(project, 'w') as jsonfile:
-                    jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_2])
                 logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[2], years[2]])
+            # if self.otoklimdlg.pch_3_map.isChecked():
+            data = ET.SubElement(params, "data")
+            with open(project, 'r') as jsonfile:
+                otoklim_project = json.load(jsonfile)
+                raster_pch_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_3"]["NAME"]
+                param = os.path.splitext(raster_pch_3)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_3)[0].split('_')[2]
+                otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_3"]["REGION_LIST"] = str(slc_id_list)
+                ET.SubElement(data, "param").text = str(param.split('_')[0])
+                ET.SubElement(data, "month").text = str(months[3][2])
+                ET.SubElement(data, "year").text = str(years[3])
+            with open(project, 'w') as jsonfile:
+                jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.pch_3_map.isChecked():
-                data = ET.SubElement(params, "data")
-                with open(project, 'r') as jsonfile:
-                    otoklim_project = json.load(jsonfile)
-                    raster_pch_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PCH_3"]["NAME"]
-                    param = os.path.splitext(raster_pch_3)[0].split('_')[1] + '_' + os.path.splitext(raster_pch_3)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PCH_3"]["REGION_LIST"] = str(slc_id_list)
-                    ET.SubElement(data, "param").text = str(param.split('_')[0])
-                    ET.SubElement(data, "month").text = str(months[3][2])
-                    ET.SubElement(data, "year").text = str(years[3])
-                with open(project, 'w') as jsonfile:
-                    jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_pch_3])
                 logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[3], years[3]])
+            # if self.otoklimdlg.psh_3_map.isChecked():
+            data = ET.SubElement(params, "data")
+            with open(project, 'r') as jsonfile:
+                otoklim_project = json.load(jsonfile)
+                raster_psh_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_3"]["NAME"]
+                param = os.path.splitext(raster_psh_3)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_3)[0].split('_')[2]
+                otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_3"]["REGION_LIST"] = str(slc_id_list)
+                ET.SubElement(data, "param").text = str(param.split('_')[0])
+                ET.SubElement(data, "month").text = str(months[3][2])
+                ET.SubElement(data, "year").text = str(years[3])
+            with open(project, 'w') as jsonfile:
+                jsonfile.write(json.dumps(otoklim_project, indent=4))
             if self.otoklimdlg.psh_3_map.isChecked():
-                data = ET.SubElement(params, "data")
-                with open(project, 'r') as jsonfile:
-                    otoklim_project = json.load(jsonfile)
-                    raster_psh_3 = otoklim_project["PROCESSING"]["CLASSIFICATION"]["RASTER_PSH_3"]["NAME"]
-                    param = os.path.splitext(raster_psh_3)[0].split('_')[1] + '_' + os.path.splitext(raster_psh_3)[0].split('_')[2]
-                    otoklim_project["PROCESSING"]["GENERATE_MAP"]["RASTER_PSH_3"]["REGION_LIST"] = str(slc_id_list)
-                    ET.SubElement(data, "param").text = str(param.split('_')[0])
-                    ET.SubElement(data, "month").text = str(months[3][2])
-                    ET.SubElement(data, "year").text = str(years[3])
-                with open(project, 'w') as jsonfile:
-                    jsonfile.write(json.dumps(otoklim_project, indent=4))
                 prc_list.append([param, raster_psh_3])
                 logger.debug('-- ' + str(param) + ' is checked')
                 date_list.append([months[3], years[3]])
+
             tree = ET.ElementTree(curah_hujan)
             tree.write(filename_xml, encoding='utf-8', xml_declaration=True)
             logger.info('- Selected parameter :' + str(prc_list))
@@ -4319,6 +4499,12 @@ class Otoklim:
                             composition.loadFromTemplate(document, substitution_map)
                             map_item = composition.getComposerItemById('map')
                             map_item.setMapCanvas(canvas)
+                            # Set Legenda Image
+                            legenda_item = composition.getComposerItemById('legenda')
+                            if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                                legenda_item.setPictureFile(legenda_ch)
+                            else:
+                                legenda_item.setPictureFile(legenda_sh)
                             # Province Polygon As Extent
                             if self.otoklimdlg.province_extent.isChecked():
                                 map_item.zoomToExtent(canvas.extent())
@@ -4445,6 +4631,12 @@ class Otoklim:
                             map_item.setMapCanvas(canvas)
                             map_item.zoomToExtent(canvas.extent())
                             composition.refreshItems()
+                            # Set Legenda Image
+                            legenda_item = composition.getComposerItemById('legenda')
+                            if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                                legenda_item.setPictureFile(legenda_ch)
+                            else:
+                                legenda_item.setPictureFile(legenda_sh)
                             # Save as image
                             dpi = 200
                             dpmm = dpi / 25.4
@@ -4576,6 +4768,12 @@ class Otoklim:
                             map_item.setMapCanvas(canvas)
                             map_item.zoomToExtent(canvas.extent())
                             composition.refreshItems()
+                            # Set Legenda Image
+                            legenda_item = composition.getComposerItemById('legenda')
+                            if str(value[0])[0:3].upper() == 'ACH' or str(value[0])[0:3].upper() == 'PCH':
+                                legenda_item.setPictureFile(legenda_ch)
+                            else:
+                                legenda_item.setPictureFile(legenda_sh)
                             # Save as image
                             dpi = 150
                             dpmm = dpi / 25.4
