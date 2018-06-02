@@ -10,7 +10,7 @@
 name=Otoklim
 qgisMinimumVersion=2.18
 description=This Plugin used to support the automation of the seasonal prediction & analysis produced by BMKG Climatological Station.
-version=0.1.3
+version=0.1.4
 author=Akhmad Faizal P S
 email=faizalprbw@gmail.com
 
