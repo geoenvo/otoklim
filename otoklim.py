@@ -5122,13 +5122,13 @@ class Otoklim:
                                                     layer_union.commitChanges()
                                                     for key, value in zip(unique_counts.keys(), unique_counts.values()):
                                                         if value > 0 and value < 20:
-                                                            sbk.update({key: value})
+                                                            sbk.update({key: round(value,1)})
                                                         elif value >= 20 and value < 50:
-                                                            sb.update({key: value})
+                                                            sb.update({key: round(value,1)})
                                                         elif value >= 50 and value < 100:
-                                                            sbb.update({key: value})
+                                                            sbb.update({key: round(value,1)})
                                                         elif value == 100:
-                                                            m.update({key: value})
+                                                            m.update({key: round(value,1)})
                                                     param_values.update({
                                                         prc[0].upper() + '_SBK': sbk,
                                                         prc[0].upper() + '_SB': sb,
